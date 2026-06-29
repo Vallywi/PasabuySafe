@@ -1,0 +1,28 @@
+[package]
+name = "pasabuy-safe"
+version = "1.0.0"
+edition = "2021"
+description = "Anti-scam escrow smart contract for group buying (pasabuy) on Stellar Soroban. Money is only released when the buyer confirms delivery."
+authors = ["PasabuySafe Team"]
+license = "MIT"
+repository = "https://github.com/pasabuysafe/pasabuy-safe"
+keywords = ["stellar", "soroban", "escrow", "pasabuy", "anti-scam"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = "22.0.0"
+
+[dev-dependencies]
+soroban-sdk = { version = "22.0.0", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true

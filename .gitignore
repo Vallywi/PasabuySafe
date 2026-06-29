@@ -1,0 +1,30 @@
+# Build artifacts
+target/
+
+# Stellar CLI identity/keys (NEVER commit these)
+.stellar/
+*.toml.bak
+
+# Kiro internal files
+.kiro/
+
+# Environment files (future frontend)
+.env
+.env.local
+.env.production
+.env*.local
+
+# Node (future frontend)
+node_modules/
+.next/
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
