@@ -103,6 +103,10 @@ async function withNetworkGuard<T>(fn: () => Promise<T>): Promise<T> {
   } catch (cause) {
     // Detect "account not found" (HTTP 404 from Horizon/RPC getAccount).
     const msg = describeUnknown(cause);
+
+    // eslint-disable-next-line no-console
+    console.error('[PasabuySafe] RPC call failed:', msg);
+
     const isNotFound =
       (cause &&
         typeof cause === 'object' &&
@@ -118,6 +122,18 @@ async function withNetworkGuard<T>(fn: () => Promise<T>): Promise<T> {
           'Account not found on Stellar testnet. Please fund your account with Friendbot before transacting.',
       };
       throw notFoundErr;
+    }
+
+    // Check if it's actually a server-side RPC error (non-network)
+    // Soroban RPC sometimes returns HTTP 200 with error payloads that the SDK throws
+    const isRpcError =
+      /jsonrpc|internal error|server error|invalid params/i.test(msg);
+    if (isRpcError) {
+      const rpcErr: InvokeError = {
+        kind: 'simulation_failed',
+        message: `Stellar RPC error: ${msg.slice(0, 150)}`,
+      };
+      throw rpcErr;
     }
 
     const err: InvokeError = {
@@ -234,6 +250,8 @@ export async function invokeContractWithStatus(
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   // 1. Load account sequence number.
+  // eslint-disable-next-line no-console
+  console.log('[PasabuySafe] invokeContractWithStatus:', method, 'from', publicKey.slice(0, 8));
   const account = await withNetworkGuard(() => server.getAccount(publicKey));
 
   // 2. Build the transaction.
@@ -254,10 +272,22 @@ export async function invokeContractWithStatus(
 
   if (Api.isSimulationError(simulated)) {
     const raw = simulated.error ?? '';
+    // Log the full simulation error for debugging
+    // eslint-disable-next-line no-console
+    console.error('[PasabuySafe] Simulation failed for', method, ':', raw);
     const code = pickContractCode(raw);
     if (code !== null) {
       const contractErr: InvokeError = { kind: 'contract_error', code, raw };
       throw contractErr;
+    }
+    // Check for authentication/authorization failures which surface differently
+    const isAuthError = /auth|unauthorized|authentication|require_auth|invoke_host_function_rejected/i.test(raw);
+    if (isAuthError) {
+      const simErr: InvokeError = {
+        kind: 'simulation_failed',
+        message: 'Authorization failed. Make sure you are using the correct wallet for this action.',
+      };
+      throw simErr;
     }
     const simErr: InvokeError = { kind: 'simulation_failed', message: raw };
     throw simErr;

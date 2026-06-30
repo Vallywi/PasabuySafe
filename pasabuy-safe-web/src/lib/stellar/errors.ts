@@ -165,6 +165,13 @@ export function mapSorobanError(
         if (looksLikeNetworkFailure(raw)) {
           return 'Could not reach the Stellar network. Check your connection and try again.';
         }
+        // If the simulation provided a specific message, surface it
+        // rather than the generic fallthrough.
+        if (err.message && err.message.length > 0 && err.message.length < 200) {
+          return err.message;
+        }
+        // eslint-disable-next-line no-console
+        console.error('[PasabuySafe] Unhandled error in', err.kind, ':', raw);
         return 'Something went wrong. Please try again.';
       }
     }

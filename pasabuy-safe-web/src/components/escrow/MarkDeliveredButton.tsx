@@ -136,12 +136,9 @@ export function MarkDeliveredButton({
       onDone();
     } catch (err) {
       // 6. Any failure path: surface the mapped message and DO NOT touch
-      //    the DB (Req 7.3). The variants handled here are:
-      //      - signing_rejected  → "Transaction cancelled" (Req 7.8)
-      //      - contract_error #4 → "This buyer has not deposited yet." (Req 7.4)
-      //      - contract_error #7 → "This order is already marked delivered…" (Req 7.5)
-      //      - unmapped contract code → "Mark as delivered failed. Error code: …" (Req 7.6)
-      //      - network_unreachable / timeout → "Could not reach the Stellar network…" (Req 7.7)
+      //    the DB (Req 7.3).
+      // eslint-disable-next-line no-console
+      console.error('[PasabuySafe] mark_delivered failed:', err);
       setErrorMessage(mapSorobanError(err, 'mark_delivered'));
     } finally {
       // 7. Always re-enable the button so the organizer can retry without a
