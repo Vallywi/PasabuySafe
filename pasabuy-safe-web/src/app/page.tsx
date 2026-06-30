@@ -16,6 +16,7 @@ import {
   Check,
   Sparkles,
   TrendingUp,
+  Coins,
 } from 'lucide-react';
 import { WalletButton } from '@/components/wallet/WalletButton';
 
@@ -71,19 +72,108 @@ export default function Home() {
         style={{ scale: heroScale, opacity: heroOpacity }}
         className="relative pt-12 pb-20 px-4 overflow-hidden"
       >
-        {/* Animated background blobs */}
+        {/* Yellow gradient blobs (soft, not solid background) */}
         <motion.div
           animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
           transition={{ repeat: Infinity, duration: 12, ease: 'easeInOut' }}
-          className="absolute top-20 -left-20 w-80 h-80 bg-yellow-300 rounded-full blur-3xl opacity-40"
+          className="absolute top-10 -left-20 w-96 h-96 bg-yellow-300 rounded-full blur-3xl opacity-50"
         />
         <motion.div
           animate={{ x: [0, -40, 0], y: [0, 30, 0] }}
           transition={{ repeat: Infinity, duration: 14, ease: 'easeInOut' }}
-          className="absolute top-40 -right-20 w-80 h-80 bg-amber-200 rounded-full blur-3xl opacity-40"
+          className="absolute top-20 -right-20 w-96 h-96 bg-amber-200 rounded-full blur-3xl opacity-50"
+        />
+        <motion.div
+          animate={{ x: [0, 20, 0], y: [0, 20, 0] }}
+          transition={{ repeat: Infinity, duration: 10, ease: 'easeInOut' }}
+          className="absolute bottom-0 left-1/3 w-80 h-80 bg-yellow-200 rounded-full blur-3xl opacity-40"
         />
 
-        <div className="max-w-5xl mx-auto text-center relative">
+        {/* Floating icons (NO heart) */}
+        <motion.div
+          animate={{ y: [0, -20, 0], rotate: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
+          className="absolute top-16 right-10 opacity-10 pointer-events-none"
+        >
+          <ShieldCheck className="w-40 h-40 text-yellow-600" strokeWidth={1.5} />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 7, ease: 'easeInOut' }}
+          className="absolute bottom-20 right-16 opacity-10 pointer-events-none"
+        >
+          <Wallet className="w-28 h-28 text-yellow-600" strokeWidth={1.5} />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, -12, 0], rotate: [0, -5, 5, 0] }}
+          transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
+          className="absolute top-1/3 left-8 opacity-10 pointer-events-none"
+        >
+          <Lock className="w-24 h-24 text-yellow-600" strokeWidth={1.5} />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 18, 0], x: [0, -8, 0] }}
+          transition={{ repeat: Infinity, duration: 9, ease: 'easeInOut' }}
+          className="absolute bottom-1/3 left-20 opacity-8 pointer-events-none"
+        >
+          <Package className="w-20 h-20 text-yellow-600" strokeWidth={1.5} />
+        </motion.div>
+
+        {/* Coin elements */}
+        <motion.div
+          animate={{ y: [0, -15, 0], rotate: [0, 15, 0] }}
+          transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
+          className="absolute top-24 left-1/4 opacity-15 pointer-events-none"
+        >
+          <Coins className="w-16 h-16 text-yellow-600" strokeWidth={1.5} />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+          transition={{ repeat: Infinity, duration: 7, ease: 'easeInOut', delay: 1 }}
+          className="absolute bottom-16 right-1/3 opacity-12 pointer-events-none"
+        >
+          <Coins className="w-12 h-12 text-yellow-500" strokeWidth={1.5} />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, -10, 0], x: [0, 5, 0] }}
+          transition={{ repeat: Infinity, duration: 8, ease: 'easeInOut', delay: 2 }}
+          className="absolute top-1/2 right-8 opacity-10 pointer-events-none"
+        >
+          <Coins className="w-10 h-10 text-amber-500" strokeWidth={2} />
+        </motion.div>
+
+        {/* Sparkle animations */}
+        {[
+          { left: '12%', top: '18%', size: 'w-5 h-5', dur: 3, delay: 0 },
+          { left: '78%', top: '22%', size: 'w-4 h-4', dur: 2.5, delay: 0.5 },
+          { left: '55%', top: '75%', size: 'w-5 h-5', dur: 3.5, delay: 1 },
+          { left: '30%', top: '65%', size: 'w-3 h-3', dur: 2.8, delay: 1.5 },
+          { left: '85%', top: '60%', size: 'w-4 h-4', dur: 3.2, delay: 0.8 },
+          { left: '20%', top: '40%', size: 'w-3 h-3', dur: 2.6, delay: 2 },
+          { left: '65%', top: '35%', size: 'w-4 h-4', dur: 3, delay: 0.3 },
+          { left: '45%', top: '15%', size: 'w-3 h-3', dur: 2.4, delay: 1.2 },
+        ].map((spark, i) => (
+          <motion.div
+            key={`spark-${i}`}
+            animate={{
+              scale: [0.5, 1.2, 0.5],
+              opacity: [0.2, 0.7, 0.2],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: spark.dur,
+              ease: 'easeInOut',
+              delay: spark.delay,
+            }}
+            className={`absolute pointer-events-none ${spark.size}`}
+            style={{ left: spark.left, top: spark.top }}
+          >
+            <Sparkles className="w-full h-full text-yellow-400" strokeWidth={2} />
+          </motion.div>
+        ))}
+
+        <div className="max-w-5xl mx-auto text-center relative z-10">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -154,7 +244,7 @@ export default function Home() {
             <WalletButton />
             <Link
               href="/explore"
-              className="inline-flex items-center gap-1 text-slate-700 hover:text-yellow-600 font-medium px-4 py-2"
+              className="inline-flex items-center gap-1 text-slate-700 hover:text-yellow-700 font-medium px-4 py-2"
             >
               Browse Pasabuys
               <ArrowRight className="w-4 h-4" />
@@ -172,12 +262,12 @@ export default function Home() {
               <Zap className="w-3.5 h-3.5 text-yellow-500" />
               Instant refunds
             </span>
-            <span className="text-slate-300">•</span>
+            <span className="text-slate-700 opacity-50">•</span>
             <span className="inline-flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5 text-yellow-500" />
               Blockchain proof
             </span>
-            <span className="text-slate-300">•</span>
+            <span className="text-slate-700 opacity-50">•</span>
             <span className="inline-flex items-center gap-1.5">
               <Heart className="w-3.5 h-3.5 text-yellow-500" />
               Free forever
@@ -454,24 +544,110 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
-      <footer className="text-center py-10 text-sm text-slate-400 border-t border-slate-100 bg-slate-900 text-white">
-        <p className="font-medium flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-yellow-400" />
-          Built with
-          <Heart className="w-3.5 h-3.5 text-red-400 fill-red-400" />
-          for Filipinos by Filipinos
-        </p>
-        <p className="mt-2 text-xs text-slate-500">
-          Smart contract on Stellar Testnet:{' '}
-          <a
-            href="https://stellar.expert/explorer/testnet/contract/CD5TYW7NH5BGFF4DNXKXTJEDIPPRBIC6MJ7M2STW3LLXKHGCOJRNNYON"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono hover:text-yellow-400 transition-colors underline"
-          >
-            View on Stellar Expert →
-          </a>
-        </p>
+      <footer className="bg-slate-900 text-white py-12 border-t border-slate-800 relative overflow-hidden">
+        {/* Animated floating dots */}
+        {[
+          { left: '8%', top: '20%', dur: 4 },
+          { left: '92%', top: '30%', dur: 3.5 },
+          { left: '25%', top: '70%', dur: 5 },
+          { left: '75%', top: '80%', dur: 3.8 },
+          { left: '50%', top: '15%', dur: 4.5 },
+          { left: '15%', top: '50%', dur: 3.2 },
+          { left: '85%', top: '60%', dur: 4.2 },
+          { left: '40%', top: '85%', dur: 3.6 },
+          { left: '60%', top: '40%', dur: 5.5 },
+          { left: '35%', top: '25%', dur: 4.8 },
+        ].map((dot, i) => (
+          <motion.div
+            key={`footer-dot-${i}`}
+            animate={{ y: [0, -10, 0], opacity: [0.15, 0.4, 0.15] }}
+            transition={{ repeat: Infinity, duration: dot.dur, ease: 'easeInOut', delay: i * 0.3 }}
+            className="absolute w-1.5 h-1.5 bg-yellow-400 rounded-full pointer-events-none"
+            style={{ left: dot.left, top: dot.top }}
+          />
+        ))}
+
+        {/* Floating sparkle elements */}
+        <motion.div
+          animate={{ rotate: 360, scale: [0.8, 1.1, 0.8] }}
+          transition={{ repeat: Infinity, duration: 10, ease: 'linear' }}
+          className="absolute top-8 right-12 opacity-10 pointer-events-none"
+        >
+          <Sparkles className="w-8 h-8 text-yellow-400" strokeWidth={2} />
+        </motion.div>
+        <motion.div
+          animate={{ rotate: -360, scale: [1, 0.8, 1] }}
+          transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
+          className="absolute bottom-10 left-10 opacity-10 pointer-events-none"
+        >
+          <Sparkles className="w-6 h-6 text-yellow-400" strokeWidth={2} />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, -8, 0], rotate: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
+          className="absolute top-1/3 left-1/2 opacity-8 pointer-events-none"
+        >
+          <Coins className="w-6 h-6 text-yellow-400/30" strokeWidth={1.5} />
+        </motion.div>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div className="md:col-span-1">
+              <div className="flex items-center gap-2 mb-3">
+                <ShieldCheck className="w-6 h-6 text-yellow-400" strokeWidth={2.5} />
+                <span className="font-bold text-lg">Pasabuy<span className="text-yellow-400">Safe</span></span>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Buy Together. Pay Securely. Anti-scam escrow for Filipino group buying.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 className="font-semibold text-sm text-slate-300 uppercase tracking-wider mb-3">Platform</h4>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li><Link href="/explore" className="hover:text-yellow-400 transition-colors">Explore Pasabuys</Link></li>
+                <li><Link href="/dashboard/organizer/create" className="hover:text-yellow-400 transition-colors">Create Pasabuy</Link></li>
+                <li><Link href="/dashboard" className="hover:text-yellow-400 transition-colors">Dashboard</Link></li>
+                <li><Link href="/auth" className="hover:text-yellow-400 transition-colors">Sign Up Free</Link></li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h4 className="font-semibold text-sm text-slate-300 uppercase tracking-wider mb-3">Resources</h4>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li><a href="https://stellar.expert/explorer/testnet/contract/CD5TYW7NH5BGFF4DNXKXTJEDIPPRBIC6MJ7M2STW3LLXKHGCOJRNNYON" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">Smart Contract ↗</a></li>
+                <li><a href="https://www.freighter.app/" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">Get Freighter Wallet ↗</a></li>
+                <li><a href="https://stellar.org" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">Stellar Network ↗</a></li>
+              </ul>
+            </div>
+
+            {/* Trust */}
+            <div>
+              <h4 className="font-semibold text-sm text-slate-300 uppercase tracking-wider mb-3">Security</h4>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-yellow-400" /> Blockchain-powered</li>
+                <li className="flex items-center gap-2"><Lock className="w-3.5 h-3.5 text-yellow-400" /> Funds locked in escrow</li>
+                <li className="flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-yellow-400" /> Instant refunds</li>
+                <li className="flex items-center gap-2"><Coins className="w-3.5 h-3.5 text-yellow-400" /> XLM on Stellar</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-slate-500">
+              © {new Date().getFullYear()} PasabuySafe. Built with ❤️ for Filipinos.
+            </p>
+            <p className="text-xs text-slate-500">
+              Powered by{' '}
+              <a href="https://stellar.org/soroban" target="_blank" rel="noopener noreferrer" className="text-yellow-400 hover:text-yellow-300 transition-colors">
+                Stellar Soroban
+              </a>
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );

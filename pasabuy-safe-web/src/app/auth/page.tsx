@@ -18,7 +18,6 @@ import {
   Calendar,
   Users,
   Wallet,
-  Heart,
 } from 'lucide-react';
 import { signUp, signIn, signInWithGoogle } from '@/lib/supabase/auth';
 
@@ -215,14 +214,7 @@ export default function AuthPage() {
           <Lock className="w-24 h-24 text-slate-900" strokeWidth={1.5} />
         </motion.div>
 
-        {/* Heart (love) */}
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], y: [0, -8, 0] }}
-          transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-          className="absolute bottom-32 left-16 opacity-30 pointer-events-none"
-        >
-          <Heart className="w-16 h-16 text-red-400 fill-red-400" strokeWidth={2} />
-        </motion.div>
+        {/* Heart (love) — REMOVED */}
 
         {/* Sparkles */}
         <motion.div
