@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  /* PasabuySafe Brand Colors */
+  --brand-yellow: #FACC15;
+  --brand-yellow-dark: #EAB308;
+  --brand-yellow-light: #FEF3C7;
+  --brand-slate: #0F172A;
+  --brand-slate-light: #1E293B;
+  --brand-coral: #FB923C;
+  --brand-mint: #10B981;
+  --brand-red: #EF4444;
+  --brand-cream: #FFFBEB;
+
+  --background: #FFFBEB;
+  --foreground: #0F172A;
+
+  color-scheme: light only;
+}
+
+/* Force light mode — disable any dark mode preference */
+html {
+  color-scheme: light only;
+  background-color: #FFFBEB;
+}
+
+body {
+  background-color: #FFFBEB;
+  color: #0F172A;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure all inputs are visible with proper colors */
+input, textarea, select {
+  background-color: white;
+  color: #0F172A;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94A3B8;
+  opacity: 1;
+}
+
+/* Hide scrollbar for filter pills */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 0%, #fef3c7 50%, #f3f4f6 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}

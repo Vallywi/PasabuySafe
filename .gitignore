@@ -1,30 +1,33 @@
-# Build artifacts
+# ===== SMART CONTRACT (Rust) =====
 target/
+test_snapshots/
+Cargo.lock
 
-# Stellar CLI identity/keys (NEVER commit these)
+# ===== STELLAR CLI KEYS (NEVER commit these) =====
 .stellar/
-*.toml.bak
 
-# Kiro internal files
+# ===== KIRO INTERNAL =====
 .kiro/
 
-# Environment files (future frontend)
-.env
-.env.local
-.env.production
-.env*.local
+# ===== FRONTEND (Next.js) =====
+pasabuy-safe-web/node_modules/
+pasabuy-safe-web/.next/
+pasabuy-safe-web/.vercel/
+pasabuy-safe-web/.env
+pasabuy-safe-web/.env.local
+pasabuy-safe-web/.env.production.local
+pasabuy-safe-web/.env.development.local
 
-# Node (future frontend)
+# ===== ROOT NODE MODULES (if any) =====
 node_modules/
-.next/
-.vercel/
+package-lock.json
 
-# OS files
+# ===== OS FILES =====
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
 *.swp
 *.swo
+
+# ===== IDE =====
+.vscode/
+.idea/

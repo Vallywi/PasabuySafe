@@ -24,16 +24,67 @@ The target audience is Filipino online shoppers who join group buys on Facebook,
 
 ## 2. Visual Design System
 
+### Brand Identity
+
+PasabuySafe is built around **trust, warmth, and Filipino community**. The visual language uses a sunshine-yellow primary (familiar to Shopee/GCash users) paired with deep midnight slate for serious financial moments. Mint green is reserved exclusively for "money safe" trust signals.
+
 ### Color Palette
 
 ```
-Primary:     #10B981 (Emerald Green — trust, money, safety)
-Secondary:   #3B82F6 (Blue — reliability, tech)
-Accent:      #F59E0B (Amber — urgency, notifications, CTAs)
-Background:  #F8FAFC (Light) / #0F172A (Dark)
-Danger:      #EF4444 (Red — errors, expired deadlines)
-Success:     #22C55E (Green — confirmed, funds released)
+Primary (Sunshine Yellow):
+  50:  #FFFBEB  — Soft cream background
+  100: #FEF3C7  — Subtle yellow tint
+  200: #FDE68A  — Light yellow
+  300: #FCD34D  — Medium yellow
+  400: #FBBF24  — Warm gold
+  500: #FACC15  — BRAND PRIMARY (logo color)
+  600: #EAB308  — Marigold (hover states)
+  700: #CA8A04  — Deep gold
+  800: #854D0E  — Dark gold (text on yellow)
+  900: #713F12  — Darkest gold
+
+Secondary (Midnight Slate):
+  900: #0F172A  — BRAND DARK (wordmark color, headlines)
+  800: #1E293B  — Slate body text
+  700: #334155  — Secondary text
+  600: #475569  — Muted text
+  500: #64748B  — Placeholder text
+  400: #94A3B8  — Disabled text
+  100: #F1F5F9  — Light slate background
+
+Accent (Sunset Coral):
+  500: #FB923C  — Urgency, warnings, secondary CTAs
+  600: #EA580C  — Hover state
+
+Trust (Mint Green) — RESERVED for "money safe" moments:
+  500: #10B981  — Funds released, deposit confirmed
+  600: #059669  — Hover state
+
+Danger (Tomato Red):
+  500: #EF4444  — Scam warnings, errors, refund expired
+  600: #DC2626  — Hover state
+
+Neutrals:
+  Background: #FFFBEB  (Cream — warm white page background)
+  Surface:    #FFFFFF  (Pure white — cards, modals)
+  Border:     #F3F4F6  (Subtle gray-50 dividers)
+  Border-2:   #E5E7EB  (Visible gray-200 borders)
 ```
+
+### Color Usage Rules
+
+| Element | Color | Why |
+|---------|-------|-----|
+| Logo & branding | Yellow + Slate | Match official logo |
+| Primary CTA buttons | Yellow 500 with Slate 900 text | High contrast, brand-forward |
+| Hover states | Yellow 600 | Subtle depth |
+| Headlines | Slate 900 | Professional, readable |
+| Body text | Slate 700 | Easy on the eyes |
+| "Money is safe" badges | Mint 500 | Trust signal — sparingly used |
+| Urgent/warning badges | Coral 500 | Attention without alarm |
+| Scam/error states | Red 500 | Clear danger |
+| Page backgrounds | Cream | Warm, inviting |
+| Card backgrounds | Pure white | Clean separation from cream bg |
 
 ### Typography
 - **Headings**: Plus Jakarta Sans (modern, friendly, readable)
@@ -41,12 +92,13 @@ Success:     #22C55E (Green — confirmed, funds released)
 - **Monospace** (addresses/hashes): JetBrains Mono
 
 ### Iconography
-- Lucide Icons (consistent, open source)
-- Custom illustrations for onboarding (Lottie animations)
+- Lucide React icons (consistent stroke-width, open source)
+- Stroke width: `2` (regular), `2.5` (bold for brand elements)
+- Size system: `w-4 h-4` (inline), `w-5 h-5` (buttons), `w-6 h-6` (cards), `w-8 h-8` (heroes)
 
 ### Component Library
-- shadcn/ui as base (accessible, customizable)
-- Custom components: EscrowCard, StatusTimeline, WalletButton
+- Built on shadcn/ui base (accessible, customizable)
+- Custom components: EscrowCard, StatusTimeline, WalletButton, BrandLogo
 
 ---
 
