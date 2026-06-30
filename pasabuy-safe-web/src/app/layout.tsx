@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   description: 'Your payment is locked until you confirm delivery. Stop pasabuy scams with blockchain-powered escrow on Stellar.',
   keywords: ['pasabuy', 'escrow', 'stellar', 'soroban', 'anti-scam', 'group buying', 'philippines'],
   icons: {
-    icon: '/favicon.ico',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
   openGraph: {
     title: 'PasabuySafe — Stop Pasabuy Scams',
