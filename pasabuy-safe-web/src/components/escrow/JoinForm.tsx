@@ -42,6 +42,8 @@ export interface JoinFormProps {
   groupBuyTitle: string;
   /** Price per slot in stroops. Will be passed as i128 to the contract. */
   pricePerSlot: number;
+  /** The on-chain pasabuy_id (numeric string, e.g. "0", "1", "2"). */
+  contractId: string;
   /** Called after the participants row is successfully inserted. */
   onSuccess: () => void;
 }
@@ -76,7 +78,7 @@ function computeErrors(values: {
   return errors;
 }
 
-export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }: JoinFormProps) {
+export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, onSuccess }: JoinFormProps) {
   const { publicKey, isConnected, connect, isConnecting } = useWallet();
 
   // All four fields start empty — no profile pre-fill (Req 5.2).
@@ -140,12 +142,13 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
       setPhase('depositing');
 
       try {
+        const pasabuyIdScVal = nativeToScVal(BigInt(contractId), { type: 'u64' });
         const buyerScVal = new Address(publicKey).toScVal();
         const amountScVal = nativeToScVal(BigInt(pricePerSlot), { type: 'i128' });
 
         const result = await invokeContractWithStatus(
           'deposit',
-          [buyerScVal, amountScVal],
+          [pasabuyIdScVal, buyerScVal, amountScVal],
           publicKey,
         );
         txHash = result.txHash;

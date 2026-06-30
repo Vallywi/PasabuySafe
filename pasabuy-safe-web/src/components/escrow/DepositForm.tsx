@@ -14,12 +14,13 @@ interface DepositFormProps {
   groupBuyTitle: string;
   pricePerSlot: number;
   groupBuyId: string;
+  contractId: string;
   onSuccess?: () => void;
 }
 
 type Status = 'idle' | 'signing' | 'submitting' | 'success' | 'error';
 
-export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, onSuccess }: DepositFormProps) {
+export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, contractId, onSuccess }: DepositFormProps) {
   const { publicKey, isConnected } = useWallet();
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
@@ -31,6 +32,7 @@ export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, onSuccess
     setError('');
 
     try {
+      const pasabuyIdScVal = nativeToScVal(BigInt(contractId), { type: 'u64' });
       const buyerScVal = new Address(publicKey).toScVal();
       const amountScVal = nativeToScVal(BigInt(pricePerSlot), { type: 'i128' });
 
@@ -38,7 +40,7 @@ export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, onSuccess
 
       const { txHash } = await invokeContractWithStatus(
         'deposit',
-        [buyerScVal, amountScVal],
+        [pasabuyIdScVal, buyerScVal, amountScVal],
         publicKey
       );
 

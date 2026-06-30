@@ -401,12 +401,20 @@ export async function invokeContractWithStatus(
 
     if (status.status === Api.GetTransactionStatus.FAILED) {
       const raw = rawFromFailedStatus(status);
+      // eslint-disable-next-line no-console
+      console.error('[PasabuySafe] On-chain FAILED for', method, '- raw:', raw);
       const code = pickContractCode(raw);
       if (code !== null) {
         const contractErr: InvokeError = { kind: 'contract_error', code, raw };
         throw contractErr;
       }
-      const failedErr: InvokeError = { kind: 'on_chain_failed', raw };
+      // When raw is mostly [object Object] with no contract code, it's
+      // typically an auth failure (require_auth rejected the signer).
+      // Surface a helpful message rather than the generic fallthrough.
+      const failedErr: InvokeError = {
+        kind: 'on_chain_failed',
+        raw: raw || 'Transaction failed on-chain. This usually means the contract rejected the authorization — the wallet that signed may not be the organizer that initialized this contract.',
+      };
       throw failedErr;
     }
 

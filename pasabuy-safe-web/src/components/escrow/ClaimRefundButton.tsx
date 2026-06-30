@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Address } from '@stellar/stellar-sdk';
+import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { invokeContractWithStatus } from '@/lib/stellar/client';
 import { mapSorobanError } from '@/lib/stellar/errors';
@@ -55,6 +55,8 @@ export interface ClaimRefundButtonProps {
     id: string;
     /** ISO 8601 timestamp. */
     deadline: string;
+    /** The on-chain pasabuy_id (numeric string). */
+    contractId: string;
   };
   onClaimed: () => void;
 }
@@ -96,11 +98,12 @@ export function ClaimRefundButton({
     setErrorMessage(null);
 
     try {
+      const pasabuyIdScVal = nativeToScVal(BigInt(groupBuy.contractId), { type: 'u64' });
       const buyerScVal = new Address(publicKey).toScVal();
 
       const { txHash } = await invokeContractWithStatus(
         'refund',
-        [buyerScVal],
+        [pasabuyIdScVal, buyerScVal],
         publicKey
       );
 

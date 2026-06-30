@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Address } from '@stellar/stellar-sdk';
+import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { invokeContractWithStatus } from '@/lib/stellar/client';
 import { mapSorobanError } from '@/lib/stellar/errors';
@@ -87,15 +87,16 @@ export function MarkDeliveredButton({
     setErrorMessage(null);
 
     try {
-      // 1. Build the buyer ScVal argument. The contract's `mark_delivered`
-      //    method takes a single buyer Address.
+      // 1. Build the ScVal arguments. The contract's `mark_delivered`
+      //    method takes (pasabuy_id: u64, buyer: Address).
+      const pasabuyIdScVal = nativeToScVal(BigInt(contractId), { type: 'u64' });
       const buyerScVal = new Address(buyerAddress).toScVal();
 
       // 2. Invoke the contract. This call only resolves once
       //    getTransaction has returned SUCCESS, or it throws an InvokeError.
       const { txHash } = await invokeContractWithStatus(
         'mark_delivered',
-        [buyerScVal],
+        [pasabuyIdScVal, buyerScVal],
         publicKey
       );
 

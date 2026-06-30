@@ -7,18 +7,19 @@ import { invokeContractWithStatus } from '@/lib/stellar/client';
 import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
 import { ensureProfileWalletLinked } from '@/lib/supabase/ensureProfileWallet';
-import { Address } from '@stellar/stellar-sdk';
+import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 
 interface RefundButtonProps {
   amount: number;
   deadlinePassed: boolean;
   groupBuyId?: string;
+  contractId: string;
   onSuccess?: () => void;
 }
 
 type Status = 'idle' | 'confirming' | 'signing' | 'submitting' | 'success' | 'error';
 
-export function RefundButton({ amount, deadlinePassed, groupBuyId, onSuccess }: RefundButtonProps) {
+export function RefundButton({ amount, deadlinePassed, groupBuyId, contractId, onSuccess }: RefundButtonProps) {
   const { publicKey } = useWallet();
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
@@ -30,12 +31,13 @@ export function RefundButton({ amount, deadlinePassed, groupBuyId, onSuccess }: 
     setError('');
 
     try {
+      const pasabuyIdScVal = nativeToScVal(BigInt(contractId), { type: 'u64' });
       const buyerScVal = new Address(publicKey).toScVal();
 
       setStatus('submitting');
       const { txHash } = await invokeContractWithStatus(
         'refund',
-        [buyerScVal],
+        [pasabuyIdScVal, buyerScVal],
         publicKey
       );
 

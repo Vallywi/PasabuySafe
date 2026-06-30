@@ -165,8 +165,12 @@ export function mapSorobanError(
         if (looksLikeNetworkFailure(raw)) {
           return 'Could not reach the Stellar network. Check your connection and try again.';
         }
+        // For on_chain_failed with no contract code, it's almost always an
+        // authorization mismatch (require_auth failed).
+        if (err.kind === 'on_chain_failed') {
+          return 'Transaction rejected by the contract. Make sure you are the organizer who initialized this contract instance.';
+        }
         // If the simulation provided a specific message, surface it
-        // rather than the generic fallthrough.
         if (err.message && err.message.length > 0 && err.message.length < 200) {
           return err.message;
         }

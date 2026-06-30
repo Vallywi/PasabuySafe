@@ -22,6 +22,10 @@ import { XLM_TOKEN_ADDRESS } from '@/lib/utils/constants';
 import { useExchangeRate } from '@/lib/hooks/useExchangeRate';
 import { phpToXlm, xlmToPhp, formatPHP, formatXLM } from '@/lib/utils/currency';
 import { ImageUpload } from '@/components/ui/ImageUpload';
+import { invokeContractWithStatus } from '@/lib/stellar/client';
+import { mapSorobanError } from '@/lib/stellar/errors';
+import { nativeToScVal, Address, scValToNative } from '@stellar/stellar-sdk';
+import { Api } from '@stellar/stellar-sdk/rpc';
 
 const CATEGORIES: Record<string, string[]> = {
   food: ['Korean Food', 'Japanese Food', 'Filipino Food', 'Snacks & Chips', 'Coffee & Beverages', 'Baked Goods', 'Frozen Items', 'Other Food'],
@@ -105,11 +109,31 @@ export default function CreateGroupBuy() {
       }
       const priceStroops = Math.round(xlmAmount * 10_000_000);
       const fullDeadline = new Date(`${deadlineDate}T${deadlineTime || '18:00'}`);
+      const deadlineUnixSeconds = Math.floor(fullDeadline.getTime() / 1000);
 
+      // 1. Call create_pasabuy on-chain to get the pasabuy_id
+      const organizerScVal = new Address(publicKey).toScVal();
+      const deadlineScVal = nativeToScVal(BigInt(deadlineUnixSeconds), { type: 'u64' });
+      const confirmWindowScVal = nativeToScVal(BigInt(604800), { type: 'u64' }); // 7 days
+
+      const result = await invokeContractWithStatus(
+        'create_pasabuy',
+        [organizerScVal, deadlineScVal, confirmWindowScVal],
+        publicKey
+      );
+
+      // 2. Extract the pasabuy_id (u64) from the return value
+      let pasabuyId = '0';
+      const successStatus = result.status as Api.GetSuccessfulTransactionResponse;
+      if (successStatus.returnValue) {
+        pasabuyId = String(scValToNative(successStatus.returnValue));
+      }
+
+      // 3. Insert the group_buy row into Supabase with the on-chain contract_id
       const { data, error: dbError } = await supabase
         .from('group_buys')
         .insert({
-          contract_id: process.env.NEXT_PUBLIC_CONTRACT_ID,
+          contract_id: pasabuyId,
           organizer_address: publicKey,
           title,
           description,
@@ -132,7 +156,12 @@ export default function CreateGroupBuy() {
 
       router.push(`/dashboard/organizer/${data.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create group buy');
+      // Check if it's an InvokeError from the contract call
+      if (err && typeof err === 'object' && 'kind' in err) {
+        setError(mapSorobanError(err));
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to create group buy');
+      }
     } finally {
       setLoading(false);
     }

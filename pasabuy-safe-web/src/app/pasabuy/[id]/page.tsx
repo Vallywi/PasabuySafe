@@ -49,6 +49,7 @@ import { JoinForm } from '@/components/escrow/JoinForm';
 
 interface GroupBuy {
   id: string;
+  contract_id: string;
   title: string;
   description: string | null;
   category: string;
@@ -146,7 +147,7 @@ export default function PasabuyDetailPage() {
       const groupBuyPromise = supabase
         .from('group_buys')
         .select(
-          'id, title, description, category, subcategory, image_url, ' +
+          'id, contract_id, title, description, category, subcategory, image_url, ' +
             'price_per_slot, max_slots, deadline, location, shipping_method, ' +
             'meetup_info, organizer_address, status',
         )
@@ -444,6 +445,7 @@ export default function PasabuyDetailPage() {
                 groupBuyId={gb.id}
                 groupBuyTitle={gb.title}
                 pricePerSlot={gb.price_per_slot}
+                contractId={gb.contract_id}
                 onSuccess={() => {
                   // Req 4.7 / 5.1: route the buyer to their order page
                   // once the participants row is inserted.

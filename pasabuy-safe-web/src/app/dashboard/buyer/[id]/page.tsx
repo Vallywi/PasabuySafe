@@ -21,6 +21,7 @@ type OrderStatus =
 
 interface GroupBuy {
   id: string;
+  contract_id: string;
   title: string;
   description: string | null;
   organizer_address: string;
@@ -419,6 +420,7 @@ export default function BuyerOrderPage() {
               groupBuyTitle={groupBuy.title}
               pricePerSlot={groupBuy.price_per_slot}
               groupBuyId={groupBuy.id}
+              contractId={groupBuy.contract_id}
               onSuccess={fetchData}
             />
           </motion.div>
@@ -470,6 +472,7 @@ export default function BuyerOrderPage() {
             <ConfirmDelivery
               groupBuyTitle={groupBuy.title}
               amount={groupBuy.price_per_slot}
+              contractId={groupBuy.contract_id}
               onSuccess={fetchData}
             />
           </motion.div>
@@ -544,7 +547,7 @@ export default function BuyerOrderPage() {
             </div>
             <ClaimRefundButton
               participant={participant}
-              groupBuy={{ id: groupBuy.id, deadline: groupBuy.deadline }}
+              groupBuy={{ id: groupBuy.id, deadline: groupBuy.deadline, contractId: groupBuy.contract_id }}
               onClaimed={fetchData}
             />
           </motion.div>
@@ -583,6 +586,7 @@ export default function BuyerOrderPage() {
               id: groupBuy.id,
               title: groupBuy.title,
               deadline: groupBuy.deadline,
+              contractId: groupBuy.contract_id,
             }}
             onClose={() => setCancelOpen(false)}
             onCancelled={fetchData}
