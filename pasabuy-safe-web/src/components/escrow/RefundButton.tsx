@@ -6,6 +6,7 @@ import { useWallet } from '@/lib/hooks/useWallet';
 import { invokeContractWithStatus } from '@/lib/stellar/client';
 import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
+import { ensureProfileWalletLinked } from '@/lib/supabase/ensureProfileWallet';
 import { Address } from '@stellar/stellar-sdk';
 
 interface RefundButtonProps {
@@ -39,6 +40,9 @@ export function RefundButton({ amount, deadlinePassed, groupBuyId, onSuccess }: 
       );
 
       if (groupBuyId) {
+        // Ensure wallet is linked so the UPDATE RLS policy passes
+        await ensureProfileWalletLinked(publicKey);
+
         await supabase
           .from('participants')
           .update({

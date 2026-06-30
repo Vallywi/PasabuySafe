@@ -91,14 +91,38 @@ function pickContractCode(haystack: string): number | null {
  * `network_unreachable` variant of `InvokeError`. This is the single funnel
  * for Requirement 7.7 — every RPC entrypoint must be guarded so callers can
  * render "Could not reach the Stellar network…".
+ *
+ * Important: a 404 "account not found" from `getAccount` is NOT a network
+ * error — it means the account doesn't exist on the current network. We
+ * surface that as `simulation_failed` so the UI can show a meaningful message
+ * instead of the generic "Could not reach the Stellar network".
  */
 async function withNetworkGuard<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (cause) {
+    // Detect "account not found" (HTTP 404 from Horizon/RPC getAccount).
+    const msg = describeUnknown(cause);
+    const isNotFound =
+      (cause &&
+        typeof cause === 'object' &&
+        'response' in cause &&
+        (cause as { response?: { status?: number } }).response?.status ===
+          404) ||
+      /not found|does not exist|account.*not/i.test(msg);
+
+    if (isNotFound) {
+      const notFoundErr: InvokeError = {
+        kind: 'simulation_failed',
+        message:
+          'Account not found on Stellar testnet. Please fund your account with Friendbot before transacting.',
+      };
+      throw notFoundErr;
+    }
+
     const err: InvokeError = {
       kind: 'network_unreachable',
-      cause: describeUnknown(cause),
+      cause: msg,
     };
     throw err;
   }
@@ -213,8 +237,10 @@ export async function invokeContractWithStatus(
   const account = await withNetworkGuard(() => server.getAccount(publicKey));
 
   // 2. Build the transaction.
+  // Use a higher base fee (0.01 XLM = 100,000 stroops) to avoid rejections
+  // on congested testnet. The actual fee charged is the min needed.
   const tx = new TransactionBuilder(account, {
-    fee: '100',
+    fee: '100000',
     networkPassphrase: NETWORK_PASSPHRASE,
   })
     .addOperation(contract.call(method, ...args))
@@ -239,25 +265,42 @@ export async function invokeContractWithStatus(
 
   const prepared = assembleTransaction(tx, simulated).build();
 
-  // 4. Sign with Freighter. The SDK can either throw on rejection or return a
-  //    payload with `error` set; we treat both as `signing_rejected`.
+  // 4. Sign with Freighter. The v6 SDK `signTransaction` returns
+  //    `{ signedTxXdr: string; error: string }`. We also pass `address` so
+  //    Freighter knows which account to sign with (required by some versions).
   let signedXdr: string;
   try {
     const freighterApi = await import('@stellar/freighter-api');
     const signResult = await freighterApi.signTransaction(prepared.toXDR(), {
       networkPassphrase: NETWORK_PASSPHRASE,
+      address: publicKey,
     });
+
+    // Handle non-empty error string from Freighter
     if (signResult.error) {
+      if (isFreighterRejection(signResult.error)) {
+        const rejected: InvokeError = { kind: 'signing_rejected' };
+        throw rejected;
+      }
+      // Non-rejection Freighter error (e.g. locked wallet, wrong network)
       const rejected: InvokeError = { kind: 'signing_rejected' };
       throw rejected;
     }
+
+    // Validate we got a signed XDR back
+    if (!signResult.signedTxXdr) {
+      const rejected: InvokeError = { kind: 'signing_rejected' };
+      throw rejected;
+    }
+
     signedXdr = signResult.signedTxXdr;
   } catch (e) {
-    // If we already mapped this to a signing_rejected above, re-throw as-is.
+    // If we already mapped this to an InvokeError above, re-throw as-is.
     if (
       e &&
       typeof e === 'object' &&
-      (e as { kind?: unknown }).kind === 'signing_rejected'
+      'kind' in e &&
+      typeof (e as { kind?: unknown }).kind === 'string'
     ) {
       throw e;
     }
@@ -265,12 +308,20 @@ export async function invokeContractWithStatus(
       const rejected: InvokeError = { kind: 'signing_rejected' };
       throw rejected;
     }
-    // Otherwise surface as a network problem — Freighter's request travels
-    // through the extension messaging layer, which can fail for non-user
-    // reasons (locked wallet, extension disabled, etc.).
+    // Distinguish Freighter-specific errors from true network errors.
+    // If the error mentions Freighter/extension concepts, it's a signing issue,
+    // not a network issue.
+    const msg = describeUnknown(e);
+    const isFreighterError =
+      /freighter|extension|not installed|not connected|wallet/i.test(msg);
+    if (isFreighterError) {
+      const rejected: InvokeError = { kind: 'signing_rejected' };
+      throw rejected;
+    }
+    // Truly unknown error — surface as network unreachable only as last resort
     const netErr: InvokeError = {
       kind: 'network_unreachable',
-      cause: describeUnknown(e),
+      cause: msg,
     };
     throw netErr;
   }

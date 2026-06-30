@@ -7,6 +7,7 @@ import { useWallet } from '@/lib/hooks/useWallet';
 import { invokeContractWithStatus } from '@/lib/stellar/client';
 import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
+import { ensureProfileWalletLinked } from '@/lib/supabase/ensureProfileWallet';
 import {
   validatePhonePH,
   validateBuyerName,
@@ -93,6 +94,9 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Track the deposit txHash so we can retry only the INSERT if the deposit
+  // succeeded but the DB write failed (user should NOT pay again).
+  const [pendingTxHash, setPendingTxHash] = useState<string | null>(null);
 
   const xlmAmount = pricePerSlot / 10_000_000;
   const inFlight = phase === 'depositing' || phase === 'recording' || phase === 'validating';
@@ -128,28 +132,38 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
       return;
     }
 
-    setPhase('depositing');
+    // If we already have a pending txHash from a prior successful deposit,
+    // skip directly to the recording phase (don't charge the user again).
+    let txHash = pendingTxHash;
 
-    let txHash: string;
-    try {
-      const buyerScVal = new Address(publicKey).toScVal();
-      const amountScVal = nativeToScVal(BigInt(pricePerSlot), { type: 'i128' });
+    if (!txHash) {
+      setPhase('depositing');
 
-      const result = await invokeContractWithStatus(
-        'deposit',
-        [buyerScVal, amountScVal],
-        publicKey,
-      );
-      txHash = result.txHash;
-    } catch (err) {
-      // On-chain failure (Req 5.8): do NOT insert a participants row; keep
-      // form state intact so the buyer can retry (Req 5.9).
-      setErrorMessage(mapSorobanError(err, 'deposit'));
-      setPhase('error');
-      return;
+      try {
+        const buyerScVal = new Address(publicKey).toScVal();
+        const amountScVal = nativeToScVal(BigInt(pricePerSlot), { type: 'i128' });
+
+        const result = await invokeContractWithStatus(
+          'deposit',
+          [buyerScVal, amountScVal],
+          publicKey,
+        );
+        txHash = result.txHash;
+        setPendingTxHash(txHash);
+      } catch (err) {
+        // On-chain failure (Req 5.8): do NOT insert a participants row; keep
+        // form state intact so the buyer can retry (Req 5.9).
+        setErrorMessage(mapSorobanError(err, 'deposit'));
+        setPhase('error');
+        return;
+      }
     }
 
     setPhase('recording');
+
+    // Ensure the user's stellar_address is linked in their profile so the
+    // strict RLS SELECT/UPDATE policies pass for subsequent operations.
+    await ensureProfileWalletLinked(publicKey);
 
     const trimmedNote = note.trim();
     const { error: insertError } = await supabase.from('participants').insert({
@@ -167,11 +181,11 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
     if (insertError) {
       // The on-chain deposit succeeded but we could not record the buyer
       // details. The funds are safe in escrow; surface the txHash so support
-      // can reconcile.
+      // can reconcile. The "Try again" button will retry ONLY the insert.
       // eslint-disable-next-line no-console
       console.error('[PasabuySafe] participants insert failed after deposit', insertError);
       setErrorMessage(
-        `Deposit confirmed but failed to record your details. Your tx hash: ${txHash}. Contact support.`,
+        `Deposit confirmed but failed to record your details. Your tx hash: ${txHash}. Please try again — you will NOT be charged again.`,
       );
       setPhase('error');
       return;
@@ -421,7 +435,7 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
               }}
               className="text-sm text-red-600 hover:text-red-700 font-medium mt-2 underline"
             >
-              Try again
+              {pendingTxHash ? 'Retry saving details (no extra charge)' : 'Try again'}
             </button>
           </motion.div>
         )}

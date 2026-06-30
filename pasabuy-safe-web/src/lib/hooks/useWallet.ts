@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { ensureProfileWalletLinked } from '@/lib/supabase/ensureProfileWallet';
 
 interface WalletState {
   publicKey: string | null;
@@ -13,6 +14,10 @@ interface WalletState {
 /**
  * Zustand store for Freighter wallet state.
  * Manages connection, public key, and status.
+ *
+ * On successful connection, automatically links the stellar_address to the
+ * user's Supabase profile (if authenticated). This ensures the strict RLS
+ * policies on participants SELECT/UPDATE work correctly.
  */
 export const useWallet = create<WalletState>((set) => ({
   publicKey: null,
@@ -45,6 +50,14 @@ export const useWallet = create<WalletState>((set) => ({
         publicKey: addressObj.address,
         isConnected: true,
         isConnecting: false,
+      });
+
+      // Best-effort: link the wallet address to the user's Supabase profile
+      // so RLS policies that check profiles.stellar_address will pass for
+      // subsequent SELECT/UPDATE operations on participants.
+      ensureProfileWalletLinked(addressObj.address).catch(() => {
+        // Non-critical — migration 006 makes INSERT permissive for authed users.
+        // The link is needed for SELECT/UPDATE but we don't block the flow.
       });
     } catch (error) {
       console.error('Wallet connection failed:', error);

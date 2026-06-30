@@ -7,6 +7,7 @@ import { useWallet } from '@/lib/hooks/useWallet';
 import { invokeContractWithStatus } from '@/lib/stellar/client';
 import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
+import { ensureProfileWalletLinked } from '@/lib/supabase/ensureProfileWallet';
 import { nativeToScVal, Address } from '@stellar/stellar-sdk';
 
 interface DepositFormProps {
@@ -40,6 +41,10 @@ export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, onSuccess
         [buyerScVal, amountScVal],
         publicKey
       );
+
+      // Ensure the user's stellar_address is linked in their profile
+      // so the strict RLS policy allows the upsert.
+      await ensureProfileWalletLinked(publicKey);
 
       // Record participant in Supabase (best-effort, contract is source of truth)
       await supabase.from('participants').upsert({
