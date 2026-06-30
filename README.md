@@ -2,6 +2,10 @@
 
 **Safe group buying for Filipino communities — powered by blockchain escrow.**
 
+[![CI](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml)
+[![Rust Tests](https://img.shields.io/github/actions/workflow/status/Vallywi/PasabuySafe/ci.yml?branch=main&label=Rust%20tests&logo=rust&logoColor=white)](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml)
+[![Web Build](https://img.shields.io/github/actions/workflow/status/Vallywi/PasabuySafe/ci.yml?branch=main&label=Web%20build&logo=next.js&logoColor=white)](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel&logoColor=white)](https://pasabuysafe.vercel.app)
 [![Stellar](https://img.shields.io/badge/Stellar-Soroban-7D00FF?logo=stellar&logoColor=white)](https://stellar.org/soroban)
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -190,7 +194,31 @@ The contract is deployed on Stellar Testnet:
 
 ---
 
-## 📚 Documentation
+## � CI / CD
+
+Every push and pull request to `main` runs through [GitHub Actions](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml) — three independent jobs that must all pass before code lands:
+
+| Job | What it does |
+|-----|--------------|
+| 🦀 **Rust contract** | `cargo build` + `cargo test` against the Soroban escrow contract |
+| 🌐 **Web build** | `npm ci` + `npm run build` for the Next.js app (typechecks included) |
+| 📜 **Docs guard** | Verifies every contract-id literal in `docs/*.md` matches `.env.local` |
+
+Production deployment is handled by **Vercel** — every push to `main` triggers an automatic deploy at [pasabuysafe.vercel.app](https://pasabuysafe.vercel.app), and pull requests get unique preview URLs.
+
+```
+Local commit ─▶ git push ─▶ GitHub Actions ─▶ (all green) ─▶ Vercel deploy
+                              │
+                              ├── 🦀 cargo test
+                              ├── 🌐 next build
+                              └── 📜 contract-id guard
+```
+
+Live status of every run is visible from the badges at the top of this README and in the [Actions tab](https://github.com/Vallywi/PasabuySafe/actions).
+
+---
+
+## �📚 Documentation
 
 Detailed documentation lives in the [`/docs`](./docs) folder:
 

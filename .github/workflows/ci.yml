@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel older runs of the same branch/PR to keep CI snappy.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Rust smart contract: compile + run the unit/integration tests in src/test.rs.
+  # Soroban contracts are stable on Rust stable; no nightly toolchain required.
+  # ---------------------------------------------------------------------------
+  rust-contract:
+    name: Rust contract (cargo test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry & target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: cargo build
+        run: cargo build --verbose
+
+      - name: cargo test
+        run: cargo test --verbose
+
+  # ---------------------------------------------------------------------------
+  # Next.js web app: install deps with npm ci, then run the production build.
+  # The build implicitly runs TypeScript type-checking. We feed in placeholder
+  # env values so `process.env.NEXT_PUBLIC_*!` assertions don't crash; real
+  # values live on Vercel, not in CI.
+  # ---------------------------------------------------------------------------
+  web-build:
+    name: Web build (npm run build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: pasabuy-safe-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: pasabuy-safe-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create stub .env.local for build
+        # NEXT_PUBLIC_CONTRACT_ID etc. are referenced with non-null assertion
+        # (`process.env.X!`) inside src/lib/utils/constants.ts. Without these,
+        # the build itself still succeeds, but providing them keeps the bundled
+        # output meaningful and unblocks any future static-analysis CI step.
+        run: |
+          cat > .env.local <<EOF
+          NEXT_PUBLIC_CONTRACT_ID=CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB
+          NEXT_PUBLIC_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
+          NEXT_PUBLIC_RPC_URL=https://soroban-testnet.stellar.org:443
+          NEXT_PUBLIC_HORIZON_URL=https://horizon-testnet.stellar.org
+          NEXT_PUBLIC_STELLAR_EXPERT_URL=https://stellar.expert/explorer/testnet
+          NEXT_PUBLIC_APP_URL=https://pasabuysafe.vercel.app
+          NEXT_PUBLIC_SUPABASE_URL=https://stub.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=ci-stub-anon-key
+          EOF
+
+      - name: Build
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Docs guard: scripts/check-contract-id.sh verifies that every Stellar
+  # contract-id literal in docs/*.md matches the canonical
+  # NEXT_PUBLIC_CONTRACT_ID. We write a one-line .env.local from a repo
+  # variable (or hard-coded fallback to the current canonical id).
+  # To switch contracts, update the CONTRACT_ID repo variable in:
+  #   Settings → Secrets and variables → Actions → Variables
+  # ---------------------------------------------------------------------------
+  docs-guard:
+    name: Docs contract-id guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # TEMPORARY: non-blocking until the docs/*.md sweep replaces all stale
+    # contract ids with the canonical one. Once the sweep is done, remove
+    # this line so a mismatch fails the run.
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write canonical contract-id into stub .env.local
+        env:
+          CONTRACT_ID: ${{ vars.CONTRACT_ID || 'CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB' }}
+        run: |
+          mkdir -p pasabuy-safe-web
+          echo "NEXT_PUBLIC_CONTRACT_ID=$CONTRACT_ID" > pasabuy-safe-web/.env.local
+
+      - name: Run docs/contract-id check
+        run: bash scripts/check-contract-id.sh
