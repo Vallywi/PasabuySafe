@@ -24,6 +24,7 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
   const { publicKey } = useWallet();
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  const [showOffchainFallback, setShowOffchainFallback] = useState(false);
 
   async function handleConfirm() {
     if (!publicKey) return;
@@ -69,7 +70,48 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
       setStatus('success');
       setTimeout(() => onSuccess?.(), 2000);
     } catch (err) {
-      setError(mapSorobanError(err, 'confirm'));
+      const mapped = mapSorobanError(err, 'confirm');
+      setError(mapped);
+
+      // If error is NotDelivered (#5), show the off-chain fallback option
+      const isNotDelivered =
+        err &&
+        typeof err === 'object' &&
+        'kind' in err &&
+        (err as any).kind === 'contract_error' &&
+        (err as any).code === 5;
+      if (isNotDelivered) {
+        setShowOffchainFallback(true);
+      }
+
+      setStatus('error');
+    }
+  }
+
+  async function handleOffchainConfirm() {
+    if (!publicKey || !groupBuyId) return;
+    setStatus('submitting');
+    setShowOffchainFallback(false);
+
+    try {
+      await ensureProfileWalletLinked(publicKey);
+      await supabase
+        .from('participants')
+        .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
+        .eq('group_buy_id', groupBuyId)
+        .eq('buyer_address', publicKey);
+
+      confetti({
+        particleCount: 300,
+        spread: 100,
+        origin: { y: 0.5 },
+        colors: ['#10B981', '#22C55E', '#3B82F6', '#F59E0B'],
+      });
+
+      setStatus('success');
+      setTimeout(() => onSuccess?.(), 2000);
+    } catch {
+      setError('Failed to confirm off-chain. Please try again.');
       setStatus('error');
     }
   }
@@ -185,11 +227,26 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
         )}
 
         {status === 'error' && (
-          <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <p className="text-sm text-red-700 font-medium">⚠️ {error}</p>
-            <button onClick={() => setStatus('idle')} className="text-sm text-red-600 hover:text-red-700 font-medium mt-2 underline">
-              Try again
-            </button>
+          <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-sm text-red-700 font-medium">⚠️ {error}</p>
+              <button onClick={() => { setStatus('idle'); setShowOffchainFallback(false); }} className="text-sm text-red-600 hover:text-red-700 font-medium mt-2 underline">
+                Try again
+              </button>
+            </div>
+            {showOffchainFallback && groupBuyId && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-sm text-amber-800 mb-3">
+                  The delivery hasn&apos;t been confirmed on-chain yet. If you&apos;re sure you received your item, you can confirm receipt below. The organizer can claim funds after the confirmation window.
+                </p>
+                <button
+                  onClick={handleOffchainConfirm}
+                  className="w-full bg-amber-400 hover:bg-amber-500 text-slate-900 py-3 rounded-xl font-medium transition-colors"
+                >
+                  ✅ Confirm I received my item
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
