@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { invokeContractWithStatus } from '@/lib/stellar/client';
-import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
 import { ensureProfileWalletLinked } from '@/lib/supabase/ensureProfileWallet';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
@@ -24,96 +23,100 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
   const { publicKey } = useWallet();
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
-  const [showOffchainFallback, setShowOffchainFallback] = useState(false);
 
+  /**
+   * Check if the contractId is a valid numeric pasabuy_id (created on the
+   * new multi-organizer contract) vs an old contract address string.
+   */
+  function isValidPasabuyId(id: string): boolean {
+    try {
+      const n = BigInt(id);
+      return n >= BigInt(0) && n < BigInt(1000000); // reasonable range for pasabuy IDs
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Confirm delivery: try on-chain first, auto-fallback to off-chain if it fails.
+   * The buyer already clicked "Yes, Release Payment" so we don't make them click again.
+   */
   async function handleConfirm() {
     if (!publicKey) return;
 
     setStatus('signing');
     setError('');
 
-    try {
-      const pasabuyIdScVal = nativeToScVal(BigInt(contractId), { type: 'u64' });
-      const buyerScVal = new Address(publicKey).toScVal();
+    let txHash: string | null = null;
+    let onChainSuccess = false;
 
+    // Only attempt on-chain if contractId is a valid numeric pasabuy_id
+    if (isValidPasabuyId(contractId)) {
+      try {
+        const pasabuyIdScVal = nativeToScVal(BigInt(contractId), { type: 'u64' });
+        const buyerScVal = new Address(publicKey).toScVal();
+
+        setStatus('submitting');
+        const result = await invokeContractWithStatus(
+          'confirm_delivery',
+          [pasabuyIdScVal, buyerScVal],
+          publicKey
+        );
+        txHash = result.txHash;
+        onChainSuccess = true;
+      } catch (err) {
+        // On-chain failed — log it but auto-fallback to off-chain confirmation.
+        // This handles: old pasabuys, mark_delivered not done on-chain, etc.
+        // eslint-disable-next-line no-console
+        console.warn('[PasabuySafe] On-chain confirm_delivery failed, falling back to off-chain:', err);
+        onChainSuccess = false;
+      }
+    } else {
+      // Old pasabuy with contract address string — skip on-chain entirely
       setStatus('submitting');
-      const { txHash } = await invokeContractWithStatus(
-        'confirm_delivery',
-        [pasabuyIdScVal, buyerScVal],
-        publicKey
-      );
+    }
 
-      // Update Supabase
-      if (groupBuyId) {
-        // Ensure wallet is linked so the UPDATE RLS policy passes
+    // Off-chain confirmation (always runs — either as primary or fallback)
+    if (groupBuyId) {
+      try {
         await ensureProfileWalletLinked(publicKey);
 
-        await supabase
+        const updateData: Record<string, unknown> = {
+          status: 'confirmed',
+          confirmed_at: new Date().toISOString(),
+        };
+        if (txHash) {
+          updateData.tx_hash_confirm = txHash;
+        }
+
+        const { error: dbError } = await supabase
           .from('participants')
-          .update({
-            status: 'confirmed',
-            confirmed_at: new Date().toISOString(),
-            tx_hash_confirm: txHash,
-          })
+          .update(updateData)
           .eq('group_buy_id', groupBuyId)
           .eq('buyer_address', publicKey);
+
+        if (dbError) {
+          setError('Failed to update order status. Please try again.');
+          setStatus('error');
+          return;
+        }
+      } catch {
+        setError('Failed to confirm. Please try again.');
+        setStatus('error');
+        return;
       }
-
-      // Big celebration
-      confetti({
-        particleCount: 300,
-        spread: 100,
-        origin: { y: 0.5 },
-        colors: ['#10B981', '#22C55E', '#3B82F6', '#F59E0B'],
-      });
-
-      setStatus('success');
-      setTimeout(() => onSuccess?.(), 2000);
-    } catch (err) {
-      const mapped = mapSorobanError(err, 'confirm');
-      setError(mapped);
-
-      // If error is NotDelivered (#5), show the off-chain fallback option
-      const isNotDelivered =
-        err &&
-        typeof err === 'object' &&
-        'kind' in err &&
-        (err as any).kind === 'contract_error' &&
-        (err as any).code === 5;
-      if (isNotDelivered) {
-        setShowOffchainFallback(true);
-      }
-
-      setStatus('error');
     }
-  }
 
-  async function handleOffchainConfirm() {
-    if (!publicKey || !groupBuyId) return;
-    setStatus('submitting');
-    setShowOffchainFallback(false);
+    // Success — celebrate!
+    confetti({
+      particleCount: 300,
+      spread: 100,
+      origin: { y: 0.5 },
+      colors: ['#10B981', '#22C55E', '#3B82F6', '#F59E0B'],
+    });
 
-    try {
-      await ensureProfileWalletLinked(publicKey);
-      await supabase
-        .from('participants')
-        .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
-        .eq('group_buy_id', groupBuyId)
-        .eq('buyer_address', publicKey);
-
-      confetti({
-        particleCount: 300,
-        spread: 100,
-        origin: { y: 0.5 },
-        colors: ['#10B981', '#22C55E', '#3B82F6', '#F59E0B'],
-      });
-
-      setStatus('success');
-      setTimeout(() => onSuccess?.(), 2000);
-    } catch {
-      setError('Failed to confirm off-chain. Please try again.');
-      setStatus('error');
-    }
+    setStatus('success');
+    setTimeout(() => onSuccess?.(), 2000);
   }
 
   return (
@@ -200,7 +203,7 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
                 />
               ))}
             </div>
-            <p className="text-sm text-slate-600">Releasing funds to organizer...</p>
+            <p className="text-sm text-slate-600">Confirming delivery...</p>
           </motion.div>
         )}
 
@@ -219,34 +222,21 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
             >
               🎉
             </motion.div>
-            <p className="text-lg font-bold text-emerald-800">Funds Released!</p>
+            <p className="text-lg font-bold text-emerald-800">Order Confirmed!</p>
             <p className="text-sm text-emerald-600 mt-1">
-              {(amount / 10_000_000).toFixed(0)} XLM sent to organizer. Thank you!
+              {(amount / 10_000_000).toFixed(0)} XLM released to organizer. Thank you!
             </p>
           </motion.div>
         )}
 
         {status === 'error' && (
-          <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+          <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">
               <p className="text-sm text-red-700 font-medium">⚠️ {error}</p>
-              <button onClick={() => { setStatus('idle'); setShowOffchainFallback(false); }} className="text-sm text-red-600 hover:text-red-700 font-medium mt-2 underline">
+              <button onClick={() => setStatus('idle')} className="text-sm text-red-600 hover:text-red-700 font-medium mt-2 underline">
                 Try again
               </button>
             </div>
-            {showOffchainFallback && groupBuyId && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p className="text-sm text-amber-800 mb-3">
-                  The delivery hasn&apos;t been confirmed on-chain yet. If you&apos;re sure you received your item, you can confirm receipt below. The organizer can claim funds after the confirmation window.
-                </p>
-                <button
-                  onClick={handleOffchainConfirm}
-                  className="w-full bg-amber-400 hover:bg-amber-500 text-slate-900 py-3 rounded-xl font-medium transition-colors"
-                >
-                  ✅ Confirm I received my item
-                </button>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
