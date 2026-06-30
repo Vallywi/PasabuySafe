@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useWallet } from '@/lib/hooks/useWallet';
-import { invokeContract } from '@/lib/stellar/client';
+import { invokeContractWithStatus } from '@/lib/stellar/client';
+import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
 import { Address } from '@stellar/stellar-sdk';
 
@@ -32,7 +33,11 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, onSuccess }
       const buyerScVal = new Address(publicKey).toScVal();
 
       setStatus('submitting');
-      const result = await invokeContract('confirm_delivery', [buyerScVal], publicKey);
+      const { txHash } = await invokeContractWithStatus(
+        'confirm_delivery',
+        [buyerScVal],
+        publicKey
+      );
 
       // Update Supabase
       if (groupBuyId) {
@@ -41,7 +46,7 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, onSuccess }
           .update({
             status: 'confirmed',
             confirmed_at: new Date().toISOString(),
-            tx_hash_confirm: result.txHash || null,
+            tx_hash_confirm: txHash,
           })
           .eq('group_buy_id', groupBuyId)
           .eq('buyer_address', publicKey);
@@ -58,12 +63,7 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, onSuccess }
       setStatus('success');
       setTimeout(() => onSuccess?.(), 2000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Transaction failed';
-      if (message.includes('Error(Contract, #5)')) {
-        setError('You can only confirm after the organizer marks delivery. Check back later.');
-      } else {
-        setError(message);
-      }
+      setError(mapSorobanError(err, 'confirm'));
       setStatus('error');
     }
   }

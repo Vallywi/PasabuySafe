@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from '@/lib/hooks/useWallet';
-import { invokeContract } from '@/lib/stellar/client';
+import { invokeContractWithStatus } from '@/lib/stellar/client';
+import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
 import { Address } from '@stellar/stellar-sdk';
 
@@ -31,7 +32,11 @@ export function RefundButton({ amount, deadlinePassed, groupBuyId, onSuccess }: 
       const buyerScVal = new Address(publicKey).toScVal();
 
       setStatus('submitting');
-      const result = await invokeContract('refund', [buyerScVal], publicKey);
+      const { txHash } = await invokeContractWithStatus(
+        'refund',
+        [buyerScVal],
+        publicKey
+      );
 
       if (groupBuyId) {
         await supabase
@@ -39,7 +44,7 @@ export function RefundButton({ amount, deadlinePassed, groupBuyId, onSuccess }: 
           .update({
             status: 'refunded',
             refunded_at: new Date().toISOString(),
-            tx_hash_confirm: result.txHash || null,
+            tx_hash_confirm: txHash,
           })
           .eq('group_buy_id', groupBuyId)
           .eq('buyer_address', publicKey);
@@ -48,14 +53,7 @@ export function RefundButton({ amount, deadlinePassed, groupBuyId, onSuccess }: 
       setStatus('success');
       setTimeout(() => onSuccess?.(), 2000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Refund failed';
-      if (message.includes('Error(Contract, #6)')) {
-        setError('Deadline has not passed yet. Wait until the deadline expires.');
-      } else if (message.includes('Error(Contract, #4)')) {
-        setError('No deposit found, or order has already been delivered.');
-      } else {
-        setError(message);
-      }
+      setError(mapSorobanError(err, 'refund'));
       setStatus('error');
     }
   }

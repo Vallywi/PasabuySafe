@@ -66,7 +66,7 @@ export default function ExplorePage() {
       const { data, error } = await supabase
         .from('group_buys')
         .select('*')
-        .eq('status', 'active')
+        .neq('status', 'cancelled')
         .order('created_at', { ascending: false });
 
       if (error) setError('Could not load group buys. Database may not be set up yet.');
@@ -272,7 +272,7 @@ export default function ExplorePage() {
                   </div>
 
                   <Link
-                    href={`/dashboard/buyer/${buy.id}`}
+                    href={`/pasabuy/${buy.id}`}
                     className="mt-5 flex items-center justify-center gap-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-slate-900 py-3 rounded-xl text-sm font-medium transition-all shadow-md shadow-yellow-100 group-hover:shadow-lg"
                   >
                     Join Safely

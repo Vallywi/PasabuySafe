@@ -1,16 +1,50 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+/**
+ * Organizer dashboard page — wires together the four management
+ * enhancements that share this file:
+ *
+ *   - Task  8.3: `CancelPasabuyDialog` for the four-case cancellation
+ *                flow (organizer-only "Cancel pasabuy" button + modal).
+ *   - Task  9.2: `ParticipantList` replaces the inline participants
+ *                table. The query now selects the per-order contact
+ *                columns (`buyer_name`, `buyer_contact`, `buyer_location`,
+ *                `buyer_note`, `refund_required`) so the component can
+ *                render them per Req 3.2.
+ *   - Task 10.4: `TransactionHistory` is mounted as an organizer-only
+ *                section (Req 2.1, 2.2). RLS on the underlying view is
+ *                still the ultimate enforcement.
+ *   - Task 11.2: The inline `markDelivered` handler and its legacy
+ *                `invokeContract`/`mapSorobanError` plumbing have been
+ *                removed; `ParticipantList` renders `MarkDeliveredButton`
+ *                internally, and that button owns the full bounded
+ *                state machine (`invokeContractWithStatus`, error mapping,
+ *                contract-events mirror, retry on failure).
+ *
+ * `runtime = 'nodejs'` is required so the Freighter dynamic import used
+ * by `invokeContractWithStatus` resolves on Vercel — the Edge runtime
+ * does not provide the `crypto` and dynamic-import surface Freighter
+ * needs at build time. This matches the Vercel-failure hypothesis in
+ * the design.
+ */
+
+export const runtime = 'nodejs';
+
+import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { supabase } from '@/lib/supabase/client';
-import { invokeContract } from '@/lib/stellar/client';
-import { Address } from '@stellar/stellar-sdk';
-import { truncateAddress } from '@/lib/utils/format';
+import { CancelPasabuyDialog } from '@/components/escrow/CancelPasabuyDialog';
+import {
+  ParticipantList,
+  type Participant,
+} from '@/components/dashboard/ParticipantList';
+import TransactionHistory from '@/components/dashboard/TransactionHistory';
 
 interface GroupBuy {
   id: string;
+  contract_id: string;
   title: string;
   description: string | null;
   organizer_address: string;
@@ -20,80 +54,48 @@ interface GroupBuy {
   status: string;
 }
 
-interface Participant {
-  id: string;
-  buyer_address: string;
-  amount: number;
-  status: string;
-  deposited_at: string;
-}
-
 export default function ManageGroupBuyPage() {
   const params = useParams();
+  const groupBuyId = params.id as string;
   const { publicKey, isConnected } = useWallet();
   const [groupBuy, setGroupBuy] = useState<GroupBuy | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actioningBuyer, setActioningBuyer] = useState<string | null>(null);
-  const [actionError, setActionError] = useState('');
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
+  // Single source of truth for fetching the page state. Memoized via
+  // `useCallback` so child components (CancelPasabuyDialog,
+  // ParticipantList) can invoke it via the `onCancelled` /
+  // `onMarkedDelivered` callbacks without re-triggering effects.
+  const fetchData = useCallback(async () => {
+    const { data: gb } = await supabase
+      .from('group_buys')
+      .select('*')
+      .eq('id', groupBuyId)
+      .single();
+
+    if (gb) setGroupBuy(gb as GroupBuy);
+
+    // Select the per-order delivery columns added by migration 005. RLS
+    // on `participants` restricts these contact columns to the organizer
+    // and the buyer themself, so it is safe to request them from the
+    // base table here (the organizer is gated below).
+    const { data: p } = await supabase
+      .from('participants')
+      .select(
+        'id, buyer_address, amount, status, deposited_at, buyer_name, buyer_contact, buyer_location, buyer_note, refund_required',
+      )
+      .eq('group_buy_id', groupBuyId)
+      .order('deposited_at', { ascending: false });
+
+    if (p) setParticipants(p as Participant[]);
+
+    setLoading(false);
+  }, [groupBuyId]);
 
   useEffect(() => {
-    async function fetchData() {
-      const { data: gb } = await supabase
-        .from('group_buys')
-        .select('*')
-        .eq('id', params.id)
-        .single();
-
-      if (gb) setGroupBuy(gb);
-
-      const { data: p } = await supabase
-        .from('participants')
-        .select('*')
-        .eq('group_buy_id', params.id)
-        .order('deposited_at', { ascending: false });
-
-      if (p) setParticipants(p);
-
-      setLoading(false);
-    }
     fetchData();
-  }, [params.id]);
-
-  async function markDelivered(buyerAddress: string) {
-    if (!publicKey) return;
-    setActioningBuyer(buyerAddress);
-    setActionError('');
-
-    try {
-      const buyerScVal = new Address(buyerAddress).toScVal();
-      await invokeContract('mark_delivered', [buyerScVal], publicKey);
-
-      await supabase
-        .from('participants')
-        .update({ status: 'delivered', delivered_at: new Date().toISOString() })
-        .eq('group_buy_id', params.id)
-        .eq('buyer_address', buyerAddress);
-
-      // Refresh
-      setParticipants((prev) =>
-        prev.map((p) =>
-          p.buyer_address === buyerAddress ? { ...p, status: 'delivered' } : p
-        )
-      );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to mark delivered';
-      if (message.includes('Error(Contract, #4)')) {
-        setActionError(`Buyer ${truncateAddress(buyerAddress)} has not deposited yet`);
-      } else if (message.includes('Error(Contract, #7)')) {
-        setActionError(`Order already marked as delivered`);
-      } else {
-        setActionError(message);
-      }
-    } finally {
-      setActioningBuyer(null);
-    }
-  }
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -122,12 +124,16 @@ export default function ManageGroupBuyPage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
           <p className="text-amber-800 font-medium">
-            {!isConnected ? 'Connect your wallet to manage this pasabuy' : 'You are not the organizer of this pasabuy'}
+            {!isConnected
+              ? 'Connect your wallet to manage this pasabuy'
+              : 'You are not the organizer of this pasabuy'}
           </p>
         </div>
       </div>
     );
   }
+
+  const isCancelled = groupBuy.status === 'cancelled';
 
   const totalEscrowed = participants
     .filter((p) => p.status === 'deposited' || p.status === 'delivered')
@@ -137,108 +143,162 @@ export default function ManageGroupBuyPage() {
     .filter((p) => p.status === 'confirmed')
     .reduce((sum, p) => sum + p.amount, 0);
 
+  // `contract_id` on `group_buys` is the FK that `contract_events` and
+  // the `group_buy_history` view JOIN against. Fall back to `groupBuy.id`
+  // when the column is unexpectedly absent so the page still renders
+  // rather than crashing in dev fixtures.
+  const contractId = groupBuy.contract_id || groupBuy.id;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <span className="inline-block text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium uppercase tracking-wide">
-          Organizer View
-        </span>
-        <h1 className="text-2xl font-bold text-slate-900 mt-3">{groupBuy.title}</h1>
-        <p className="text-slate-600 mt-1">{groupBuy.description}</p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="inline-block text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium uppercase tracking-wide">
+            Organizer View
+          </span>
+          {isCancelled && (
+            <motion.span
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="inline-flex items-center gap-1 text-xs px-3 py-1 bg-rose-100 text-rose-700 rounded-full font-semibold uppercase tracking-wide"
+              aria-label="This pasabuy has been cancelled"
+            >
+              <span aria-hidden>✖</span> Cancelled
+            </motion.span>
+          )}
+        </div>
+        <div className="mt-3 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-slate-900">{groupBuy.title}</h1>
+            {groupBuy.description && (
+              <p className="text-slate-600 mt-1">{groupBuy.description}</p>
+            )}
+          </div>
+
+          {/* Req 1.1, 1.2: the "Cancel pasabuy" control is rendered only
+              for the signed-in organizer and only while the pasabuy is
+              not already cancelled. The dialog itself enforces the
+              decision-matrix branches; this button merely opens it. */}
+          {!isCancelled && (
+            <button
+              type="button"
+              onClick={() => setCancelDialogOpen(true)}
+              className="shrink-0 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-4 py-2 rounded-xl font-medium text-sm transition-colors"
+            >
+              Cancel pasabuy
+            </button>
+          )}
+        </div>
       </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-slate-100 rounded-2xl p-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Total Buyers</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{participants.length}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-slate-100 rounded-2xl p-4"
+        >
+          <p className="text-xs text-slate-500 uppercase tracking-wide">
+            Total Buyers
+          </p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">
+            {participants.length}
+          </p>
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-          <p className="text-xs text-blue-600 uppercase tracking-wide">In Escrow</p>
-          <p className="text-2xl font-bold text-blue-900 mt-1">{(totalEscrowed / 10_000_000).toFixed(0)} XLM</p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-blue-50 border border-blue-100 rounded-2xl p-4"
+        >
+          <p className="text-xs text-blue-600 uppercase tracking-wide">
+            In Escrow
+          </p>
+          <p className="text-2xl font-bold text-blue-900 mt-1">
+            {(totalEscrowed / 10_000_000).toFixed(0)} XLM
+          </p>
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-yellow-50 border border-emerald-100 rounded-2xl p-4">
-          <p className="text-xs text-yellow-700 uppercase tracking-wide">Released</p>
-          <p className="text-2xl font-bold text-yellow-900 mt-1">{(totalReleased / 10_000_000).toFixed(0)} XLM</p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-yellow-50 border border-emerald-100 rounded-2xl p-4"
+        >
+          <p className="text-xs text-yellow-700 uppercase tracking-wide">
+            Released
+          </p>
+          <p className="text-2xl font-bold text-yellow-900 mt-1">
+            {(totalReleased / 10_000_000).toFixed(0)} XLM
+          </p>
         </motion.div>
       </div>
 
-      {actionError && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4">
-          <p className="text-sm text-red-700">{actionError}</p>
+      {/* Participants — ParticipantList owns the row layout, the
+          contact-detail rendering (Req 3.x), and the MarkDeliveredButton
+          for each `deposited` row. */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-slate-900">Buyers</h2>
+        </div>
+        <ParticipantList
+          groupBuyId={groupBuyId}
+          contractId={contractId}
+          participants={participants}
+          onMarkedDelivered={fetchData}
+        />
+      </section>
+
+      {/* Transaction History — organizer-only (Req 2.1, 2.2). The
+          underlying `group_buy_history` view's RLS already restricts
+          access to the organizer, so this UI-level guard is a courtesy
+          that matches the page's overall organizer gating. */}
+      <section className="mb-8">
+        <TransactionHistory groupBuyId={groupBuyId} contractId={contractId} />
+      </section>
+
+      {/* Share — hidden once the pasabuy is cancelled (no point sharing
+          a link to a cancelled pasabuy). */}
+      {!isCancelled && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+          <p className="text-xs font-medium text-yellow-700 mb-2">
+            📤 Share this pasabuy:
+          </p>
+          <code className="text-xs bg-white px-3 py-2 rounded-lg block break-all border border-emerald-100">
+            {typeof window !== 'undefined'
+              ? `${window.location.origin}/pasabuy/${groupBuy.id}`
+              : ''}
+          </code>
         </div>
       )}
 
-      {/* Participants */}
-      <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-900">Buyers</h2>
-        </div>
-
-        {participants.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <div className="text-4xl mb-3">📭</div>
-            <p className="text-slate-500">No buyers yet</p>
-            <p className="text-xs text-slate-400 mt-1">Share the link to get participants</p>
-          </div>
-        ) : (
-          <AnimatePresence>
-            {participants.map((p, i) => (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="px-6 py-4 border-b border-slate-50 last:border-0 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-mono text-sm text-slate-700">{truncateAddress(p.buyer_address)}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {(p.amount / 10_000_000).toFixed(0)} XLM • {new Date(p.deposited_at).toLocaleDateString()}
-                  </p>
-                </div>
-
-                {p.status === 'deposited' && (
-                  <button
-                    onClick={() => markDelivered(p.buyer_address)}
-                    disabled={actioningBuyer === p.buyer_address}
-                    className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
-                  >
-                    {actioningBuyer === p.buyer_address ? 'Marking...' : '📦 Mark Delivered'}
-                  </button>
-                )}
-
-                {p.status === 'delivered' && (
-                  <span className="text-sm text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full font-medium">
-                    ⏳ Waiting for buyer to confirm
-                  </span>
-                )}
-
-                {p.status === 'confirmed' && (
-                  <span className="text-sm text-yellow-700 bg-yellow-50 px-3 py-1.5 rounded-full font-medium">
-                    ✅ Confirmed
-                  </span>
-                )}
-
-                {p.status === 'refunded' && (
-                  <span className="text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-full font-medium">
-                    💰 Refunded
-                  </span>
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
+      {/* Cancel pasabuy modal. Mounted inside an AnimatePresence so the
+          modal animates in/out without leaving the participants list
+          jumpy. The dialog's `onCancelled` triggers a re-fetch so the
+          Cancelled badge, the participant statuses, and the transaction
+          history all refresh in one round-trip. */}
+      <AnimatePresence>
+        {cancelDialogOpen && (
+          <CancelPasabuyDialog
+            groupBuy={{
+              id: groupBuy.id,
+              title: groupBuy.title,
+              deadline: groupBuy.deadline,
+            }}
+            participants={participants.map((p) => ({
+              buyer_address: p.buyer_address,
+              amount: p.amount,
+              status: p.status,
+            }))}
+            onClose={() => setCancelDialogOpen(false)}
+            onCancelled={fetchData}
+          />
         )}
-      </div>
-
-      {/* Share */}
-      <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
-        <p className="text-xs font-medium text-yellow-700 mb-2">📤 Share this pasabuy:</p>
-        <code className="text-xs bg-white px-3 py-2 rounded-lg block break-all border border-emerald-100">
-          {typeof window !== 'undefined' ? `${window.location.origin}/dashboard/buyer/${groupBuy.id}` : ''}
-        </code>
-      </div>
+      </AnimatePresence>
     </div>
   );
 }

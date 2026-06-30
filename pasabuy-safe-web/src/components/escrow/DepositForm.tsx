@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useWallet } from '@/lib/hooks/useWallet';
-import { invokeContract } from '@/lib/stellar/client';
+import { invokeContractWithStatus } from '@/lib/stellar/client';
+import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
 import { nativeToScVal, Address } from '@stellar/stellar-sdk';
 
@@ -34,7 +35,11 @@ export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, onSuccess
 
       setStatus('submitting');
 
-      const result = await invokeContract('deposit', [buyerScVal, amountScVal], publicKey);
+      const { txHash } = await invokeContractWithStatus(
+        'deposit',
+        [buyerScVal, amountScVal],
+        publicKey
+      );
 
       // Record participant in Supabase (best-effort, contract is source of truth)
       await supabase.from('participants').upsert({
@@ -42,7 +47,7 @@ export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, onSuccess
         buyer_address: publicKey,
         amount: pricePerSlot,
         status: 'deposited',
-        tx_hash_deposit: result.txHash || null,
+        tx_hash_deposit: txHash,
       });
 
       // Celebration animation
@@ -56,15 +61,7 @@ export function DepositForm({ groupBuyTitle, pricePerSlot, groupBuyId, onSuccess
       setStatus('success');
       setTimeout(() => onSuccess?.(), 1500);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Transaction failed';
-      // Make blockchain errors friendlier
-      if (message.includes('Error(Contract, #3)')) {
-        setError('You already deposited into this pasabuy');
-      } else if (message.includes('Error(Contract, #2)') || message.includes('NotInitialized')) {
-        setError('This pasabuy is not yet active. Ask the organizer to initialize it.');
-      } else {
-        setError(message);
-      }
+      setError(mapSorobanError(err, 'deposit'));
       setStatus('error');
     }
   }
