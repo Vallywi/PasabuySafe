@@ -446,6 +446,7 @@ export default function PasabuyDetailPage() {
                 groupBuyTitle={gb.title}
                 pricePerSlot={gb.price_per_slot}
                 contractId={gb.contract_id}
+                availableSlots={Math.max(gb.max_slots - joinedCount, 0)}
                 onSuccess={() => {
                   // Req 4.7 / 5.1: route the buyer to their order page
                   // once the participants row is inserted.

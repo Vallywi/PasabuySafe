@@ -45,6 +45,10 @@ export interface Participant {
   buyer_address: string;
   /** Amount in stroops (1 XLM = 10^7 stroops). */
   amount: number;
+  /** Number of slots/items this buyer ordered. */
+  quantity: number;
+  /** Buyer-selected delivery method, e.g. "Meet-up (in-person)". */
+  delivery_method: string | null;
   status: 'deposited' | 'delivered' | 'confirmed' | 'refunded' | 'cancelled';
   buyer_name: string | null;
   buyer_contact: string | null;
@@ -174,6 +178,7 @@ export function ParticipantList({
                   </p>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {(p.amount / 10_000_000).toFixed(2)} XLM &middot;{' '}
+                    {p.quantity}× item{p.quantity === 1 ? '' : 's'} &middot;{' '}
                     {new Date(p.deposited_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -203,6 +208,11 @@ export function ParticipantList({
                   />
                   <ContactField label="Location" value={p.buyer_location} />
                   <ContactField label="Note" value={p.buyer_note} />
+                  <ContactField
+                    label="Quantity"
+                    value={`${p.quantity} × item${p.quantity === 1 ? '' : 's'}`}
+                  />
+                  <ContactField label="Delivery Method" value={p.delivery_method} />
                 </div>
               )}
 

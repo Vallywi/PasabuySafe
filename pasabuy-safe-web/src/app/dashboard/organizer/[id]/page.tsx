@@ -32,7 +32,7 @@ export const runtime = 'nodejs';
 
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { supabase } from '@/lib/supabase/client';
 import { CancelPasabuyDialog } from '@/components/escrow/CancelPasabuyDialog';
@@ -56,12 +56,37 @@ interface GroupBuy {
 
 export default function ManageGroupBuyPage() {
   const params = useParams();
+  const router = useRouter();
   const groupBuyId = params.id as string;
   const { publicKey, isConnected } = useWallet();
   const [groupBuy, setGroupBuy] = useState<GroupBuy | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    if (
+      !window.confirm(
+        'Permanently delete this cancelled pasabuy? This cannot be undone.',
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    setDeleteError(null);
+    const { error } = await supabase
+      .from('group_buys')
+      .delete()
+      .eq('id', groupBuyId);
+    if (error) {
+      setDeleteError(error.message);
+      setDeleting(false);
+      return;
+    }
+    router.push('/dashboard');
+  }
 
   // Single source of truth for fetching the page state. Memoized via
   // `useCallback` so child components (CancelPasabuyDialog,
@@ -83,7 +108,7 @@ export default function ManageGroupBuyPage() {
     const { data: p } = await supabase
       .from('participants')
       .select(
-        'id, buyer_address, amount, status, deposited_at, buyer_name, buyer_contact, buyer_location, buyer_note, refund_required',
+        'id, buyer_address, amount, quantity, delivery_method, status, deposited_at, buyer_name, buyer_contact, buyer_location, buyer_note, refund_required',
       )
       .eq('group_buy_id', groupBuyId)
       .order('deposited_at', { ascending: false });
@@ -183,8 +208,12 @@ export default function ManageGroupBuyPage() {
           {/* Req 1.1, 1.2: the "Cancel pasabuy" control is rendered only
               for the signed-in organizer and only while the pasabuy is
               not already cancelled. The dialog itself enforces the
-              decision-matrix branches; this button merely opens it. */}
-          {!isCancelled && (
+              decision-matrix branches; this button merely opens it.
+
+              Once the pasabuy is cancelled, the Cancel button is replaced
+              by a destructive "Delete pasabuy" button that hard-removes
+              the row from `group_buys` (the two are mutually exclusive). */}
+          {!isCancelled ? (
             <button
               type="button"
               onClick={() => setCancelDialogOpen(true)}
@@ -192,8 +221,22 @@ export default function ManageGroupBuyPage() {
             >
               Cancel pasabuy
             </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="shrink-0 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-xl font-medium text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {deleting ? 'Deleting…' : 'Delete pasabuy'}
+            </button>
           )}
         </div>
+        {deleteError && (
+          <p className="mt-2 text-xs text-red-600">
+            Couldn&apos;t delete: {deleteError}
+          </p>
+        )}
       </motion.div>
 
       {/* Stats */}

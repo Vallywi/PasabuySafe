@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import { useWallet } from '@/lib/hooks/useWallet';
+import { useExchangeRate } from '@/lib/hooks/useExchangeRate';
 import { invokeContractWithStatus } from '@/lib/stellar/client';
 import { mapSorobanError } from '@/lib/stellar/errors';
 import { supabase } from '@/lib/supabase/client';
 import { ensureProfileWalletLinked } from '@/lib/supabase/ensureProfileWallet';
+import { xlmToPhp, formatPHP } from '@/lib/utils/currency';
 import {
   validatePhonePH,
   validateBuyerName,
@@ -44,9 +46,19 @@ export interface JoinFormProps {
   pricePerSlot: number;
   /** The on-chain pasabuy_id (numeric string, e.g. "0", "1", "2"). */
   contractId: string;
+  /** Remaining slots — caps the quantity selector. Defaults to 1 if not provided. */
+  availableSlots?: number;
   /** Called after the participants row is successfully inserted. */
   onSuccess: () => void;
 }
+
+const DELIVERY_METHODS = [
+  'Meet-up (in-person)',
+  'Same-day delivery (Lalamove/Grab)',
+  'Local courier (LBC, J&T, etc.)',
+  'Customer pick-up',
+  'Free shipping included',
+] as const;
 
 type Phase = 'idle' | 'validating' | 'depositing' | 'recording' | 'success' | 'error';
 
@@ -55,6 +67,8 @@ interface FieldErrors {
   contact?: string;
   location?: string;
   note?: string;
+  quantity?: string;
+  deliveryMethod?: string;
 }
 
 interface TouchedFields {
@@ -62,6 +76,8 @@ interface TouchedFields {
   contact: boolean;
   location: boolean;
   note: boolean;
+  quantity: boolean;
+  deliveryMethod: boolean;
 }
 
 function computeErrors(values: {
@@ -69,29 +85,52 @@ function computeErrors(values: {
   contact: string;
   location: string;
   note: string;
+  quantity: number;
+  deliveryMethod: string;
+  availableSlots: number;
 }): FieldErrors {
   const errors: FieldErrors = {};
   if (!validateBuyerName(values.name)) errors.name = BUYER_NAME_MESSAGE;
   if (!validatePhonePH(values.contact)) errors.contact = PH_PHONE_MESSAGE;
   if (!validateBuyerLocation(values.location)) errors.location = BUYER_LOCATION_MESSAGE;
   if (!validateBuyerNote(values.note)) errors.note = BUYER_NOTE_MESSAGE;
+  if (!Number.isFinite(values.quantity) || values.quantity < 1) {
+    errors.quantity = 'Quantity must be at least 1.';
+  } else if (values.availableSlots > 0 && values.quantity > values.availableSlots) {
+    errors.quantity = `Only ${values.availableSlots} slot${values.availableSlots === 1 ? '' : 's'} remaining.`;
+  }
+  if (!values.deliveryMethod) {
+    errors.deliveryMethod = 'Choose a delivery method.';
+  }
   return errors;
 }
 
-export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, onSuccess }: JoinFormProps) {
+export function JoinForm({
+  groupBuyId,
+  groupBuyTitle,
+  pricePerSlot,
+  contractId,
+  availableSlots,
+  onSuccess,
+}: JoinFormProps) {
   const { publicKey, isConnected, connect, isConnecting } = useWallet();
+  const { rate } = useExchangeRate();
 
   // All four fields start empty — no profile pre-fill (Req 5.2).
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [location, setLocation] = useState('');
   const [note, setNote] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [deliveryMethod, setDeliveryMethod] = useState('');
 
   const [touched, setTouched] = useState<TouchedFields>({
     name: false,
     contact: false,
     location: false,
     note: false,
+    quantity: false,
+    deliveryMethod: false,
   });
 
   const [phase, setPhase] = useState<Phase>('idle');
@@ -100,17 +139,31 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, 
   // succeeded but the DB write failed (user should NOT pay again).
   const [pendingTxHash, setPendingTxHash] = useState<string | null>(null);
 
+  const slotsCap = typeof availableSlots === 'number' && availableSlots > 0 ? availableSlots : 1;
+  const totalStroops = pricePerSlot * Math.max(quantity, 1);
   const xlmAmount = pricePerSlot / 10_000_000;
+  const totalXlm = totalStroops / 10_000_000;
+  const totalPhp = xlmToPhp(totalXlm, rate);
   const inFlight = phase === 'depositing' || phase === 'recording' || phase === 'validating';
 
   // Compute errors reactively so touched fields show inline messages without
   // requiring a submit attempt.
-  const liveErrors = computeErrors({ name, contact, location, note });
+  const liveErrors = computeErrors({
+    name,
+    contact,
+    location,
+    note,
+    quantity,
+    deliveryMethod,
+    availableSlots: slotsCap,
+  });
   const visibleErrors: FieldErrors = {
     name: touched.name ? liveErrors.name : undefined,
     contact: touched.contact ? liveErrors.contact : undefined,
     location: touched.location ? liveErrors.location : undefined,
     note: touched.note ? liveErrors.note : undefined,
+    quantity: touched.quantity ? liveErrors.quantity : undefined,
+    deliveryMethod: touched.deliveryMethod ? liveErrors.deliveryMethod : undefined,
   };
 
   function markTouched(field: keyof TouchedFields) {
@@ -122,12 +175,27 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, 
     if (!publicKey) return;
 
     // Force all fields visible if user submitted without touching them first.
-    setTouched({ name: true, contact: true, location: true, note: true });
+    setTouched({
+      name: true,
+      contact: true,
+      location: true,
+      note: true,
+      quantity: true,
+      deliveryMethod: true,
+    });
 
     setPhase('validating');
     setErrorMessage(null);
 
-    const errors = computeErrors({ name, contact, location, note });
+    const errors = computeErrors({
+      name,
+      contact,
+      location,
+      note,
+      quantity,
+      deliveryMethod,
+      availableSlots: slotsCap,
+    });
     if (Object.keys(errors).length > 0) {
       // Block submission per Req 5.3-5.6. Inline messages render via visibleErrors.
       setPhase('idle');
@@ -144,7 +212,8 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, 
       try {
         const pasabuyIdScVal = nativeToScVal(BigInt(contractId), { type: 'u64' });
         const buyerScVal = new Address(publicKey).toScVal();
-        const amountScVal = nativeToScVal(BigInt(pricePerSlot), { type: 'i128' });
+        const totalAmount = BigInt(pricePerSlot) * BigInt(quantity);
+        const amountScVal = nativeToScVal(totalAmount, { type: 'i128' });
 
         const result = await invokeContractWithStatus(
           'deposit',
@@ -210,7 +279,9 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, 
     const { error: insertError } = await supabase.from('participants').upsert({
       group_buy_id: groupBuyId,
       buyer_address: publicKey,
-      amount: pricePerSlot,
+      amount: pricePerSlot * quantity,
+      quantity,
+      delivery_method: deliveryMethod,
       status: 'deposited',
       tx_hash_deposit: txHash,
       buyer_name: name.trim(),
@@ -278,6 +349,97 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, 
       </div>
 
       <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="join-quantity" className="block text-sm font-medium text-slate-700">
+              Quantity
+              <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <input
+              id="join-quantity"
+              type="number"
+              min={1}
+              max={slotsCap}
+              step={1}
+              value={quantity}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === '') {
+                  setQuantity(NaN);
+                  return;
+                }
+                const parsed = parseInt(raw, 10);
+                setQuantity(Number.isNaN(parsed) ? NaN : parsed);
+              }}
+              onBlur={() => {
+                markTouched('quantity');
+                if (!Number.isFinite(quantity) || quantity < 1) setQuantity(1);
+              }}
+              disabled={inFlight}
+              aria-invalid={Boolean(visibleErrors.quantity)}
+              aria-describedby={visibleErrors.quantity ? 'join-quantity-error' : undefined}
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-400 disabled:bg-slate-50"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              {slotsCap} slot{slotsCap === 1 ? '' : 's'} remaining
+            </p>
+            {visibleErrors.quantity && (
+              <p id="join-quantity-error" className="text-xs text-red-600 mt-1">
+                {visibleErrors.quantity}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="join-delivery" className="block text-sm font-medium text-slate-700">
+              Delivery method
+              <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <select
+              id="join-delivery"
+              value={deliveryMethod}
+              onChange={(e) => setDeliveryMethod(e.target.value)}
+              onBlur={() => markTouched('deliveryMethod')}
+              disabled={inFlight}
+              aria-invalid={Boolean(visibleErrors.deliveryMethod)}
+              aria-describedby={visibleErrors.deliveryMethod ? 'join-delivery-error' : undefined}
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-400 disabled:bg-slate-50 bg-white"
+            >
+              <option value="">Select a delivery method…</option>
+              {DELIVERY_METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+            {visibleErrors.deliveryMethod && (
+              <p id="join-delivery-error" className="text-xs text-red-600 mt-1">
+                {visibleErrors.deliveryMethod}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Live total — updates as quantity changes. */}
+        <div className="rounded-xl bg-yellow-50 border border-yellow-200 px-4 py-3 flex items-center justify-between">
+          <div className="text-sm">
+            <p className="text-xs uppercase tracking-wide text-yellow-700 font-semibold">
+              Order total
+            </p>
+            <p className="text-slate-600 mt-0.5">
+              {xlmAmount.toFixed(2)} XLM × {Number.isFinite(quantity) ? quantity : 0}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-lg font-bold text-slate-900">
+              {totalXlm.toFixed(2)} XLM
+            </p>
+            <p className="text-xs text-slate-500">
+              ≈ {formatPHP(totalPhp)}
+            </p>
+          </div>
+        </div>
+
         <div>
           <label htmlFor="join-name" className="block text-sm font-medium text-slate-700">
             Name
@@ -397,7 +559,7 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, contractId, 
             disabled={inFlight}
             className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-slate-200 disabled:text-slate-500 text-slate-900 py-3.5 rounded-xl font-medium transition-colors shadow-lg shadow-yellow-200"
           >
-            💳 Pay {xlmAmount.toFixed(0)} XLM and join
+            💳 Pay {totalXlm.toFixed(2)} XLM and join
           </motion.button>
         ) : null}
 

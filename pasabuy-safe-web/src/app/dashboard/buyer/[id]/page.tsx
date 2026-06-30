@@ -36,6 +36,8 @@ interface Participant {
   group_buy_id: string;
   buyer_address: string;
   amount: number;
+  quantity: number;
+  delivery_method: string | null;
   status: OrderStatus;
   refund_required: boolean;
   buyer_name: string | null;
@@ -73,7 +75,7 @@ export default function BuyerOrderPage() {
         const { data: row } = await supabase
           .from('participants')
           .select(
-            'id, group_buy_id, buyer_address, amount, status, refund_required, buyer_name, buyer_contact, buyer_location, buyer_note, tx_hash_deposit, tx_hash_confirm, deposited_at'
+            'id, group_buy_id, buyer_address, amount, quantity, delivery_method, status, refund_required, buyer_name, buyer_contact, buyer_location, buyer_note, tx_hash_deposit, tx_hash_confirm, deposited_at'
           )
           .eq('group_buy_id', params.id)
           .eq('buyer_address', publicKey)
@@ -319,6 +321,22 @@ export default function BuyerOrderPage() {
               </p>
               <p className="text-slate-700 mt-0.5">
                 {participant.buyer_note ?? '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Quantity
+              </p>
+              <p className="text-slate-700 mt-0.5">
+                {participant.quantity} × item{participant.quantity === 1 ? '' : 's'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Delivery Method
+              </p>
+              <p className="text-slate-700 mt-0.5">
+                {participant.delivery_method ?? '—'}
               </p>
             </div>
             <div>
