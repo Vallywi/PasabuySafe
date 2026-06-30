@@ -301,3 +301,17 @@ stellar contract invoke --id pasabuy-safe --source deployer --network testnet --
 # Check alias
 stellar contract alias ls
 ```
+
+---
+
+## 14. Management Enhancements
+
+The PasabuySafe platform extends the v1.0 escrow contract with a set of organizer and customer management features delivered by the `pasabuy-management-enhancements` spec. The Soroban contract itself remains immutable; these enhancements live entirely in the web app and Supabase layer.
+
+- **Organizer cancel pasabuy** (Requirement 1) — Organizers can cancel a pasabuy they own. Cancellation is blocked when any order has been marked delivered; otherwise the pasabuy is marked `cancelled` and any deposited participants are flagged for refund via the existing on-chain `refund` primitive after the deadline.
+- **Organizer transaction history** (Requirement 2) — Each pasabuy's organizer management page surfaces a unified, deterministically ordered transaction history that interleaves on-chain `contract_events` (deposit, mark_delivered, confirm_delivery, refund) with off-chain state changes (participant joined, order cancelled, pasabuy cancelled).
+- **Participant contact details collected on join** (Requirement 3) — The `participants` table stores `buyer_name`, `buyer_contact`, `buyer_location`, and `buyer_note`. Row Level Security restricts those fields to the buyer themself and the pasabuy's organizer; a `participants_public` view exposes only non-contact columns to everyone else.
+- **Pasabuy detail page route `/pasabuy/{id}`** (Requirement 4) — Customers navigate from the Explore page to a dedicated detail page that shows the full pasabuy listing (image, price in XLM and PHP, slots, deadline, organizer, shipping/meetup info) and either a "Join this pasabuy" CTA or a "View my order" link, without requiring a wallet connection to render.
+- **Customer joins with per-order delivery details** (Requirement 5) — The join flow collects per-order delivery fields (with PH phone validation), invokes `deposit` on-chain first, and only inserts the `participants` row after the deposit transaction is confirmed, so an off-chain order can never exist without a matching on-chain deposit.
+- **Customer cancel order + refund_required flow** (Requirement 6) — Buyers can cancel a deposited order. After the deadline, cancellation directly invokes `refund` on-chain; before the deadline the order is marked `cancelled` with `refund_required = true`, and a "Claim refund" control appears after the deadline so the buyer can complete the on-chain refund themselves.
+- **Mark-as-Delivered reliability** (Requirement 7) — The Mark-as-Delivered flow awaits transaction confirmation through a hardened Stellar client (`invokeContractWithStatus`), updates the database only on confirmed success, maps every Soroban error code to a user-facing message, and re-enables the button on failure so the organizer can retry without a page reload.

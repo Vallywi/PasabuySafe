@@ -1062,3 +1062,333 @@ ON-CHAIN (source of truth):     OFF-CHAIN (UX layer):
 **Off-chain = Experience.** Supabase makes the app feel like Shopee — titles, images, chat, notifications, profiles. If Supabase goes down, the money is still safe on Stellar.
 
 This separation means users get an engaging e-commerce-like experience while their funds are protected by the immutable smart contract.
+
+---
+
+## 15. Pasabuy Management Enhancements — UI Surfaces
+
+The surfaces below were introduced by the `pasabuy-management-enhancements` spec. They layer onto the existing routes from Section 4 without changing the visual system from Sections 2 and 5.
+
+---
+
+### 15.1 PasabuyDetailPage — `/pasabuy/[id]`
+
+The public detail page is the shared read-only landing for a single group buy. It is a client component and renders without a connected wallet — Freighter is only prompted when the user activates the join CTA. The page is a four-state machine: `loading`, `not_found`, `error`, and `ready`.
+
+**Layout**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [← Back to Explore]                                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌──────────────────┐   Korean Skincare Bundle             │
+│   │                  │   Skincare → Korean                  │
+│   │   [Cover image   │                                      │
+│   │    or placeholder]│  ₱850 / slot  (≈ 30.0000000 XLM)    │
+│   │                  │   ▓▓▓▓▓▓▓▓░░  8 / 12 slots filled    │
+│   │                  │   ⏰ Deadline: Jul 15, 2026 7:00 PM   │
+│   └──────────────────┘   📍 Quezon City                     │
+│                          🚚 Meetup at SM North              │
+│                          Organizer: Maria S. (GAB…VVH6)     │
+│                                                             │
+│   Description                                               │
+│   Full description text rendered as prose…                  │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │  [Join this pasabuy →]                              │   │
+│   │   (or: View my order  /  Cancelled by organizer)    │   │
+│   └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**States and copy**
+
+- **Loading.** Skeleton blocks fill the image, title, body, and CTA areas. The page must not render `"Pasabuy not found"` or the error message during loading.
+- **Not found.** Renders the page shell with the literal `"Pasabuy not found"` and a link `Back to Explore` pointing at `/explore`.
+- **Error.** Renders `"Could not load pasabuy details. Try again."` next to a retry control that re-runs both queries (group_buy + slot count) without a full page reload.
+- **Ready.** Renders `title`, `description`, `category` + `subcategory`, the cover image (with a placeholder fallback for null or failed `image_url`), `price_per_slot` shown in both XLM (7 decimals) and PHP via `useExchangeRate`, `max_slots` with a joined-count progress bar, the `deadline` in the viewer's local timezone, `location`, `shipping_method`, `meetup_info`, and the organizer line — display name followed by the truncated address in `4…4` form.
+
+**CTA behavior**
+
+- If the connected wallet already has a `participants` row for this pasabuy, the CTA reads `View my order` and routes to `/dashboard/buyer/{id}`.
+- Otherwise the CTA reads `Join this pasabuy` and is gated by `computeJoinability(group_buy, joinedCount, now)`. When the helper returns `{ joinable: false; reason }`, the button is replaced by a disabled chip carrying the reason verbatim using the precedence ladder: `Cancelled by organizer` → `Deadline passed` → `Slots full` → `No longer accepting joins`.
+- Clicking `Join this pasabuy` without a connected wallet prompts Freighter first; once connected, `JoinForm` is rendered. The page itself never blocks reads on the wallet.
+
+---
+
+### 15.2 JoinForm
+
+The join form is the only entry point that writes the four per-order delivery fields. It is opened from `PasabuyDetailPage` (modal or inline section) and follows a **deposit-then-insert** order — a `participants` row is never created until the on-chain `deposit` is confirmed.
+
+**Layout**
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Join: Korean Skincare Bundle                       │
+│  ₱850 / slot                                        │
+├─────────────────────────────────────────────────────┤
+│  Full name *                                        │
+│  [_________________________________________]        │
+│  Enter a name between 1 and 100 characters.         │
+│                                                     │
+│  Contact number (PH) *                              │
+│  [_________________________________________]        │
+│  Enter a valid Philippine phone number.             │
+│                                                     │
+│  Delivery location *                                │
+│  [_________________________________________]        │
+│  Enter a delivery location between 1 and 250        │
+│  characters.                                        │
+│                                                     │
+│  Notes for the organizer (optional)                 │
+│  [                                          ]       │
+│  [                                          ]       │
+│  Notes must be 500 characters or fewer.             │
+│                                                     │
+│  [Pay ₱850 and join →]                              │
+└─────────────────────────────────────────────────────┘
+```
+
+**Fields and validation**
+
+All four inputs initialize as empty strings — values are never pre-filled from the profile, to avoid stale cross-pasabuy data. Validation runs on submit and reactively for already-touched fields. The exact required messages are:
+
+- `buyer_name` — `"Enter a name between 1 and 100 characters."`
+- `buyer_contact` — `"Enter a valid Philippine phone number."` (regex `^(\+63|0)[0-9 \-]{7,14}$`)
+- `buyer_location` — `"Enter a delivery location between 1 and 250 characters."`
+- `buyer_note` — `"Notes must be 500 characters or fewer."`
+
+These strings live in `src/lib/utils/validation.ts` so the form, the DB CHECK constraints, and the docs share one source.
+
+**Submit button**
+
+The button label includes the PHP price (`Pay ₱{price} and join`). It is disabled whenever the form phase is `validating`, `depositing`, or `recording`, and re-enabled on any error completion so the user can retry without re-typing.
+
+**Phase animations**
+
+Phases follow the same vocabulary as Section 5.4:
+
+- `idle → validating`: field-level error messages fade in next to offending inputs.
+- `validating → depositing`: button morphs into the loading state (spinner, then "Waiting for Freighter…").
+- `depositing → recording`: progress bar advances; copy switches to `"Sending to Stellar…"` then `"Saving your order…"`.
+- `recording → success`: brief checkmark burst (Lottie), then route to `/dashboard/buyer/{groupBuyId}`.
+- Any error returns the form to `idle` with the user's values intact and the mapped error from `mapSorobanError` rendered above the submit button.
+
+---
+
+### 15.3 ParticipantList
+
+Renders the organizer-only roster of buyers for a single pasabuy, including the protected contact columns. The strict RLS policy on `participants` ensures only the organizer and the buyer themself see their own contact fields; this component is what surfaces those fields to the organizer.
+
+**Per-row layout**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ GAB…VVH6  ·  Maria Santos                                       │
+│ 📞 0917-555-1234  [📋 Copy]   📍 Quezon City, QC                │
+│ Note: Please pack with bubble wrap.                             │
+│ 30.0000000 XLM (₱850)  ·  Status: Deposited                     │
+│                                              [Mark Delivered]   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Field rendering rules**
+
+- Truncated buyer address renders as `4…4` (e.g., `GAB…VVH6`) and is the row anchor.
+- When a single contact field (`buyer_name`, `buyer_contact`, `buyer_location`, `buyer_note`) is null, the cell renders the literal em-dash `"—"`.
+- When **all four** contact fields are null on the same row, the four cells collapse into one and render the summary message `"No contact information provided"`.
+
+**Copy-to-clipboard**
+
+Adjacent to a non-null `buyer_contact`, a small copy-icon button is rendered. Clicking calls `navigator.clipboard.writeText(buyer_contact)`:
+
+- Success → toast `"Copied"` for 2000 ms.
+- Failure → error toast for 3000 ms; the `"Copied"` toast is suppressed.
+
+The copy button is hidden entirely when `buyer_contact` is null.
+
+**MarkDeliveredButton placement**
+
+The `Mark Delivered` action is anchored to the row's right edge and is rendered only when `status === 'deposited'`. While `actioningBuyer === buyer_address` the button is disabled and shows a spinner; on error completion the button is re-enabled so the organizer can retry.
+
+---
+
+### 15.4 TransactionHistory
+
+The organizer section that aggregates on-chain `contract_events` with the three off-chain synthesized streams (`participant_joined`, `order_cancelled`, `pasabuy_cancelled`) into one timeline. It is a three-state component: `loading`, `error`, `ready` — where `ready` further branches into empty and non-empty.
+
+**Section layout**
+
+```
+┌─ Transaction history ─────────────────────────────┐
+│                                                   │
+│  Deposit       GAB…VVH6   30.00 XLM  ₱850         │
+│                tx 9f3a…b21c  · Jul 02, 7:14 PM    │
+│                                                   │
+│  Mark delivered  GAB…VVH6  —          —           │
+│                tx 4c81…0e99  · Jul 05, 9:02 AM    │
+│                                                   │
+│  Confirm delivery  GAB…VVH6  30.00 XLM  ₱850      │
+│                tx 1d6c…77f0  · Jul 06, 11:42 AM   │
+│                                                   │
+│  Participant joined  GAB…VVH6  —          —       │
+│                —          · Jul 02, 7:14 PM       │
+└───────────────────────────────────────────────────┘
+```
+
+**States and copy**
+
+- **Section header.** Reads `Transaction history`. The header is always visible (loading, error, empty, and ready all keep it on screen).
+- **Loading.** Skeleton rows fill the body. The empty message `"No transactions yet."` and the error message are not shown during loading.
+- **Error.** Renders the container, the message `"Could not load transaction history"`, and a `Retry` control that calls `useTransactionHistory.retry()` without a full page reload.
+- **Empty (ready, zero rows).** Renders `"No transactions yet."` centered in the section.
+- **Ready (non-empty).** Renders rows in the deterministic order from `compareHistoryEntries` (timestamp DESC nullsLast, then by event-type tiebreak).
+
+**Row layout**
+
+Each row shows, in order:
+
+1. **Event type** label — one of `Deposit`, `Mark delivered`, `Confirm delivery`, `Refund`, `Participant joined`, `Order cancelled`, `Pasabuy cancelled`.
+2. **Actor address** — truncated `4…4` (e.g., `GAB…VVH6`).
+3. **Amount** — XLM to 7 decimals + PHP equivalent via `useExchangeRate` (60 s cache). Off-chain entries render `—`.
+4. **Tx hash** — truncated `6…6` rendered as `<a href="${STELLAR_EXPERT_URL}/tx/${tx_hash}" target="_blank" rel="noopener noreferrer">`. Off-chain entries render `—` for the hash column.
+5. **Timestamp** — ISO 8601 in the viewer's local timezone.
+
+---
+
+### 15.5 CancelOrderDialog
+
+The buyer-side cancel confirmation. The dialog is only opened when the signed-in buyer's row has `status === 'deposited'`. Its body forks on whether the pasabuy's deadline has passed.
+
+**Pre-deadline branch**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Cancel your order?                             │
+├─────────────────────────────────────────────────┤
+│  Funds will not be released until the deadline. │
+│  You can return after the deadline to claim     │
+│  your refund.                                   │
+│                                                 │
+│  [Keep order]   [Cancel order]                  │
+└─────────────────────────────────────────────────┘
+```
+
+On confirm, no on-chain call is made. The dialog writes `participants.status='cancelled'`, `cancelled_at=now()`, `refund_required=TRUE` and closes. The buyer page surfaces a banner telling them to return after the deadline to claim the refund.
+
+**Post-deadline branch**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Refund your order                              │
+├─────────────────────────────────────────────────┤
+│  The deadline has passed. Confirm to send the   │
+│  refund transaction on Stellar.                 │
+│                                                 │
+│  Amount: 30.0000000 XLM (₱850)                  │
+│  Returns to: GAB…VVH6                           │
+│                                                 │
+│  [Back]   [Confirm refund]                      │
+└─────────────────────────────────────────────────┘
+```
+
+`Confirm refund` invokes `invokeContractWithStatus('refund', [buyer], publicKey)`. On confirmed success the dialog writes `status='refunded'`, `refunded_at=now()`, `refund_required=FALSE`, `tx_hash_confirm=<hash>` and inserts a `contract_events` row of type `refund`. Errors are surfaced via `mapSorobanError(err, 'refund')`. The confirm button is disabled while in flight and re-enabled on error.
+
+---
+
+### 15.6 CancelPasabuyDialog
+
+The organizer-side cancel confirmation. The dialog computes a `CancellationGate` from the current participants and renders one of four branches.
+
+**Branch 1 — `allowed_simple` (zero deposited or delivered participants)**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Cancel this pasabuy?                           │
+├─────────────────────────────────────────────────┤
+│  No one has joined yet. Cancelling will remove  │
+│  this pasabuy from Explore.                     │
+│                                                 │
+│  [Keep pasabuy]   [Cancel pasabuy]              │
+└─────────────────────────────────────────────────┘
+```
+
+On confirm, calls the `cancel_group_buy` RPC; the pasabuy's status flips to `cancelled` with `cancelled_at` and `cancelled_by` populated.
+
+**Branch 2 — `allowed_with_refund`, post-deadline**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Cancel this pasabuy?                           │
+├─────────────────────────────────────────────────┤
+│  These buyers can claim their refund on-chain:  │
+│                                                 │
+│   • GAB…VVH6                                    │
+│   • GCD…M4Z2                                    │
+│   • GEF…7QXP                                    │
+│                                                 │
+│  [Keep pasabuy]   [Cancel pasabuy]              │
+└─────────────────────────────────────────────────┘
+```
+
+On confirm, the RPC marks every affected `deposited` participant with `refund_required=TRUE`; each buyer's `Claim refund` button becomes active.
+
+**Branch 3 — `allowed_with_refund`, pre-deadline**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Cancel this pasabuy?                           │
+├─────────────────────────────────────────────────┤
+│  Funds cannot be returned on-chain until the    │
+│  deadline. Affected buyers will be marked so    │
+│  they can claim a refund after the deadline.    │
+│                                                 │
+│  Affected buyers:                               │
+│   • GAB…VVH6                                    │
+│   • GCD…M4Z2                                    │
+│                                                 │
+│  ☐ I understand buyers cannot claim until the   │
+│     deadline passes.                            │
+│                                                 │
+│  [Keep pasabuy]   [Cancel pasabuy]              │
+└─────────────────────────────────────────────────┘
+```
+
+The `Cancel pasabuy` button stays disabled until the explicit confirmation checkbox is ticked. On confirm, the same RPC path runs.
+
+**Branch 4 — `blocked_has_delivered`**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Can't cancel right now                         │
+├─────────────────────────────────────────────────┤
+│  This pasabuy has orders marked delivered.      │
+│  Wait for buyers to confirm or refund before    │
+│  cancelling.                                    │
+│                                                 │
+│                                       [Close]   │
+└─────────────────────────────────────────────────┘
+```
+
+The branch renders only the error message and a `Close` button; no mutation runs. The error copy matches the spec verbatim.
+
+---
+
+### 15.7 ClaimRefundButton
+
+A buyer-side button distinct from the pre-existing `RefundButton`. It surfaces only the post-cancellation, post-deadline claim path so the visibility predicate is easy to reason about.
+
+**Visibility predicate**
+
+The button is rendered if and only if all three of the following hold for the signed-in buyer's `participants` row:
+
+- `status === 'cancelled'`
+- `refund_required === true`
+- `deadline <= now()` (i.e., the deadline has passed)
+
+When `refund_required === true` but the deadline is still in the future, the buyer page replaces the button with a banner telling the buyer to return after the deadline.
+
+**Button copy and behavior**
+
+The button label reads `Claim refund`. Clicking it invokes `invokeContractWithStatus('refund', [buyer], publicKey)`. On confirmed success, the row is updated to `status='refunded'`, `refund_required=FALSE`, `refunded_at=now()`, `tx_hash_confirm=<hash>` and a `contract_events` row of type `refund` is inserted. Errors are routed through `mapSorobanError(err, 'refund')`, with `Error(Contract, #6)` mapping to `"Refund is not yet available. Try again after the deadline."` and `Error(Contract, #4)` mapping to `"No deposit found for this order. It may have already been refunded."`. The button is disabled while the call is in flight and re-enabled on error.

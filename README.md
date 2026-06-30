@@ -1,90 +1,204 @@
-# PasabuySafe
+# 🛡️ PasabuySafe
 
-**Stop pasabuy scams. Your money is safe until you confirm delivery.**
+**Safe group buying for Filipino communities — powered by blockchain escrow.**
 
-An escrow smart contract for group buying (pasabuy) on the Stellar Soroban platform. Buyers' payments are locked on the blockchain — organizers can't touch the money until the buyer confirms they received their order. If the organizer disappears or doesn't deliver, buyers get an automatic refund.
+PasabuySafe is an anti-scam platform that protects buyers in pasabuy (group buy) transactions. Instead of sending money directly to an organizer and hoping for the best, your payment is locked in a smart contract that only releases funds when you confirm you received your order.
 
-## How It Protects You
+---
+
+## The Problem
+
+In Filipino online communities — Facebook groups, Viber GCs, Telegram channels — **pasabuy scams** are everywhere. The pattern is always the same:
+
+1. A "trusted" organizer posts a group buy deal (Korean skincare, gadgets, food from Japan)
+2. Buyers send money via **GCash, Maya, or bank transfer** — directly to the organizer's personal account
+3. Once the money is collected, the organizer **blocks everyone** and disappears
+4. Victims file police reports that go nowhere. The money is gone.
+
+Thousands of Filipinos lose money every month to this scheme. Amounts range from ₱500 to ₱50,000+ per victim. Reputation systems don't work because scammers build trust over months, then do one massive scam run. GCash and bank transfers offer zero buyer protection. COD doesn't apply to group buys. Reporting to Facebook or Viber gets the account banned — but never returns the money.
+
+---
+
+## How PasabuySafe Solves It
+
+The core principle is simple: **the organizer never touches the money until the buyer confirms delivery.**
+
+Your payment goes into an escrow smart contract on the Stellar blockchain — not into anyone's personal wallet. The money sits there, locked by code, until you say "I got my order."
+
+### Traditional vs PasabuySafe
 
 ```
-❌ Without PasabuySafe:
-   You send ₱850 → Organizer blocks you → Money gone forever
+❌ Traditional (scam-prone):
+   Buyer → sends money → Organizer → blocks buyer → SCAMMED
 
-✅ With PasabuySafe:
-   You pay ₱850 → Money locked in smart contract (not the organizer)
-   → You receive your item → You click "Confirm" → Organizer gets paid
-   → OR deadline passes → You click "Refund" → Money returns to you
+✅ PasabuySafe:
+   Buyer → pays into ESCROW CONTRACT → money locked on blockchain
+   Organizer marks "shipped" → Buyer receives item → Buyer clicks "Confirm"
+   ONLY THEN → money released to organizer
+
+   If scammed? → deadline passes → buyer clicks "Refund" → money returns automatically
 ```
 
-**The organizer NEVER holds your money. The blockchain does.**
+No one — not even the PasabuySafe team — can override the smart contract. The organizer can't withdraw. The money only moves when **you** say it moves.
 
-## Prerequisites
+---
 
-- Rust (stable toolchain)
-- Soroban CLI
-- `wasm32-unknown-unknown` target
+## How It Works
 
-## Setup
+### For Organizers
 
-```bash
-rustup target add wasm32-unknown-unknown
-```
+1. **Create a pasabuy** — Set a title, price per slot, deadline, and description. Upload a cover image. The escrow contract is initialized on-chain.
+2. **Share the link** — Buyers join from the Explore page or your share link.
+3. **Fulfill orders** — Purchase the items, then mark each buyer's order as "Delivered."
+4. **Get paid** — Once a buyer confirms receipt, the escrowed funds are released to your wallet.
 
-## Build
+### For Buyers
 
-```bash
-soroban contract build
-```
+1. **Browse** — Explore active pasabuys. See prices, slots remaining, deadlines, and organizer info.
+2. **Join & pay** — Enter your delivery details, then deposit your payment into the escrow contract via Freighter wallet.
+3. **Receive your item** — The organizer delivers your order.
+4. **Confirm** — Click "Confirm Delivery" to release funds to the organizer. Done.
 
-Or directly with Cargo:
+**Or, if something goes wrong:**
 
-```bash
-cargo build --target wasm32-unknown-unknown --release
-```
+5. **Deadline passes without delivery?** → Click "Claim Refund" → your money returns to your wallet instantly. No approvals needed.
 
-## Test
+---
+
+## Key Features
+
+- **Anyone can create a pasabuy** — No approval process, no gatekeepers
+- **On-chain escrow** — Payments locked in a Soroban smart contract (XLM on Stellar)
+- **Philippine phone number + delivery details** — Collected per order so organizers can fulfill
+- **Transaction history with Stellar Expert links** — Full transparency, every transaction viewable on-chain
+- **7-day confirmation window** — Buyers have time to verify their order before funds release
+- **Automatic refund after deadline** — If the organizer doesn't deliver, buyers reclaim their funds
+- **Organizer can cancel pasabuy** — Graceful cancellation with refund flow for deposited buyers
+- **Buyer can cancel order** — Change your mind? Cancel and claim your refund after the deadline
+- **Mobile-responsive UI** — Built for the way Filipinos browse: on their phones
+
+---
+
+## Anti-Scam Protection
+
+Every common scam attempt is blocked by the contract design:
+
+| Scam Attempt | How PasabuySafe Blocks It |
+|-------------|--------------------------|
+| Organizer collects money and blocks buyers | Money is in the contract, not the organizer's wallet. Buyer refunds after deadline. |
+| Organizer marks "delivered" without shipping | `mark_delivered` alone does NOT release funds. Buyer must also confirm. |
+| Organizer fakes buyer's confirmation | Impossible — confirmation requires the buyer's private key signature. |
+| Organizer tries to withdraw directly | No withdraw function exists. Only buyer-signed confirmation moves money to organizer. |
+| Organizer changes the deadline | Impossible — deadline is set once at initialization, stored immutably on-chain. |
+| Organizer deploys a modified contract | Each contract has a unique verifiable address. Buyers check the address before joining. |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Smart Contract | Rust + Soroban SDK (Stellar blockchain) |
+| Frontend | Next.js 14, TypeScript, Tailwind CSS, shadcn/ui |
+| Database | Supabase (PostgreSQL + Realtime + Edge Functions) |
+| Wallet | Freighter (Stellar browser wallet) |
+| Hosting | Vercel |
+| Animations | Framer Motion |
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools) installed
+- [Node.js](https://nodejs.org/) 18+
+- [Freighter Wallet](https://www.freighter.app/) browser extension
+
+### Run the Smart Contract Tests
 
 ```bash
 cargo test
 ```
 
-## Contract Functions
+### Run the Web App
 
-| Function | Who Calls It | What Happens |
-|----------|-------------|--------------|
-| `initialize` | Organizer | Sets up the group buy (token, deadline, confirm window) |
-| `deposit` | Buyer | Locks buyer's payment in the contract (NOT the organizer) |
-| `mark_delivered` | Organizer | Organizer says "I shipped it" (money still locked, starts timer) |
-| `confirm_delivery` | **Buyer** | **Buyer confirms receipt → money released to organizer** |
-| `refund` | Buyer | Deadline passed, no delivery → money returns to buyer |
-| `release_expired` | Organizer | Buyer got item but won't confirm? After confirm window expires → auto-release |
+```bash
+cd pasabuy-safe-web
+npm install
+npm run dev
+```
 
-**Key anti-scam design:** `mark_delivered` alone does NOT release money. The **buyer** must also call `confirm_delivery`. Two signatures from two different people are required.
+### Environment Variables
 
-**Key anti-abuse design:** If the buyer receives the item but refuses to confirm (trying to keep both the item AND the money), the organizer can call `release_expired` after the confirmation window (e.g., 3 days) to auto-release funds. This protects honest organizers from dishonest buyers.
+Create `pasabuy-safe-web/.env.local`:
 
-## Architecture
+```env
+NEXT_PUBLIC_CONTRACT_ID=<your-deployed-contract-id>
+NEXT_PUBLIC_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
+NEXT_PUBLIC_RPC_URL=https://soroban-testnet.stellar.org:443
+NEXT_PUBLIC_HORIZON_URL=https://horizon-testnet.stellar.org
+NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_STELLAR_EXPERT_URL=https://stellar.expert/explorer/testnet
+```
 
-The contract implements a per-buyer state machine with the following lifecycle:
+---
+
+## Smart Contract
+
+The PasabuySafe escrow contract is written in Rust and deployed on Stellar's Soroban platform. It uses a **multi-organizer architecture** — each pasabuy initializes its own escrow instance with an organizer address, token, and deadline.
+
+### Contract Functions
+
+| Function | Who Calls It | What It Does |
+|----------|-------------|-------------|
+| `create_pasabuy` | Organizer | Initializes a new escrow with token address and deadline |
+| `deposit` | Buyer | Locks buyer's payment in the contract |
+| `mark_delivered` | Organizer | Signals that the buyer's order has been shipped/delivered |
+| `confirm_delivery` | Buyer | Buyer confirms receipt — funds released to organizer |
+| `refund` | Buyer | Returns funds to buyer (only after deadline passes) |
+| `release_expired` | Anyone | Releases funds from expired confirmed orders |
+
+### State Machine
+
+Each buyer's order follows this lifecycle:
 
 ```
-Deposited → Delivered → Confirmed
+Deposited → Delivered → Confirmed (funds released to organizer)
     ↓
- [Refunded] (only after deadline)
+ Refunded (after deadline, funds returned to buyer)
 ```
 
-### Why This Design Stops Scams
+---
 
-- **Deposited**: Buyer has placed funds in escrow. Organizer CANNOT access them.
-- **Delivered**: Organizer claims they shipped. Money is STILL LOCKED. This step alone releases nothing.
-- **Confirmed**: Buyer verifies receipt and releases payment. This is the ONLY way organizer gets paid.
-- **Refunded**: Deadline expired without buyer confirming. Buyer gets full refund automatically.
+## Live Demo
 
-The organizer can mark "Delivered" all they want — **funds don't move until the buyer signs `confirm_delivery`**. If the organizer blocks the buyer after marking delivered, the buyer simply waits for the deadline and refunds.
+The contract is deployed on Stellar Testnet:
 
-Refund is only available from the `Deposited` state and only after the contract's expiration deadline. Once an order is marked `Delivered`, refund is no longer possible — the buyer must confirm or wait for a future dispute mechanism (v2).
+- **Contract ID:** `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB`
+- **Stellar Expert:** [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB)
 
-All state is stored in Soroban persistent storage. Token transfers use the standard `soroban_sdk::token::Client`. Authorization is enforced via `require_auth` on every public function.
+---
+
+## Documentation
+
+Detailed documentation lives in the [`/docs`](./docs) folder:
+
+| File | Description |
+|------|-------------|
+| [PRD.md](./docs/PRD.md) | Product requirements — problem statement, target users, functional specs |
+| [USER_STORIES.md](./docs/USER_STORIES.md) | User flows for organizers and buyers |
+| [SMART_CONTRACT_SPEC.md](./docs/SMART_CONTRACT_SPEC.md) | Contract functions, state machine, correctness properties, security model |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System overview — on-chain + off-chain layers, deployment architecture |
+| [UX_UI_SPEC.md](./docs/UX_UI_SPEC.md) | Design philosophy, visual system, animation spec |
+| [DATABASE.md](./docs/DATABASE.md) | Supabase schema, RLS policies, migrations |
+| [API_SPEC.md](./docs/API_SPEC.md) | API endpoints and edge functions |
+| [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Deployment guide |
+| [MVP_CHECKLIST.md](./docs/MVP_CHECKLIST.md) | Feature completion tracker |
+
+---
 
 ## License
 

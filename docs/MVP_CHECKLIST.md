@@ -211,3 +211,89 @@ After deploying, go to Supabase → Auth → URL Configuration:
 6. **Open source** — anyone can verify the contract code
 
 You have a real product. The 4 manual steps above unlock the whole thing.
+
+---
+
+## Management Enhancements
+
+Checklist of acceptance criteria shipped by the `pasabuy-management-enhancements` spec. Each item maps to a single AC in `.kiro/specs/pasabuy-management-enhancements/requirements.md`.
+
+### Requirement 1: Organizer cancels a pasabuy
+- [x] **AC 1.1** — Organizer sees "Cancel pasabuy" control on their pasabuy management page
+- [x] **AC 1.2** — Non-organizers cannot trigger cancellation; control is hidden and direct requests are rejected with an authorization error
+- [x] **AC 1.3** — Cancelling a pasabuy with no active deposits sets `Pasabuy_Status = cancelled` and confirms removal
+- [x] **AC 1.4** — Cancelling after the deadline with active deposits sets `cancelled`, flags each affected participant with `Refund_Required = true`, and lists buyers who must claim their refund
+- [x] **AC 1.5** — Cancelling before the deadline with active deposits requires explicit confirmation, sets `cancelled`, flags `Refund_Required`, and notifies affected buyers
+- [x] **AC 1.6** — Cancellation is rejected when any participant is in `delivered` status, with a clear explanatory message
+- [x] **AC 1.7** — Cancelled pasabuys are hidden from the default Explore listing and show "Cancelled" instead of a Join CTA to non-organizers
+- [x] **AC 1.8** — `group_buys.cancelled_at` and `group_buys.cancelled_by` are recorded on cancellation
+- [x] **AC 1.9** — Buyers with `Refund_Required` see the cancelled pasabuy in their order list with a link to the refund action when eligible
+
+### Requirement 2: Organizer views transaction history
+- [x] **AC 2.1** — Organizer sees a "Transaction history" section on their pasabuy management page
+- [x] **AC 2.2** — Non-organizers cannot see the section and direct queries for the history are rejected with an authorization error
+- [x] **AC 2.3** — History includes every `contract_events` row matching the pasabuy's `contract_id`
+- [x] **AC 2.4** — History includes off-chain events: participant joined, order cancelled by buyer, pasabuy cancelled by organizer
+- [x] **AC 2.5** — Each entry shows event type, truncated actor address, XLM amount + PHP equivalent (≤60s old rate), truncated tx hash, and local ISO 8601 timestamp
+- [x] **AC 2.6** — Entries are ordered by timestamp descending, ties broken by event type precedence
+- [x] **AC 2.7** — On-chain tx hashes link to Stellar Expert testnet in a new tab
+- [x] **AC 2.8** — Loading state shows an indicator and suppresses both the entries list and the error message
+- [x] **AC 2.9** — Failed queries render the section container with "Could not load transaction history" and a retry control
+- [x] **AC 2.10** — Empty history displays "No transactions yet."
+- [x] **AC 2.11** — Successful queries do not display the error message
+
+### Requirement 3: Organizer views participant contact details
+- [x] **AC 3.1** — `participants` table has nullable `buyer_name`, `buyer_contact`, `buyer_location`, `buyer_note` (TEXT)
+- [x] **AC 3.2** — Organizer participant list displays the four contact fields alongside existing fields
+- [x] **AC 3.3** — RLS prevents non-organizers from reading the contact fields
+- [x] **AC 3.4** — `NULL` fields render as "—" instead of "null"
+- [x] **AC 3.5** — Participants with all four fields `NULL` show "No contact information provided"
+- [x] **AC 3.6** — Copy control writes `buyer_contact` to the clipboard and shows a 2s "Copied" toast
+- [x] **AC 3.7** — Copy control is hidden when `buyer_contact` is `NULL`
+- [x] **AC 3.8** — Clipboard failures show a 3s error toast and suppress the "Copied" toast
+
+### Requirement 4: Customer opens pasabuy detail page from Explore
+- [x] **AC 4.1** — Clicking an Explore card navigates to `/pasabuy/{id}` within 2 seconds
+- [x] **AC 4.2** — Detail page shows title, description, category/subcategory, image (or placeholder), price in XLM + PHP, slots, filled count, deadline in local TZ, location, shipping method, meetup info, organizer name + truncated address
+- [x] **AC 4.3** — "Join this pasabuy" CTA appears when status is `active`, slots are available, and current time is before the deadline
+- [x] **AC 4.4** — When not joinable, exactly one unavailability reason is shown using the defined precedence (Cancelled → Deadline → Slots full → Not accepting)
+- [x] **AC 4.5** — Existing participants see "View my order" linking to `/dashboard/buyer/{id}` instead of the Join CTA
+- [x] **AC 4.6** — Unknown pasabuy ids show "Pasabuy not found" with a link back to Explore
+- [x] **AC 4.7** — Detail page renders without requiring wallet connection; Freighter prompt only on Join activation
+- [x] **AC 4.8** — Loading state shows an indicator and suppresses the "not found" message
+- [x] **AC 4.9** — Non-404 failures show "Could not load pasabuy details. Try again." with a retry control (no full reload)
+
+### Requirement 5: Customer supplies per-order delivery details when joining
+- [x] **AC 5.1** — Join form collects `buyer_name` (req), `buyer_contact` (req), `buyer_location` (req), `buyer_note` (opt) before deposit
+- [x] **AC 5.2** — Form does NOT pre-fill from the customer's profile
+- [x] **AC 5.3** — Invalid `buyer_name` blocks submit with "Enter a name between 1 and 100 characters."
+- [x] **AC 5.4** — Invalid `buyer_contact` blocks submit with "Enter a valid Philippine phone number." using regex `^(\+63|0)[0-9 \-]{7,14}$`
+- [x] **AC 5.5** — Invalid `buyer_location` blocks submit with "Enter a delivery location between 1 and 250 characters."
+- [x] **AC 5.6** — `buyer_note` over 500 chars blocks submit with "Notes must be 500 characters or fewer."
+- [x] **AC 5.7** — On valid submit, `deposit` is invoked first and the `participants` row is only inserted after on-chain confirmation, including `tx_hash_deposit`
+- [x] **AC 5.8** — Failed `deposit` inserts no participant row and shows a contract-specific error (`InvalidAmount`, `AlreadyDeposited`, `NotInitialized`)
+- [x] **AC 5.9** — Form input is retained across a failed submission so the customer can retry without retyping
+
+### Requirement 6: Customer cancels their order
+- [x] **AC 6.1** — Customer sees "Cancel order" when their `Order_Status = deposited`
+- [x] **AC 6.2** — Control is hidden for `delivered`, `confirmed`, `refunded`, `cancelled`
+- [x] **AC 6.3** — Cancelling after the deadline invokes `refund` and on confirmation sets `Order_Status = refunded` and `refunded_at`
+- [x] **AC 6.4** — Cancelling before the deadline shows a confirmation dialog, requires explicit confirmation, sets `cancelled` + `Refund_Required = true`, and shows a "return after deadline" banner
+- [x] **AC 6.5** — After the deadline, cancelled-with-`Refund_Required` orders show a "Claim refund" control that invokes `refund`
+- [x] **AC 6.6** — Successful `refund` transitions `Order_Status` from `cancelled` to `refunded`
+- [x] **AC 6.7** — `NotExpired` refund failure shows "Refund is not yet available. Try again after the deadline."
+- [x] **AC 6.8** — `NotDeposited` refund failure shows "No deposit found for this order. It may have already been refunded."
+- [x] **AC 6.9** — RLS rejects cancelling another user's order; UI shows "You can only cancel your own order."
+
+### Requirement 7: Mark as Delivered reliability
+- [x] **AC 7.1** — `mark_delivered` is invoked with the organizer's wallet and the UI awaits the result before any state change
+- [x] **AC 7.2** — On success, `participants.status = delivered`, `delivered_at` is set, the tx hash is recorded, and the row updates within 2 seconds
+- [x] **AC 7.3** — On any failure, no DB row is changed and the UI does not show delivery as completed
+- [x] **AC 7.4** — `NotDeposited` (#4) shows "This buyer has not deposited yet."
+- [x] **AC 7.5** — `InvalidStatus` (#7) shows "This order is already marked delivered or has been refunded."
+- [x] **AC 7.6** — Unknown Soroban error codes show "Mark as delivered failed. Error code: {code}. Try again or contact support." and the full error + XDR is logged
+- [x] **AC 7.7** — RPC unreachable shows "Could not reach the Stellar network. Check your connection and try again." with no DB change
+- [x] **AC 7.8** — Rejected Freighter signature shows "Transaction cancelled" with no DB change
+- [x] **AC 7.9** — Button is disabled for the submitting row during the on-chain call to prevent double submission
+- [x] **AC 7.10** — Button is re-enabled after a Soroban or network failure so the organizer can retry without reloading
+- [x] **AC 7.11** — Successful action inserts a `contract_events` row of type `deliver` so it shows in Transaction History

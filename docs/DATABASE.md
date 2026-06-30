@@ -595,3 +595,357 @@ SUPABASE_SERVICE_KEY=eyJhbG...
 STELLAR_RPC_URL=https://soroban-testnet.stellar.org:443
 CONTRACT_ID=CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW
 ```
+
+
+---
+
+## 11. Migration 005 — Management Enhancements
+
+Migration `supabase/migrations/005_pasabuy_management_enhancements.sql` is purely additive and ships the schema, Row Level Security, views, and RPC required by the *pasabuy-management-enhancements* spec (organizer cancel, organizer transaction history, participant contact details, customer cancel order, customer pasabuy detail page, mark-as-delivered reliability).
+
+### 11.1 New Columns
+
+**`participants` — per-order delivery + cancellation state**
+
+| Column | Type | Nullable | Default | Purpose |
+|--------|------|----------|---------|---------|
+| `buyer_name` | TEXT | yes | NULL | Per-order recipient name (Req 5.1, 5.3). Length 1–100 when set. |
+| `buyer_contact` | TEXT | yes | NULL | PH phone number (Req 5.1, 5.4). Validated against `^(\+63\|0)[0-9 \-]{7,14}$`. |
+| `buyer_location` | TEXT | yes | NULL | Per-order delivery address (Req 5.1, 5.5). Length 1–250 when set. |
+| `buyer_note` | TEXT | yes | NULL | Optional buyer notes (Req 5.1, 5.6). Length ≤ 500 when set. |
+| `refund_required` | BOOLEAN | no | `FALSE` | Off-chain claim flag set when a refund is owed but the on-chain `refund` is not yet eligible (Req 1.4, 1.5, 6.4). Cleared when `status` transitions to `refunded`. |
+| `cancelled_at` | TIMESTAMPTZ | yes | NULL | Set when the buyer cancels their order pre-deadline (Req 6.4). |
+
+**`group_buys` — organizer cancellation audit**
+
+| Column | Type | Nullable | Default | Purpose |
+|--------|------|----------|---------|---------|
+| `cancelled_at` | TIMESTAMPTZ | yes | NULL | Set when organizer cancels (Req 1.8). |
+| `cancelled_by` | TEXT | yes | NULL | Cancelling organizer's `stellar_address` (Req 1.8). |
+
+### 11.2 Updated Status Enumerations
+
+Both status columns now carry an explicit `cancelled` value. The full enumeration:
+
+**`participants.status` (Order_Status)**
+
+| Value | Meaning | Set by |
+|-------|---------|--------|
+| `deposited` | Buyer deposited on-chain; awaiting organizer fulfillment. | `JoinForm` after confirmed `deposit` |
+| `delivered` | Organizer called `mark_delivered`; awaiting buyer confirmation. | `MarkDeliveredButton` |
+| `confirmed` | Buyer called `confirm_delivery`; funds released to organizer. | `ConfirmDelivery` |
+| `refunded` | On-chain `refund` succeeded; funds returned to buyer. | `RefundButton`, `ClaimRefundButton`, `CancelOrderDialog` (post-deadline) |
+| `cancelled` *(new)* | Buyer cancelled pre-deadline. Funds still in escrow; `refund_required = TRUE` until claimed post-deadline. | `CancelOrderDialog` (pre-deadline) |
+
+**`group_buys.status` (Pasabuy_Status)**
+
+| Value | Meaning | Set by |
+|-------|---------|--------|
+| `active` | Open for joins. | Default on insert |
+| `in_progress` | At least one participant delivered/confirmed. | (reserved, computed by triggers) |
+| `completed` | All participants confirmed. | `update_group_buy_status` trigger |
+| `expired` | Deadline passed without completion. | `expire_past_deadline()` cron |
+| `cancelled` *(new)* | Organizer invoked `cancel_group_buy` RPC. Hidden from Explore. | `cancel_group_buy(uuid)` RPC |
+
+The constraints below are added by migration 005:
+
+```sql
+ALTER TABLE participants
+  ADD CONSTRAINT participants_status_valid
+  CHECK (status IN ('deposited','delivered','confirmed','refunded','cancelled'));
+
+ALTER TABLE group_buys
+  ADD CONSTRAINT group_buys_status_valid
+  CHECK (status IN ('active','in_progress','completed','expired','cancelled'));
+```
+
+### 11.3 Migration DDL
+
+```sql
+-- ===========================
+-- PARTICIPANTS: new columns
+-- ===========================
+ALTER TABLE participants
+  ADD COLUMN IF NOT EXISTS buyer_name      TEXT,
+  ADD COLUMN IF NOT EXISTS buyer_contact   TEXT,
+  ADD COLUMN IF NOT EXISTS buyer_location  TEXT,
+  ADD COLUMN IF NOT EXISTS buyer_note      TEXT,
+  ADD COLUMN IF NOT EXISTS refund_required BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS cancelled_at    TIMESTAMPTZ;
+
+-- ===========================
+-- GROUP_BUYS: new columns
+-- ===========================
+ALTER TABLE group_buys
+  ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS cancelled_by TEXT;
+
+-- ===========================
+-- CHECK CONSTRAINTS (idempotent — wrapped in DO blocks that probe
+-- pg_constraint, since Postgres does not support ADD CONSTRAINT IF NOT EXISTS)
+-- ===========================
+ALTER TABLE participants
+  ADD CONSTRAINT participants_buyer_name_len
+  CHECK (buyer_name IS NULL OR char_length(buyer_name) BETWEEN 1 AND 100);
+
+ALTER TABLE participants
+  ADD CONSTRAINT participants_buyer_location_len
+  CHECK (buyer_location IS NULL OR char_length(buyer_location) BETWEEN 1 AND 250);
+
+ALTER TABLE participants
+  ADD CONSTRAINT participants_buyer_note_len
+  CHECK (buyer_note IS NULL OR char_length(buyer_note) <= 500);
+
+ALTER TABLE participants
+  ADD CONSTRAINT participants_buyer_contact_format
+  CHECK (buyer_contact IS NULL OR buyer_contact ~ '^(\+63|0)[0-9 \-]{7,14}$');
+
+ALTER TABLE participants
+  ADD CONSTRAINT participants_status_valid
+  CHECK (status IN ('deposited','delivered','confirmed','refunded','cancelled'));
+
+ALTER TABLE group_buys
+  ADD CONSTRAINT group_buys_status_valid
+  CHECK (status IN ('active','in_progress','completed','expired','cancelled'));
+
+-- ===========================
+-- PARTIAL INDEXES
+-- ===========================
+-- Claimable refund enumeration (organizer cancel post-deadline; buyer claim flow).
+CREATE INDEX IF NOT EXISTS idx_participants_refund_required
+  ON participants(group_buy_id)
+  WHERE refund_required = TRUE;
+
+-- Filter cancelled pasabuys out of Explore quickly.
+CREATE INDEX IF NOT EXISTS idx_group_buys_cancelled
+  ON group_buys(status)
+  WHERE status = 'cancelled';
+```
+
+### 11.4 Row Level Security — Strict Participant Policies
+
+Migration 005 replaces the permissive MVP policies on `participants` with strict ones that key on the caller's linked `stellar_address` (via `profiles`). The result:
+
+- A buyer can read, insert, and update only their own `participants` row.
+- The parent pasabuy's organizer can read and update `participants` rows for the pasabuy they own (needed for fulfillment + cancellation).
+- No one else can read the `buyer_*` contact columns (Req 3.3).
+
+```sql
+-- Drop permissive MVP policies introduced in 001_initial_schema.sql.
+DROP POLICY IF EXISTS "Public read participants"     ON participants;
+DROP POLICY IF EXISTS "Anyone joins as participant"  ON participants;
+DROP POLICY IF EXISTS "Anyone updates participant"   ON participants;
+
+-- New strict policies (key on profiles.stellar_address via auth.uid()).
+CREATE POLICY "Owner or organizer reads participant" ON participants
+  FOR SELECT
+  USING (
+    buyer_address = (SELECT stellar_address FROM profiles WHERE id = auth.uid())
+    OR group_buy_id IN (
+      SELECT id FROM group_buys
+      WHERE organizer_address =
+            (SELECT stellar_address FROM profiles WHERE id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Buyer inserts own participant" ON participants
+  FOR INSERT
+  WITH CHECK (
+    buyer_address = (SELECT stellar_address FROM profiles WHERE id = auth.uid())
+  );
+
+CREATE POLICY "Buyer or organizer updates participant" ON participants
+  FOR UPDATE
+  USING (
+    buyer_address = (SELECT stellar_address FROM profiles WHERE id = auth.uid())
+    OR group_buy_id IN (
+      SELECT id FROM group_buys
+      WHERE organizer_address =
+            (SELECT stellar_address FROM profiles WHERE id = auth.uid())
+    )
+  );
+```
+
+**Column-level protection via `participants_public`.** PostgreSQL does not natively support column-level RLS, so the non-contact read path (Explore slot counts, public pasabuy detail) goes through the `participants_public` view. The view projects only the non-contact columns. Even a manipulated client cannot select `buyer_name`, `buyer_contact`, `buyer_location`, or `buyer_note` through `participants_public` because those columns are not in the view definition.
+
+The strict RLS on the underlying `participants` table and the column projection of the view together form a defence-in-depth boundary: direct table reads are gated by the row-level policy; public reads are gated by the view's column set.
+
+### 11.5 New Views
+
+**`participants_public` — column-level access control.** Used by `/explore` and `/pasabuy/[id]` to count joined slots without exposing contact data. Granted `SELECT` to both `anon` and `authenticated`.
+
+```sql
+CREATE OR REPLACE VIEW participants_public AS
+SELECT
+  id,
+  group_buy_id,
+  buyer_address,
+  amount,
+  status,
+  deposited_at,
+  delivered_at,
+  confirmed_at,
+  refunded_at,
+  cancelled_at,
+  tx_hash_deposit
+FROM participants;
+
+GRANT SELECT ON participants_public TO anon, authenticated;
+```
+
+**`group_buy_history` — UNION ALL aggregation for the Transaction History section.** Combines one on-chain stream (`contract_events`) with three off-chain synthesized streams (`participant_joined`, `order_cancelled`, `pasabuy_cancelled`). All four legs project a uniform shape `(group_buy_id, event_type, actor_address, amount_stroops, tx_hash, ts, event_kind)`. The client filters by `group_buy_id` and applies the deterministic tie-break ordering of Req 2.6 in `src/lib/utils/history.ts`.
+
+```sql
+CREATE OR REPLACE VIEW group_buy_history AS
+-- (1) On-chain events mirrored from the Soroban contract.
+SELECT
+  gb.id                              AS group_buy_id,
+  ce.event_type                      AS event_type,
+  ce.buyer_address                   AS actor_address,
+  ce.amount                          AS amount_stroops,
+  ce.tx_hash                         AS tx_hash,
+  to_timestamp(ce.ledger_timestamp)  AS ts,
+  1                                  AS event_kind  -- 1 = on-chain
+FROM contract_events ce
+JOIN group_buys gb ON gb.contract_id = ce.contract_id
+
+UNION ALL
+
+-- (2) Off-chain: participant joined (post-confirmed-deposit row insert).
+SELECT
+  p.group_buy_id,
+  'participant_joined'::text,
+  p.buyer_address,
+  p.amount,
+  NULL::text,
+  p.deposited_at,
+  0  -- 0 = off-chain
+FROM participants p
+
+UNION ALL
+
+-- (3) Off-chain: buyer cancelled their order (pre-deadline path).
+SELECT
+  p.group_buy_id,
+  'order_cancelled'::text,
+  p.buyer_address,
+  NULL::bigint,
+  NULL::text,
+  p.cancelled_at,
+  0
+FROM participants p
+WHERE p.cancelled_at IS NOT NULL
+
+UNION ALL
+
+-- (4) Off-chain: organizer cancelled the pasabuy.
+SELECT
+  gb.id,
+  'pasabuy_cancelled'::text,
+  gb.cancelled_by,
+  NULL::bigint,
+  NULL::text,
+  gb.cancelled_at,
+  0
+FROM group_buys gb
+WHERE gb.cancelled_at IS NOT NULL;
+
+GRANT SELECT ON group_buy_history TO authenticated;
+```
+
+### 11.6 New RPC — `cancel_group_buy`
+
+A SECURITY DEFINER function that performs the organizer cancellation as a single atomic Postgres transaction. The function:
+
+1. Resolves the caller's linked `stellar_address` from `profiles`.
+2. Loads the target pasabuy's `organizer_address`; not-found → error.
+3. Rejects when the caller is not the organizer.
+4. Rejects when any participant has `status = 'delivered'` (defence in depth on top of the UI's `CancellationGate`; Req 1.6).
+5. Sets `group_buys.status = 'cancelled'`, `cancelled_at = now()`, `cancelled_by = caller`.
+6. Flags every `status = 'deposited'` participant with `refund_required = TRUE` so the buyer can claim on or after the deadline.
+
+Both writes happen inside the same function body, which PostgreSQL treats as a single transaction.
+
+```sql
+CREATE OR REPLACE FUNCTION cancel_group_buy(p_group_buy_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_caller_address  TEXT;
+  v_organizer       TEXT;
+  v_has_delivered   BOOLEAN;
+BEGIN
+  SELECT stellar_address INTO v_caller_address
+  FROM profiles
+  WHERE id = auth.uid();
+
+  IF v_caller_address IS NULL THEN
+    RAISE EXCEPTION 'Not authorized: caller has no linked stellar address'
+      USING ERRCODE = '42501';
+  END IF;
+
+  SELECT organizer_address INTO v_organizer
+  FROM group_buys
+  WHERE id = p_group_buy_id;
+
+  IF v_organizer IS NULL THEN
+    RAISE EXCEPTION 'Pasabuy % not found', p_group_buy_id
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  IF v_organizer <> v_caller_address THEN
+    RAISE EXCEPTION 'Not authorized: only the organizer can cancel this pasabuy'
+      USING ERRCODE = '42501';
+  END IF;
+
+  SELECT EXISTS (
+    SELECT 1 FROM participants
+    WHERE group_buy_id = p_group_buy_id
+      AND status = 'delivered'
+  ) INTO v_has_delivered;
+
+  IF v_has_delivered THEN
+    RAISE EXCEPTION 'Cannot cancel: pasabuy has orders marked delivered'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- (1) Transition the pasabuy.
+  UPDATE group_buys
+  SET status       = 'cancelled',
+      cancelled_at = now(),
+      cancelled_by = v_caller_address,
+      updated_at   = now()
+  WHERE id = p_group_buy_id;
+
+  -- (2) Flag every deposited participant for refund.
+  UPDATE participants
+  SET refund_required = TRUE
+  WHERE group_buy_id = p_group_buy_id
+    AND status = 'deposited';
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION cancel_group_buy(uuid) TO authenticated;
+```
+
+**Error codes raised:**
+
+| SQLSTATE | Condition | UI mapping |
+|----------|-----------|-----------|
+| `42501` | Caller has no linked `stellar_address`, or is not the organizer | "Only the organizer can cancel this pasabuy." |
+| `P0002` | Pasabuy id not found | "Pasabuy not found." |
+| `P0001` | At least one participant has `status = 'delivered'` | "This pasabuy has orders marked delivered. Wait for buyers to confirm or refund before cancelling." |
+
+### 11.7 Application Consumption Summary
+
+After migration 005, application code reads and writes through these surfaces:
+
+| Surface | Used by | Purpose |
+|---------|---------|---------|
+| `participants_public` view | `/explore`, `/pasabuy/[id]` | Public slot counts without contact data |
+| `participants` table | Organizer dashboard, buyer dashboard | Contact-aware reads gated by strict RLS |
+| `group_buy_history` view | `useTransactionHistory` hook | Unified history feed for organizer Transaction History |
+| `cancel_group_buy(uuid)` RPC | `useCancelPasabuy` hook | Atomic organizer cancellation |

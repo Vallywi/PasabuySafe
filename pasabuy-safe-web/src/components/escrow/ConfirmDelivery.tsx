@@ -39,16 +39,39 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
 
   /**
    * Confirm delivery: try on-chain first, auto-fallback to off-chain if it fails.
-   * The buyer already clicked "Yes, Release Payment" so we don't make them click again.
+   *
+   * Guarantees the order is ALWAYS persisted as `confirmed` in the database
+   * before we celebrate. The previous version skipped the DB write entirely
+   * when `groupBuyId` was undefined, which silently re-rendered the confirm
+   * screen on every page refresh.
+   *
+   * Failure modes that bubble up to the user:
+   *   - groupBuyId missing (programmer error)         → 'error'
+   *   - Supabase rejects the update (auth/RLS/network) → 'error'
+   *   - Update matched zero rows (RLS silently denied) → 'error'
+   * Only after `status='confirmed'` is observed in the DB do we celebrate.
    */
   async function handleConfirm() {
     if (!publicKey) return;
+    if (!groupBuyId) {
+      setError('Order context is missing. Please refresh the page and try again.');
+      setStatus('error');
+      return;
+    }
 
     setStatus('signing');
     setError('');
 
     let txHash: string | null = null;
-    let onChainSuccess = false;
+
+    // Link wallet to profile up-front so RLS UPDATE policy can find the
+    // row regardless of which branch executes below.
+    try {
+      await ensureProfileWalletLinked(publicKey);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[PasabuySafe] ensureProfileWalletLinked failed (non-fatal):', err);
+    }
 
     // Only attempt on-chain if contractId is a valid numeric pasabuy_id
     if (isValidPasabuyId(contractId)) {
@@ -63,48 +86,69 @@ export function ConfirmDelivery({ groupBuyTitle, amount, groupBuyId, contractId,
           publicKey
         );
         txHash = result.txHash;
-        onChainSuccess = true;
       } catch (err) {
         // On-chain failed — log it but auto-fallback to off-chain confirmation.
         // This handles: old pasabuys, mark_delivered not done on-chain, etc.
         // eslint-disable-next-line no-console
         console.warn('[PasabuySafe] On-chain confirm_delivery failed, falling back to off-chain:', err);
-        onChainSuccess = false;
       }
     } else {
       // Old pasabuy with contract address string — skip on-chain entirely
       setStatus('submitting');
     }
 
-    // Off-chain confirmation (always runs — either as primary or fallback)
-    if (groupBuyId) {
-      try {
-        await ensureProfileWalletLinked(publicKey);
+    // Off-chain confirmation — REQUIRED. If this fails, we surface the error
+    // instead of celebrating. Use `.select()` so we can detect zero-row
+    // updates (e.g. RLS denied silently).
+    try {
+      const updateData: Record<string, unknown> = {
+        status: 'confirmed',
+        confirmed_at: new Date().toISOString(),
+      };
+      if (txHash) {
+        updateData.tx_hash_confirm = txHash;
+      }
 
-        const updateData: Record<string, unknown> = {
-          status: 'confirmed',
-          confirmed_at: new Date().toISOString(),
-        };
-        if (txHash) {
-          updateData.tx_hash_confirm = txHash;
-        }
+      const { data: updated, error: dbError } = await supabase
+        .from('participants')
+        .update(updateData)
+        .eq('group_buy_id', groupBuyId)
+        .eq('buyer_address', publicKey)
+        .select('id');
 
-        const { error: dbError } = await supabase
-          .from('participants')
-          .update(updateData)
-          .eq('group_buy_id', groupBuyId)
-          .eq('buyer_address', publicKey);
-
-        if (dbError) {
-          setError('Failed to update order status. Please try again.');
-          setStatus('error');
-          return;
-        }
-      } catch {
-        setError('Failed to confirm. Please try again.');
+      if (dbError) {
+        // eslint-disable-next-line no-console
+        console.error('[PasabuySafe] Failed to confirm delivery in DB:', dbError);
+        setError('Failed to update order status. Please try again.');
         setStatus('error');
         return;
       }
+
+      if (!updated || updated.length === 0) {
+        // RLS silently denied or row was already moved. Re-fetch to find
+        // out which one — if it's already confirmed, we treat it as a
+        // success (idempotent).
+        const { data: existing } = await supabase
+          .from('participants')
+          .select('status')
+          .eq('group_buy_id', groupBuyId)
+          .eq('buyer_address', publicKey)
+          .maybeSingle();
+
+        if (existing?.status !== 'confirmed') {
+          setError(
+            'Could not save the confirmation. Make sure you are signed in with the same account that placed this order.'
+          );
+          setStatus('error');
+          return;
+        }
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[PasabuySafe] Unexpected error confirming delivery:', err);
+      setError('Failed to confirm. Please try again.');
+      setStatus('error');
+      return;
     }
 
     // Success — celebrate!

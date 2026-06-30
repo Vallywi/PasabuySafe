@@ -181,3 +181,126 @@
 - "Your money is safe" messaging with vault illustration
 - Skip option for experienced users
 - Doesn't show again after completion
+
+---
+
+## Management Enhancements
+
+These stories cover the organizer and customer management features added in the `pasabuy-management-enhancements` spec. Each story cross-references the requirement and acceptance criteria (AC) numbers in `.kiro/specs/pasabuy-management-enhancements/requirements.md`.
+
+### US-14: Cancel a Pasabuy
+**As an** organizer,
+**I want to** cancel a pasabuy I created,
+**So that** I can clean up listings I no longer want to run, with funds returned to buyers who have already deposited.
+
+**Cross-reference:** Requirement 1 (AC 1.1–1.9)
+
+**Acceptance Criteria:**
+- "Cancel pasabuy" control is visible only to the pasabuy's organizer (AC 1.1, 1.2)
+- Pasabuys with no deposits are cancelled immediately (AC 1.3)
+- Pasabuys with deposits after the deadline are cancelled and affected buyers are marked eligible to claim a refund (AC 1.4)
+- Pasabuys with deposits before the deadline require explicit confirmation; affected buyers are notified to claim refunds after the deadline (AC 1.5)
+- Cancellation is blocked when any order is marked delivered (AC 1.6)
+- Cancelled pasabuys are hidden from Explore and show "Cancelled" to non-organizers (AC 1.7)
+- Cancellation timestamp and organizer address are recorded in `group_buys.cancelled_at` and `cancelled_by` (AC 1.8)
+- Affected buyers see the cancellation in their order list with a link to the refund action once eligible (AC 1.9)
+
+---
+
+### US-15: View Transaction History of a Pasabuy
+**As an** organizer,
+**I want to** view the transaction history of a pasabuy I created,
+**So that** I can audit deposits, deliveries, confirmations, refunds, and cancellations across all participants.
+
+**Cross-reference:** Requirement 2 (AC 2.1–2.11)
+
+**Acceptance Criteria:**
+- Transaction history is shown only to the organizer; non-organizers cannot query it (AC 2.1, 2.2)
+- History includes every `contract_events` row for the pasabuy's contract id (AC 2.3)
+- History includes off-chain events: participant joined, order cancelled by buyer, pasabuy cancelled by organizer (AC 2.4)
+- Each entry shows event type, truncated actor address (4…4), amount in XLM + PHP (rate ≤ 60 s old), truncated tx hash (6…6) or "—", and ISO 8601 local-time timestamp (AC 2.5)
+- Entries are ordered by timestamp descending with a deterministic event-type tie-break order (AC 2.6)
+- On-chain hashes link to Stellar Expert testnet in a new tab (AC 2.7)
+- Loading state shows a spinner only; no list or error message (AC 2.8)
+- On query failure the section renders with "Could not load transaction history" and a retry control (AC 2.9)
+- Empty history shows "No transactions yet." (AC 2.10)
+- Successful queries never show the error message (AC 2.11)
+
+---
+
+### US-16: View Participant Contact Details
+**As an** organizer,
+**I want to** see each participant's name, contact number, location, and order description,
+**So that** I can fulfill and deliver their order.
+
+**Cross-reference:** Requirement 3 (AC 3.1–3.8)
+
+**Acceptance Criteria:**
+- `buyer_name`, `buyer_contact`, `buyer_location`, and `buyer_note` are stored as nullable TEXT on `participants` (AC 3.1)
+- Organizer sees these four fields alongside existing buyer info for each participant (AC 3.2)
+- Row Level Security prevents non-organizers from reading these fields (AC 3.3)
+- Null fields render as "—" rather than the literal "null" (AC 3.4)
+- Rows where all four fields are null render the message "No contact information provided" in place of per-field values (AC 3.5)
+- A copy control next to a non-null `buyer_contact` writes the value to the clipboard and shows a "Copied" toast for 2 seconds (AC 3.6)
+- The copy control is hidden when `buyer_contact` is null (AC 3.7)
+- Clipboard failures show an error toast for 3 seconds and never show the "Copied" toast (AC 3.8)
+
+---
+
+### US-17: Open Pasabuy Detail Page
+**As a** customer,
+**I want to** click a pasabuy on the Explore page and see its full details on a dedicated page,
+**So that** I can decide whether to join before committing funds.
+
+**Cross-reference:** Requirement 4 (AC 4.1–4.9)
+
+**Acceptance Criteria:**
+- Clicking a pasabuy listing navigates to `/pasabuy/{id}` within 2 seconds (AC 4.1)
+- The page renders title, description, category, subcategory, image (with placeholder fallback), price in XLM + PHP, max slots, joined count, deadline in local time, location, shipping method, meetup info, and the organizer name + truncated address (4…4) (AC 4.2)
+- A "Join this pasabuy" call to action appears only while the pasabuy is active, before the deadline, and has open slots (AC 4.3)
+- When not joinable, exactly one unavailability reason is shown using the precedence: cancelled → deadline passed → slots full → no longer accepting joins (AC 4.4)
+- Users who already have an order see "View my order" linking to `/dashboard/buyer/{id}` (AC 4.5)
+- Unknown pasabuy ids show "Pasabuy not found" with a link back to Explore (AC 4.6)
+- The page renders without requiring a wallet; Freighter is only prompted when the user activates Join (AC 4.7)
+- Loading state shows a spinner only; the not-found message is not shown while loading (AC 4.8)
+- On non-404 query failures, "Could not load pasabuy details. Try again." and a retry control are shown (AC 4.9)
+
+---
+
+### US-18: Join Pasabuy with Per-Order Delivery Details
+**As a** customer,
+**I want to** enter my name, contact number, delivery location, and order notes when joining a pasabuy,
+**So that** the organizer has everything needed to fulfill my order even if it differs from other pasabuys I have joined.
+
+**Cross-reference:** Requirement 5 (AC 5.1–5.9)
+
+**Acceptance Criteria:**
+- The Join Form collects `buyer_name` (required), `buyer_contact` (required), `buyer_location` (required), and `buyer_note` (optional) (AC 5.1)
+- Fields are never pre-filled from the user's profile so each order can have distinct details (AC 5.2)
+- Invalid `buyer_name` (empty, whitespace, or > 100 chars) blocks submission with "Enter a name between 1 and 100 characters." (AC 5.3)
+- Invalid `buyer_contact` (empty or non-matching PH phone regex) blocks submission with "Enter a valid Philippine phone number." (AC 5.4)
+- Invalid `buyer_location` (empty, whitespace, or > 250 chars) blocks submission with "Enter a delivery location between 1 and 250 characters." (AC 5.5)
+- `buyer_note` longer than 500 characters blocks submission with "Notes must be 500 characters or fewer." (AC 5.6)
+- On valid submission, the `participants` row is inserted only after the on-chain `deposit` is confirmed (AC 5.7)
+- On-chain `deposit` failures show a contract-specific error and never insert a `participants` row (AC 5.8)
+- Form input is retained in browser state after a failed submission so the user does not have to re-type to retry (AC 5.9)
+
+---
+
+### US-19: Cancel My Order
+**As a** customer,
+**I want to** cancel my order in a pasabuy,
+**So that** I can get my money back when I change my mind, with clear rules about when cancellation is allowed.
+
+**Cross-reference:** Requirement 6 (AC 6.1–6.9)
+
+**Acceptance Criteria:**
+- A "Cancel order" control appears only when the buyer's order status is `deposited` (AC 6.1)
+- The control is hidden for `delivered`, `confirmed`, `refunded`, or already `cancelled` orders (AC 6.2)
+- Cancelling after the deadline invokes the on-chain `refund` and sets the order to `refunded` with `refunded_at` (AC 6.3)
+- Cancelling before the deadline requires explicit confirmation, sets the order to `cancelled` with `Refund_Required = true`, and shows a banner to return after the deadline (AC 6.4)
+- A "Claim refund" control appears for cancelled orders once the deadline has passed and invokes the on-chain `refund` (AC 6.5)
+- A successful on-chain `refund` transitions a cancelled order to `refunded` (AC 6.6)
+- `refund` failing with `NotExpired` shows "Refund is not yet available. Try again after the deadline." (AC 6.7)
+- `refund` failing with `NotDeposited` shows "No deposit found for this order. It may have already been refunded." (AC 6.8)
+- Attempts to cancel another user's order are rejected by RLS and show "You can only cancel your own order." (AC 6.9)

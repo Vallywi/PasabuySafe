@@ -205,3 +205,54 @@ The entire contract is designed around one principle: **the organizer never hold
 - **Storage exhaustion**: Per-buyer storage bounded by number of unique depositors
 - **Token trust**: Only works with SAC (Stellar Asset Contract) tokens verified at initialization
 - **Fund conservation**: No function creates or destroys funds — money in = money out (to organizer OR back to buyer)
+
+---
+
+## 9. Off-Chain Cancellation vs On-Chain Refund
+
+> Added by the `pasabuy-management-enhancements` spec (Requirement 8.6, design "Refund_Required Flow"). The on-chain contract is unchanged — this section clarifies how the off-chain layer interacts with the `refund` function documented in §4.
+
+### 9.1 Two cancellation paths
+
+The product layer exposes **two** ways for a buyer to back out of an order. Only one of them touches the contract:
+
+| Path | Trigger | On-chain action | Off-chain effect |
+|------|---------|-----------------|-------------------|
+| **Pre-deadline cancellation** (off-chain only) | Buyer clicks "Cancel order" while `now() < deadline` | **None.** The deposit stays in the contract; `OrderStatus` for the buyer remains `Deposited`. | `participants.status = 'cancelled'`, `participants.cancelled_at = now()`, `participants.refund_required = TRUE` |
+| **Post-deadline refund** (on-chain) | Buyer clicks "Cancel order" while `now() >= deadline`, OR a previously-cancelled buyer clicks "Claim refund" via `ClaimRefundButton` | `refund(buyer)` is invoked — see §4. The contract returns the deposit and removes the buyer's storage. | After the tx is confirmed: `participants.status = 'refunded'`, `participants.refunded_at = now()`, `participants.refund_required = FALSE`, `participants.tx_hash_confirm = <hash>`. All four updates are written in the same DB write. |
+
+The same dual logic applies to **organizer-initiated pasabuy cancellation**: pre-deadline cancellation of a pasabuy that has deposited buyers does not pull funds out of the contract. It only flags each affected `participants` row with `refund_required = TRUE` so the buyer can claim their refund after the deadline.
+
+### 9.2 The on-chain `refund` is the only fund-return mechanism
+
+Re-stating §4 with the off-chain context made explicit:
+
+- The on-chain `refund` function (§4) is the **only** path by which a buyer's deposit leaves the contract back to the buyer. There is no off-chain bookkeeping that can substitute for it.
+- `refund` is callable **only after the deadline**. The contract enforces this with `Error::NotExpired` (error code `#6` in §3) when `ledger.timestamp < deadline`.
+- Therefore an off-chain `cancelled` status with `refund_required = TRUE` is **a promise of a future refund, not a refund itself**. The funds remain locked in the contract until the buyer (or the buyer's own wallet) signs the `refund` call post-deadline.
+
+### 9.3 State-machine note
+
+The on-chain state machine in §2 has **no `cancelled` state**. From the contract's perspective, a buyer who has cancelled off-chain pre-deadline is still in `OrderStatus::Deposited` until they claim their refund.
+
+```
+Off-chain status     :  deposited → cancelled ─────────────────▶ refunded
+                                       │                              ▲
+                                       │ (no on-chain action yet)     │
+                                       ▼                              │
+On-chain OrderStatus :  Deposited ───────────────────────────────▶ (removed)
+                                              after deadline,
+                                              via refund(buyer)
+```
+
+Implications:
+
+- The contract's invariants (`P1 State Machine Integrity`, `P2 Fund Conservation`, `P4 Deadline Enforcement` in §5) are preserved unchanged. Off-chain cancellation cannot violate them because it does not call into the contract.
+- A "Claim refund" button is shown by the web app only when all three of `status === 'cancelled'`, `refund_required === true`, and `now() >= deadline` hold. Clicking it invokes `refund` exactly as §4 describes; the off-chain row is reconciled in the same DB write that records `tx_hash_confirm`.
+- If the buyer never claims, the funds remain in the contract indefinitely. The spec does not introduce any automatic claim — the `refund_required` flag is the durable signal that a claim is owed.
+
+### 9.4 Cross-references
+
+- `docs/DATABASE.md` §11 (`participants.refund_required` column) — full column definition, default, and the partial index `idx_participants_refund_required` used to enumerate pending claims.
+- `docs/DATABASE.md` §11.6 (`cancel_group_buy(uuid)` RPC) — the SECURITY DEFINER Postgres function the organizer calls to perform an atomic pasabuy cancellation, including the bulk update that flips `refund_required` on every affected `deposited` participant.
+- `docs/DATABASE.md` §11 — the `participants.status` enum (now including `cancelled`) and the `group_buys.status` enum (now including `cancelled`).

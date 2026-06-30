@@ -186,16 +186,24 @@ User Action (e.g., "Pay ₱850")
 │  Supabase Project                    │
 │                                      │
 │  ┌── PostgreSQL ───────────────────┐ │
+│  │  Tables:                        │ │
 │  │  • profiles                     │ │
 │  │  • group_buys                   │ │
 │  │  • participants                 │ │
 │  │  • messages                     │ │
 │  │  • contract_events              │ │
+│  │  Views (migration 005):         │ │
+│  │  • participants_public          │ │
+│  │  • group_buy_history            │ │
+│  │  RPCs (migration 005):          │ │
+│  │  • cancel_group_buy(uuid)       │ │
 │  └─────────────────────────────────┘ │
 │                                      │
 │  ┌── Edge Functions ───────────────┐ │
 │  │  • auth-wallet (JWT issuance)   │ │
 │  │  • sync-events (cron: 30s)      │ │
+│  │    └── unchanged by migration   │ │
+│  │        005                      │ │
 │  └─────────────────────────────────┘ │
 │                                      │
 │  ┌── Realtime ─────────────────────┐ │
@@ -239,6 +247,7 @@ User Action (e.g., "Pay ₱850")
 | Frontend | XSS | Sanitize on-chain data, CSP headers |
 | Frontend | Phishing | Domain verification, no seed phrase inputs |
 | Supabase | Unauthorized data access | Row Level Security (RLS) policies |
+| Supabase | Participant contact leak | Strict RLS on `participants` (contact columns readable only to the buyer or organizer); public reads go through `participants_public` view |
 | Supabase | Token theft | Short-lived JWTs, wallet-based auth |
 | Network | Man-in-middle | HTTPS only, signed transactions |
 
@@ -262,3 +271,63 @@ User Action (e.g., "Pay ₱850")
 | Database | Supabase (PostgreSQL) | latest |
 | Hosting | Vercel | — |
 | Domain | Custom (TBD) | — |
+
+---
+
+## 7. Pasabuy Management Enhancements (Migration 005)
+
+Migration `supabase/migrations/005_pasabuy_management_enhancements.sql` introduces new schema surfaces, strict RLS policies on `participants` contact columns, and an organizer cancellation RPC. The on-chain contract and the `sync-events` edge function are unchanged.
+
+### 7.1 New Schema Surfaces
+
+| Surface | Type | Grants | Purpose |
+|---------|------|--------|---------|
+| `participants_public` | View | `SELECT` to `anon, authenticated` | Non-contact columns of `participants` (id, group_buy_id, buyer_address, slot_count, amount_deposited, status, timestamps, tx hashes). Used by Explore and any unauthenticated slot-count reads. Postgres lacks column-level RLS, so the contact-free read path goes through this view. |
+| `group_buy_history` | View | `SELECT` to `authenticated` | Uniform-shape `UNION ALL` of (a) on-chain `contract_events JOIN group_buys ON contract_id` and (b) three off-chain synthesized streams: `participant_joined`, `order_cancelled`, `pasabuy_cancelled`. Powers the organizer Transaction History section. |
+| `cancel_group_buy(p_group_buy_id uuid)` | RPC (`SECURITY DEFINER`) | `EXECUTE` to `authenticated` | Atomic organizer cancellation. Validates the caller is the pasabuy's organizer, sets `group_buys.status='cancelled'`, `cancelled_at=now()`, `cancelled_by=organizer_address`, and flags every still-`deposited` participant with `refund_required=TRUE` in one transaction. Non-organizers receive an authorization error. |
+
+### 7.2 Strict RLS on `participants`
+
+Migration 005 drops the older permissive policies and replaces them with three strict policies. All four contact columns (`buyer_name`, `buyer_contact`, `buyer_location`, `buyer_note`) live on `participants` itself, so RLS protects them at the row level.
+
+| Policy | Action | Authorized actor |
+|--------|--------|-------------------|
+| `Owner or organizer reads participant` | `SELECT` | The buyer themself, or the organizer of the parent pasabuy. |
+| `Buyer inserts own participant` | `INSERT` | The wallet-authenticated buyer for their own `buyer_address` row. |
+| `Buyer or organizer updates participant` | `UPDATE` | The buyer (for cancellation / claim flows) or the organizer (for `mark_delivered`). |
+
+Non-authorized readers cannot see contact columns. Any public-facing surface that needs slot counts or non-contact data queries `participants_public` instead.
+
+### 7.3 Deposit-Then-Insert Ordering (Canonical Pattern)
+
+The canonical join flow is **deposit-first, insert-second**. A `participants` row MUST NOT exist without a confirmed on-chain deposit. This is enforced at the client layer; there is no on-chain check that mirrors the off-chain row.
+
+```
+[1] User submits JoinForm
+       │
+       ▼
+[2] invokeContractWithStatus('deposit', ...)
+       │  — wait for Soroban GetTransactionResponse.status === SUCCESS
+       ▼
+[3] On confirmed success:
+       │  — supabase.from('participants').insert({
+       │      group_buy_id, buyer_address, status: 'deposited',
+       │      tx_hash_deposit: <hash>, buyer_name, buyer_contact,
+       │      buyer_location, buyer_note
+       │    })
+       ▼
+[4] Navigate to /dashboard/buyer/{group_buy_id}
+
+If [2] fails (simulation_failed, signing_rejected, submit_failed,
+network_unreachable, timeout, contract_error, on_chain_failed):
+       └── DO NOT insert a participants row.
+           Surface mapSorobanError(err, 'deposit'); keep form values
+           in state so the user can retry without re-typing.
+```
+
+This ordering matters because the on-chain deposit is the source of truth for funds. Inserting a `participants` row before the deposit confirms would create off-chain records that don't reflect any escrowed funds — breaking the Transaction History view and the refund-claim flow.
+
+### 7.4 Edge Functions
+
+`sync-events` is **unchanged** by migration 005. It continues to mirror Soroban contract events into the `contract_events` table on its existing 30 s cron, and `group_buy_history` consumes that table read-only.
+

@@ -489,7 +489,8 @@ export default function BuyerOrderPage() {
           <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <ConfirmDelivery
               groupBuyTitle={groupBuy.title}
-              amount={groupBuy.price_per_slot}
+              amount={participant?.amount ?? groupBuy.price_per_slot}
+              groupBuyId={groupBuy.id}
               contractId={groupBuy.contract_id}
               onSuccess={fetchData}
             />

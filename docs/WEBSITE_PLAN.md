@@ -41,6 +41,8 @@ pasabuy-safe-web/
 │   │   └── buyer/
 │   │       └── [id]/page.tsx      # Buyer view of a group buy
 │   ├── explore/page.tsx           # Browse open group buys
+│   ├── pasabuy/
+│   │   └── [id]/page.tsx          # Public pasabuy detail page (open to guests; CTA → Join Form)
 │   └── tx/[hash]/page.tsx         # Transaction detail view
 ├── components/
 │   ├── wallet/                    # Freighter connect button, status
@@ -82,8 +84,15 @@ pasabuy-safe-web/
 - List of active group buys (from indexed contract events)
 - Filter by token, deadline, organizer
 - Status indicators (open, in-progress, completed, expired)
+- Navigation flow: **Explore → Pasabuy Detail (`/pasabuy/{id}`) → Join Form → Buyer Order Page (`/dashboard/buyer/{id}`)**. The Explore card links to the public detail page rather than jumping directly to the buyer order page; the detail page hosts the "Join this pasabuy" CTA which opens the Join Form, and only after a confirmed on-chain deposit does the user land on `/dashboard/buyer/{id}`.
 
-### 4.5 Transaction Detail
+### 4.5 Pasabuy Detail Page (`/pasabuy/{id}`)
+- Public, guest-viewable page that shows the full pasabuy (title, description, image, price, slots, deadline, location, shipping, organizer info)
+- Primary CTA: "Join this pasabuy" — gated by joinability rules (status, slots, deadline); prompts Freighter only on activation
+- If the signed-in viewer already has an order for this pasabuy, the CTA is replaced by a "View my order" link to `/dashboard/buyer/{id}`
+- Unavailability states render a single reason ("Cancelled by organizer", "Deadline passed", "Slots full", "No longer accepting joins")
+
+### 4.6 Transaction Detail
 - Show on-chain transaction data
 - Link to Stellar Expert
 - Event logs for the contract interaction
@@ -148,7 +157,7 @@ To keep the UI in sync with on-chain state:
 
 **Option A: Mercury Indexer (Recommended)**
 - Subscribe to contract events
-- Automatic webhook on new events
+- Automatic webhook on ne  events
 - No polling overhead
 
 **Option B: Horizon + Polling**
