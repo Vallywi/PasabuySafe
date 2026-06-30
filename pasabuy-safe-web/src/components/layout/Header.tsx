@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Search, Home, ClipboardList } from 'lucide-react';
+import { Search, Home, ClipboardList, HelpCircle } from 'lucide-react';
 import { WalletButton } from '@/components/wallet/WalletButton';
 import { Logo } from '@/components/layout/Logo';
 import { UserMenu } from '@/components/layout/UserMenu';
@@ -12,6 +12,7 @@ const navItems = [
   { href: '/explore', label: 'Explore', icon: Search },
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/dashboard/orders', label: 'My Orders', icon: ClipboardList },
+  { href: '/faq', label: 'FAQ', icon: HelpCircle },
 ];
 
 export function Header() {
