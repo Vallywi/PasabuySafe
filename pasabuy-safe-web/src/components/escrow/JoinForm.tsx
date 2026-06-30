@@ -151,11 +151,49 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
         txHash = result.txHash;
         setPendingTxHash(txHash);
       } catch (err) {
-        // On-chain failure (Req 5.8): do NOT insert a participants row; keep
-        // form state intact so the buyer can retry (Req 5.9).
-        setErrorMessage(mapSorobanError(err, 'deposit'));
-        setPhase('error');
-        return;
+        // Special case: AlreadyDeposited (contract error #3) means the user
+        // deposited on-chain in a prior session but the DB insert failed.
+        // We should proceed to the INSERT step using 'already-deposited' as
+        // a sentinel txHash — the funds are already in escrow.
+        const isAlreadyDeposited =
+          err &&
+          typeof err === 'object' &&
+          'kind' in err &&
+          (err as { kind: string }).kind === 'contract_error' &&
+          'code' in err &&
+          (err as { code: number }).code === 3;
+
+        if (isAlreadyDeposited) {
+          // The deposit exists on-chain. Use a placeholder hash — the real
+          // hash is in the user's Freighter history but we can't retrieve it.
+          // We'll try to find it from an existing participants row first.
+          const { data: existingRow } = await supabase
+            .from('participants')
+            .select('id, tx_hash_deposit')
+            .eq('group_buy_id', groupBuyId)
+            .eq('buyer_address', publicKey)
+            .maybeSingle();
+
+          if (existingRow) {
+            // Row already exists in DB — the user is already joined!
+            // Just redirect them to their order page.
+            setPhase('success');
+            onSuccess();
+            return;
+          }
+
+          // Row doesn't exist in DB but deposit is on-chain. Proceed with
+          // insert using a marker so we at least record their details.
+          txHash = `on-chain-prior-deposit-${Date.now()}`;
+          setPendingTxHash(txHash);
+          // Fall through to the recording phase below
+        } else {
+          // On-chain failure (Req 5.8): do NOT insert a participants row; keep
+          // form state intact so the buyer can retry (Req 5.9).
+          setErrorMessage(mapSorobanError(err, 'deposit'));
+          setPhase('error');
+          return;
+        }
       }
     }
 
@@ -166,7 +204,7 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
     await ensureProfileWalletLinked(publicKey);
 
     const trimmedNote = note.trim();
-    const { error: insertError } = await supabase.from('participants').insert({
+    const { error: insertError } = await supabase.from('participants').upsert({
       group_buy_id: groupBuyId,
       buyer_address: publicKey,
       amount: pricePerSlot,
@@ -176,7 +214,7 @@ export function JoinForm({ groupBuyId, groupBuyTitle, pricePerSlot, onSuccess }:
       buyer_contact: contact.trim(),
       buyer_location: location.trim(),
       buyer_note: trimmedNote.length > 0 ? trimmedNote : null,
-    });
+    }, { onConflict: 'group_buy_id,buyer_address' });
 
     if (insertError) {
       // The on-chain deposit succeeded but we could not record the buyer
