@@ -2,11 +2,19 @@
 
 **Safe group buying for Filipino communities — powered by blockchain escrow.**
 
+[![Stellar](https://img.shields.io/badge/Stellar-Soroban-7D00FF?logo=stellar&logoColor=white)](https://stellar.org/soroban)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Rust](https://img.shields.io/badge/Rust-Edition_2021-CE412B?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Made in PH](https://img.shields.io/badge/Made_in-🇵🇭_Philippines-blue)](#)
+
 PasabuySafe is an anti-scam platform that protects buyers in pasabuy (group buy) transactions. Instead of sending money directly to an organizer and hoping for the best, your payment is locked in a smart contract that only releases funds when you confirm you received your order.
 
 ---
 
-## The Problem
+## 🚨 The Problem
 
 In Filipino online communities — Facebook groups, Viber GCs, Telegram channels — **pasabuy scams** are everywhere. The pattern is always the same:
 
@@ -19,7 +27,7 @@ Thousands of Filipinos lose money every month to this scheme. Amounts range from
 
 ---
 
-## How PasabuySafe Solves It
+## 💡 How PasabuySafe Solves It
 
 The core principle is simple: **the organizer never touches the money until the buyer confirms delivery.**
 
@@ -43,16 +51,16 @@ No one — not even the PasabuySafe team — can override the smart contract. Th
 
 ---
 
-## How It Works
+## ⚙️ How It Works
 
-### For Organizers
+### 👤 For Organizers
 
 1. **Create a pasabuy** — Set a title, price per slot, deadline, and description. Upload a cover image. The escrow contract is initialized on-chain.
 2. **Share the link** — Buyers join from the Explore page or your share link.
 3. **Fulfill orders** — Purchase the items, then mark each buyer's order as "Delivered."
 4. **Get paid** — Once a buyer confirms receipt, the escrowed funds are released to your wallet.
 
-### For Buyers
+### 🛒 For Buyers
 
 1. **Browse** — Explore active pasabuys. See prices, slots remaining, deadlines, and organizer info.
 2. **Join & pay** — Enter your delivery details, then deposit your payment into the escrow contract via Freighter wallet.
@@ -65,21 +73,21 @@ No one — not even the PasabuySafe team — can override the smart contract. Th
 
 ---
 
-## Key Features
+## ✨ Key Features
 
-- **Anyone can create a pasabuy** — No approval process, no gatekeepers
-- **On-chain escrow** — Payments locked in a Soroban smart contract (XLM on Stellar)
-- **Philippine phone number + delivery details** — Collected per order so organizers can fulfill
-- **Transaction history with Stellar Expert links** — Full transparency, every transaction viewable on-chain
-- **7-day confirmation window** — Buyers have time to verify their order before funds release
-- **Automatic refund after deadline** — If the organizer doesn't deliver, buyers reclaim their funds
-- **Organizer can cancel pasabuy** — Graceful cancellation with refund flow for deposited buyers
-- **Buyer can cancel order** — Change your mind? Cancel and claim your refund after the deadline
-- **Mobile-responsive UI** — Built for the way Filipinos browse: on their phones
+- 🌐 **Anyone can create a pasabuy** — No approval process, no gatekeepers
+- 🔒 **On-chain escrow** — Payments locked in a Soroban smart contract (XLM on Stellar)
+- 📱 **Philippine phone number + delivery details** — Collected per order so organizers can fulfill
+- 🔗 **Transaction history with Stellar Expert links** — Full transparency, every transaction viewable on-chain
+- ⏳ **7-day confirmation window** — Buyers have time to verify their order before funds release
+- 💸 **Automatic refund after deadline** — If the organizer doesn't deliver, buyers reclaim their funds
+- 🛑 **Organizer can cancel pasabuy** — Graceful cancellation with refund flow for deposited buyers
+- ↩️ **Buyer can cancel order** — Change your mind? Cancel and claim your refund after the deadline
+- 📲 **Mobile-responsive UI** — Built for the way Filipinos browse: on their phones
 
 ---
 
-## Anti-Scam Protection
+## 🛡️ Anti-Scam Protection
 
 Every common scam attempt is blocked by the contract design:
 
@@ -94,34 +102,34 @@ Every common scam attempt is blocked by the contract design:
 
 ---
 
-## Tech Stack
+## 🧰 Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Smart Contract | Rust + Soroban SDK (Stellar blockchain) |
-| Frontend | Next.js 14, TypeScript, Tailwind CSS, shadcn/ui |
-| Database | Supabase (PostgreSQL + Realtime + Edge Functions) |
-| Wallet | Freighter (Stellar browser wallet) |
-| Hosting | Vercel |
-| Animations | Framer Motion |
+| 📜 Smart Contract | Rust + Soroban SDK (Stellar blockchain) |
+| 🎨 Frontend | Next.js 14, TypeScript, Tailwind CSS, shadcn/ui |
+| 🗄️ Database | Supabase (PostgreSQL + Realtime + Edge Functions) |
+| 👛 Wallet | Freighter (Stellar browser wallet) |
+| ☁️ Hosting | Vercel |
+| 🎞️ Animations | Framer Motion |
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
-### Prerequisites
+### 📋 Prerequisites
 
 - [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools) installed
 - [Node.js](https://nodejs.org/) 18+
 - [Freighter Wallet](https://www.freighter.app/) browser extension
 
-### Run the Smart Contract Tests
+### 🦀 Run the Smart Contract Tests
 
 ```bash
 cargo test
 ```
 
-### Run the Web App
+### 💻 Run the Web App
 
 ```bash
 cd pasabuy-safe-web
@@ -129,7 +137,7 @@ npm install
 npm run dev
 ```
 
-### Environment Variables
+### 🔑 Environment Variables
 
 Create `pasabuy-safe-web/.env.local`:
 
@@ -146,22 +154,22 @@ NEXT_PUBLIC_STELLAR_EXPERT_URL=https://stellar.expert/explorer/testnet
 
 ---
 
-## Smart Contract
+## 📜 Smart Contract
 
 The PasabuySafe escrow contract is written in Rust and deployed on Stellar's Soroban platform. It uses a **multi-organizer architecture** — each pasabuy initializes its own escrow instance with an organizer address, token, and deadline.
 
-### Contract Functions
+### 🧩 Contract Functions
 
 | Function | Who Calls It | What It Does |
 |----------|-------------|-------------|
-| `create_pasabuy` | Organizer | Initializes a new escrow with token address and deadline |
-| `deposit` | Buyer | Locks buyer's payment in the contract |
-| `mark_delivered` | Organizer | Signals that the buyer's order has been shipped/delivered |
-| `confirm_delivery` | Buyer | Buyer confirms receipt — funds released to organizer |
-| `refund` | Buyer | Returns funds to buyer (only after deadline passes) |
-| `release_expired` | Anyone | Releases funds from expired confirmed orders |
+| 🆕 `create_pasabuy` | Organizer | Initializes a new escrow with token address and deadline |
+| 💰 `deposit` | Buyer | Locks buyer's payment in the contract |
+| 📦 `mark_delivered` | Organizer | Signals that the buyer's order has been shipped/delivered |
+| ✅ `confirm_delivery` | Buyer | Buyer confirms receipt — funds released to organizer |
+| ↩️ `refund` | Buyer | Returns funds to buyer (only after deadline passes) |
+| ⏰ `release_expired` | Anyone | Releases funds from expired confirmed orders |
 
-### State Machine
+### 🔁 State Machine
 
 Each buyer's order follows this lifecycle:
 
@@ -173,7 +181,7 @@ Deposited → Delivered → Confirmed (funds released to organizer)
 
 ---
 
-## Live Demo
+## 🌐 Live Demo
 
 The contract is deployed on Stellar Testnet:
 
@@ -182,24 +190,32 @@ The contract is deployed on Stellar Testnet:
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 Detailed documentation lives in the [`/docs`](./docs) folder:
 
 | File | Description |
 |------|-------------|
-| [PRD.md](./docs/PRD.md) | Product requirements — problem statement, target users, functional specs |
-| [USER_STORIES.md](./docs/USER_STORIES.md) | User flows for organizers and buyers |
-| [SMART_CONTRACT_SPEC.md](./docs/SMART_CONTRACT_SPEC.md) | Contract functions, state machine, correctness properties, security model |
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System overview — on-chain + off-chain layers, deployment architecture |
-| [UX_UI_SPEC.md](./docs/UX_UI_SPEC.md) | Design philosophy, visual system, animation spec |
-| [DATABASE.md](./docs/DATABASE.md) | Supabase schema, RLS policies, migrations |
-| [API_SPEC.md](./docs/API_SPEC.md) | API endpoints and edge functions |
-| [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Deployment guide |
-| [MVP_CHECKLIST.md](./docs/MVP_CHECKLIST.md) | Feature completion tracker |
+| 📝 [PRD.md](./docs/PRD.md) | Product requirements — problem statement, target users, functional specs |
+| 👥 [USER_STORIES.md](./docs/USER_STORIES.md) | User flows for organizers and buyers |
+| 📜 [SMART_CONTRACT_SPEC.md](./docs/SMART_CONTRACT_SPEC.md) | Contract functions, state machine, correctness properties, security model |
+| 🏗️ [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System overview — on-chain + off-chain layers, deployment architecture |
+| 🎨 [UX_UI_SPEC.md](./docs/UX_UI_SPEC.md) | Design philosophy, visual system, animation spec |
+| 🗄️ [DATABASE.md](./docs/DATABASE.md) | Supabase schema, RLS policies, migrations |
+| 🔌 [API_SPEC.md](./docs/API_SPEC.md) | API endpoints and edge functions |
+| 🚀 [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Deployment guide |
+| ✅ [MVP_CHECKLIST.md](./docs/MVP_CHECKLIST.md) | Feature completion tracker |
 
 ---
 
-## License
+## 📄 License
 
-MIT
+MIT — see [LICENSE](./LICENSE) for details.
+
+---
+
+<div align="center">
+
+🇵🇭 Built with ❤️ for Filipino pasabuy communities
+
+</div>
