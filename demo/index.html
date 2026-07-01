@@ -1874,35 +1874,84 @@
 
 <script>
   // ---------------------------------------------------------------------------
-  // Scene timings — 120 seconds total, mapped to the 9 scenes in the DOM.
+  // Cinematic timeline — 120s total, 9 scenes, with timed voiceover captions
+  // and chapter labels. Runs auto-play after a 3-2-1 countdown intro.
   // ---------------------------------------------------------------------------
+
   const SCENES = [
-    { s: 0,   e: 12  },  // 1 · Landing hero
-    { s: 12,  e: 24  },  // 2 · Old vs new
-    { s: 24,  e: 40  },  // 3 · Explore
-    { s: 40,  e: 56  },  // 4 · Detail
-    { s: 56,  e: 76  },  // 5 · Join form + Freighter
-    { s: 76,  e: 92  },  // 6 · Order tracking
-    { s: 92,  e: 106 },  // 7 · Confirm delivery + confetti
-    { s: 106, e: 114 },  // 8 · Anti-scam
-    { s: 114, e: 120 }   // 9 · CTA
+    { s: 0,   e: 12,  chapter: 'The Pitch',        num: '01' },
+    { s: 12,  e: 24,  chapter: 'The Problem',      num: '02' },
+    { s: 24,  e: 40,  chapter: 'Discover',         num: '03' },
+    { s: 40,  e: 56,  chapter: 'Deep Dive',        num: '04' },
+    { s: 56,  e: 76,  chapter: 'Join & Deposit',   num: '05' },
+    { s: 76,  e: 92,  chapter: 'Track Your Order', num: '06' },
+    { s: 92,  e: 106, chapter: 'Confirm Delivery', num: '07' },
+    { s: 106, e: 114, chapter: 'Anti-Scam Rules',  num: '08' },
+    { s: 114, e: 120, chapter: 'Try It Now',       num: '09' }
   ];
   const TOTAL = 120;
+
+  // Voiceover-style caption schedule. Each entry is { at: seconds, text: html }.
+  // The current caption is the one with the largest `at` that is <= t.
+  const CAPTIONS = [
+    { at: 0,   text: 'Meet <em>PasabuySafe</em>. The safer way to pasabuy.' },
+    { at: 4,   text: 'Filipino group buys, protected by blockchain escrow.' },
+    { at: 8,   text: 'Your money never touches the organizer — until you confirm.' },
+    { at: 12,  text: 'The old way: send GCash, hope for the best.' },
+    { at: 17,  text: 'One scam, and your money is <strong>gone</strong>.' },
+    { at: 21,  text: 'The new way? Math instead of trust.' },
+    { at: 24,  text: 'Browse active pasabuys on the <em>Explore</em> page.' },
+    { at: 30,  text: 'Cebu chicharon. Ilocos empanada. Osaka moshi manju.' },
+    { at: 36,  text: 'Prices in ₱ and XLM — pay in either.' },
+    { at: 40,  text: 'Tap a listing. See slots, deadline, and organizer wallet.' },
+    { at: 46,  text: 'Every field is on-chain and independently verifiable.' },
+    { at: 52,  text: 'Ready to join? One click.' },
+    { at: 56,  text: 'Fill in the essentials — name, phone, meetup, quantity.' },
+    { at: 62,  text: 'Order total is calculated live. No hidden fees.' },
+    { at: 68,  text: 'Sign the deposit in <em>Freighter</em>. Funds locked on Stellar.' },
+    { at: 72,  text: 'Row inserted only <em>after</em> the on-chain deposit confirms.' },
+    { at: 76,  text: 'Track your order status live from your dashboard.' },
+    { at: 82,  text: 'Paid → Delivered → Confirmed. Bounded, deterministic.' },
+    { at: 88,  text: 'Every transaction linked to <em>Stellar Expert</em> for proof.' },
+    { at: 92,  text: 'Item arrived? One tap to release the escrow.' },
+    { at: 98,  text: 'Funds transfer to the organizer. Instantly. On-chain.' },
+    { at: 102, text: '<em>That&apos;s it.</em> Trust, cryptographically enforced.' },
+    { at: 106, text: 'Four attacks the contract makes <strong>impossible</strong>.' },
+    { at: 111, text: 'No withdraw function. No fake confirmations. No deadline tricks.' },
+    { at: 114, text: 'Ready to pasabuy without fear?' },
+    { at: 117, text: 'Live on Stellar Testnet. <em>Free forever.</em>' }
+  ];
 
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
   const scenes = $$('.scene');
   const startOverlay = $('#startOverlay');
-  const startBtn = $('#startBtn');
+  const countdownEl = $('#countdown');
   const progressFill = $('#progressFill');
   const pip = $('#pip');
-  const stage = $('#stage');
+  const chapterLabel = $('#chapterLabel');
+  const chapterNum = $('#chapterNum');
+  const chapterTitle = $('#chapterTitle');
+  const captionBar = $('#captionBar');
+  const captionText = $('#captionText');
+  const chapterDots = $('#chapterDots');
+
+  // Build chapter dots (one per scene).
+  SCENES.forEach(() => {
+    const d = document.createElement('div');
+    d.className = 'chapter-dot';
+    d.innerHTML = '<div class="fill"></div>';
+    chapterDots.appendChild(d);
+  });
+  const dotEls = chapterDots.querySelectorAll('.chapter-dot');
 
   let t = 0;
   let playing = false;
   let rafId = null;
   let lastTs = 0;
   let confettiInjected = false;
+  let lastSceneIdx = -1;
+  let lastCaption = '';
 
   function fmt(sec) {
     const m = Math.floor(sec / 60);
@@ -1917,6 +1966,15 @@
     return SCENES.length - 1;
   }
 
+  function currentCaption() {
+    let match = null;
+    for (const c of CAPTIONS) {
+      if (t >= c.at) match = c;
+      else break;
+    }
+    return match ? match.text : '';
+  }
+
   function injectConfetti() {
     if (confettiInjected) return;
     confettiInjected = true;
@@ -1924,7 +1982,7 @@
     const container = scene7.querySelector('#confetti');
     if (!container) return;
     const colors = ['#FBBF24', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6', '#FCD34D'];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 60; i++) {
       const el = document.createElement('div');
       el.className = 'confetti-piece';
       el.style.left = (Math.random() * 100) + '%';
@@ -1937,11 +1995,62 @@
     }
   }
 
+  function updateChapter(idx) {
+    if (idx === lastSceneIdx) return;
+    lastSceneIdx = idx;
+    const sc = SCENES[idx];
+    // Slide the label out, swap, slide back in — creates a video-cut feel.
+    chapterLabel.classList.remove('show');
+    setTimeout(() => {
+      chapterNum.textContent = sc.num;
+      chapterTitle.textContent = sc.chapter;
+      chapterLabel.classList.add('show');
+    }, 250);
+    // Hide the label 4 seconds after the chapter starts (except for the last).
+    setTimeout(() => {
+      if (lastSceneIdx === idx && idx !== SCENES.length - 1) {
+        chapterLabel.classList.remove('show');
+      }
+    }, 4500);
+  }
+
+  function updateCaption() {
+    const c = currentCaption();
+    if (c !== lastCaption) {
+      lastCaption = c;
+      if (!c) {
+        captionBar.classList.remove('show');
+      } else {
+        captionBar.classList.remove('show');
+        setTimeout(() => {
+          captionText.innerHTML = c;
+          captionBar.classList.add('show');
+        }, 180);
+      }
+    }
+  }
+
+  function updateDots(idx) {
+    dotEls.forEach((el, i) => {
+      el.classList.remove('done', 'active');
+      if (i < idx) el.classList.add('done');
+      else if (i === idx) {
+        el.classList.add('active');
+        const sc = SCENES[idx];
+        const local = (t - sc.s) / (sc.e - sc.s);
+        el.style.setProperty('--chapter-progress', Math.max(0, Math.min(1, local)));
+      }
+    });
+  }
+
   function render() {
     const idx = sceneIdx();
     scenes.forEach((el, i) => el.classList.toggle('active', i === idx));
     pip.textContent = `SCENE ${idx + 1} / ${SCENES.length}  ·  ${fmt(t)}`;
     progressFill.style.width = `${(t / TOTAL) * 100}%`;
+    updateChapter(idx);
+    updateCaption();
+    updateDots(idx);
     if (idx === 6) injectConfetti();
   }
 
@@ -1952,9 +2061,11 @@
     lastTs = ts;
     t += dt;
     if (t >= TOTAL) {
+      // Loop: reset everything so scene 7 confetti replays.
       t = 0;
-      // Reset scene 7 confetti animation state so next loop replays.
       confettiInjected = false;
+      lastSceneIdx = -1;
+      lastCaption = '';
       const scene7 = $$('[data-scene="7"]')[0];
       const container = scene7.querySelector('#confetti');
       if (container) container.innerHTML = '';
@@ -1974,20 +2085,37 @@
     if (rafId) cancelAnimationFrame(rafId);
   }
 
-  startBtn.addEventListener('click', () => {
-    startOverlay.classList.add('hidden');
-    setTimeout(() => { startOverlay.style.display = 'none'; }, 400);
-    play();
-  });
+  // Auto-start countdown 3-2-1, then dismiss overlay and begin playback.
+  function runCountdown() {
+    let n = 3;
+    countdownEl.textContent = n;
+    const iv = setInterval(() => {
+      n -= 1;
+      if (n > 0) {
+        countdownEl.textContent = n;
+      } else if (n === 0) {
+        countdownEl.textContent = '▶';
+      } else {
+        clearInterval(iv);
+        startOverlay.classList.add('hidden');
+        setTimeout(() => { startOverlay.style.display = 'none'; }, 700);
+        play();
+      }
+    }, 900);
+  }
 
   document.addEventListener('keydown', (e) => {
     if (e.key === ' ') { e.preventDefault(); playing ? pause() : play(); }
     else if (e.key === 'ArrowRight') { const i = sceneIdx(); if (i < SCENES.length - 1) t = SCENES[i + 1].s; render(); }
     else if (e.key === 'ArrowLeft') { const i = sceneIdx(); t = i > 0 ? SCENES[i - 1].s : 0; render(); }
-    else if (e.key === 'r' || e.key === 'R') { t = 0; render(); play(); }
+    else if (e.key === 'r' || e.key === 'R') { t = 0; lastCaption = ''; lastSceneIdx = -1; confettiInjected = false; render(); play(); }
   });
 
+  // Kick off after a moment so the overlay is visible first.
   render();
+  window.addEventListener('load', () => {
+    setTimeout(runCountdown, 400);
+  });
 </script>
 
 </body>
