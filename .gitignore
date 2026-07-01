@@ -20,7 +20,10 @@ pasabuy-safe-web/.env.development.local
 
 # ===== ROOT NODE MODULES (if any) =====
 node_modules/
-package-lock.json
+# Ignore ONLY a root-level package-lock.json (there shouldn't be one).
+# The frontend's pasabuy-safe-web/package-lock.json MUST be committed
+# so CI's `npm ci` can run — do not ignore it.
+/package-lock.json
 
 # ===== OS FILES =====
 .DS_Store
