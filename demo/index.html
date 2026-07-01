@@ -143,13 +143,12 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 }
 .start-overlay.hidden{opacity:0;pointer-events:none}
 .start-overlay .big-shield{
-  width:96px;height:96px;border-radius:24px;
-  background:linear-gradient(135deg,var(--y3),var(--y5));
+  width:140px;height:140px;
   display:grid;place-items:center;
-  box-shadow:0 20px 60px rgba(251,191,36,.5);
-  animation:bob 3s ease infinite;overflow:hidden
+  filter:drop-shadow(0 20px 60px rgba(251,191,36,.55));
+  animation:bob 3s ease infinite;background:transparent;
 }
-.start-overlay .big-shield img{width:110%;height:110%;object-fit:cover}
+.start-overlay .big-shield img{width:100%;height:100%;object-fit:contain}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .start-overlay h1{font-size:44px;font-weight:800;letter-spacing:-.03em}
 .start-overlay p{color:rgba(255,255,255,.7);text-align:center;line-height:1.6;font-size:15px;max-width:460px}
@@ -170,12 +169,14 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 ============================================================ */
 .brand-intro{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;position:relative}
 .brand-intro .logo-big{
-  width:200px;height:200px;border-radius:44px;overflow:hidden;
-  box-shadow:0 30px 80px rgba(251,191,36,.5),0 0 0 8px rgba(251,191,36,.15);
+  width:260px;height:260px;
+  display:grid;place-items:center;
+  filter:drop-shadow(0 24px 60px rgba(251,191,36,.35));
   animation:logoIn 900ms cubic-bezier(.22,1.4,.36,1) forwards;
   opacity:0;transform:scale(.6) rotate(-8deg);
+  background:transparent;
 }
-.brand-intro .logo-big img{width:100%;height:100%;object-fit:cover;display:block}
+.brand-intro .logo-big img{width:100%;height:100%;object-fit:contain;display:block}
 @keyframes logoIn{
   to{opacity:1;transform:scale(1) rotate(0deg)}
 }
@@ -549,10 +550,12 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 ============================================================ */
 .cta-wrap{text-align:center;padding-top:80px;display:flex;flex-direction:column;align-items:center}
 .cta-shield{
-  width:130px;height:130px;border-radius:32px;overflow:hidden;
-  box-shadow:0 20px 60px rgba(251,191,36,.5);animation:bob 3s ease infinite;
+  width:170px;height:170px;
+  display:grid;place-items:center;
+  filter:drop-shadow(0 20px 60px rgba(251,191,36,.4));
+  animation:bob 3s ease infinite;background:transparent;
 }
-.cta-shield img{width:100%;height:100%;object-fit:cover}
+.cta-shield img{width:100%;height:100%;object-fit:contain}
 .cta-wrap h2{font-size:64px;font-weight:800;color:var(--sl9);letter-spacing:-.03em;line-height:1.05;margin-top:18px}
 .cta-wrap p{font-size:17px;color:var(--muted);margin-top:10px;max-width:620px;line-height:1.5}
 .cta-btns{display:flex;gap:12px;margin-top:22px}
@@ -592,7 +595,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="body">
       <div class="brand-intro">
         <div class="sparkles"><span>✨</span><span>💛</span><span>🛡️</span><span>✨</span></div>
-        <div class="logo-big"><img src="../pasabuy-safe-web/public/logo1.png" alt="PasabuySafe"></div>
+        <div class="logo-big"><img src="../pasabuy-safe-web/public/logo.png" alt="PasabuySafe"></div>
         <h1>Pasabuy<span class="safe">Safe</span></h1>
         <div class="divider"></div>
         <div class="strap">ANTI-SCAM ESCROW · POWERED BY STELLAR SOROBAN</div>
@@ -916,7 +919,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   <div class="scene" data-scene="13">
     <div class="body">
       <div class="cta-wrap">
-        <div class="cta-shield"><img src="../pasabuy-safe-web/public/logo1.png" alt="PasabuySafe"></div>
+        <div class="cta-shield"><img src="../pasabuy-safe-web/public/logo.png" alt="PasabuySafe"></div>
         <h2>Ready to pasabuy<br><span class="grad">without fear?</span></h2>
         <p>Live on Stellar Testnet. Real transactions verifiable on Stellar Expert. Free XLM from Friendbot, free Freighter wallet, zero risk.</p>
         <div class="cta-btns">
@@ -940,7 +943,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 
 <!-- Auto-start intro -->
 <div class="start-overlay" id="startOverlay">
-  <div class="big-shield"><img src="../pasabuy-safe-web/public/logo1.png" alt="PasabuySafe"></div>
+  <div class="big-shield"><img src="../pasabuy-safe-web/public/logo.png" alt="PasabuySafe"></div>
   <h1>PasabuySafe</h1>
   <p>A 2-minute walkthrough of the escrow flow.<br><span style="color:rgba(255,255,255,.45);font-size:13px">Auto-starting…</span></p>
   <div class="countdown" id="countdown">3</div>
@@ -961,12 +964,12 @@ const SCENES = [
   // ACT 1 · OPENING (0–14s)
   { s:0, e:7, dom:1, num:'01', tag:'Brand', act:'01', actName:'OPENING',
     title:'PasabuySafe',
-    sub:'The anti-scam escrow platform built for Filipino pasabuy communities — <strong>powered by Stellar Soroban smart contracts.</strong>',
-    narr:'<strong>Hi, I&apos;m PasabuySafe.</strong> I make group buys safe. Every peso goes into a smart contract on Stellar — not into anyone&apos;s wallet — until the buyer says the item actually arrived.' },
+    sub:'The anti-scam escrow platform built for Filipino pasabuy communities — <strong>powered by Stellar Soroban smart contracts.</strong> Every deposit is locked by code, not by trust.',
+    narr:'<strong>Hi, this is PasabuySafe.</strong> Imagine a version of pasabuy where the organizer physically <em>cannot</em> run away with your money. That&apos;s what we built. Every peso goes into a smart contract on Stellar — not into anyone&apos;s wallet — until the buyer confirms the item actually arrived.' },
   { s:7, e:14, dom:2, num:'02', tag:'Tagline', act:'01', actName:'OPENING',
     title:'Buy together. Pay securely.',
-    sub:'A single principle: <strong>the organizer never touches the money until the buyer confirms delivery.</strong> Everything else follows from that.',
-    narr:'The idea is simple. When you pay for a pasabuy, your money should not go to the organizer&apos;s GCash. It should sit somewhere <em>neither of you can move</em> until the item is delivered. That&apos;s what we built.' },
+    sub:'A single principle drives the whole platform: <strong>the organizer never touches the money until the buyer confirms delivery.</strong> Everything else — the UI, the database, the flows — follows from that.',
+    narr:'The whole product rests on one idea. When you pay for a pasabuy, your money should <em>not</em> go to the organizer&apos;s GCash or bank account. It should sit somewhere <em>neither of you can move</em> until the item actually gets delivered. That place is a Stellar smart contract, and it&apos;s the reason scams don&apos;t work here.' },
   // ACT 2 · THE PROBLEM (14–34s)
   { s:14, e:22, dom:3, num:'03', tag:'The Hook', act:'02', actName:'THE PROBLEM',
     title:'A pasabuy scam is fast.',
@@ -974,100 +977,117 @@ const SCENES = [
     narr:'Watch what happens on the right. A trusted-looking organizer posts a batch. You send GCash. They read the message. Then you&apos;re <strong>blocked</strong>. Report to Facebook? Account banned. Money? Gone.' },
   { s:22, e:28, dom:3, num:'04', tag:'Victim Voices', act:'02', actName:'THE PROBLEM',
     title:'Why nobody stops it.',
-    sub:'Reputation systems are gamed for months, then burned in a single scam run. GCash offers no dispute. Police reports go nowhere.',
-    narr:'Scammers spend <em>months</em> building trust — receipts, testimonials, screenshots of "past batches." Then one big run, and they vanish. The current system can&apos;t tell a good organizer from a patient thief.' },
+    sub:'Reputation systems get gamed for months, then burned in a single scam run. GCash offers no dispute mechanism. Bank transfers are irreversible. Police reports go nowhere.',
+    narr:'Here&apos;s what makes it worse. Scammers spend <em>months</em> building trust. They post real receipts, share testimonials, screenshots of "past batches" — sometimes even ship a few small orders successfully. Then one massive run, and they vanish. Facebook can ban the account, but that <em>never returns the money</em>. There&apos;s no chargeback, no arbitration, no way home.' },
   { s:28, e:34, dom:4, num:'05', tag:'Impact Stats', act:'02', actName:'THE PROBLEM',
     title:'The damage, in numbers.',
-    sub:'Amounts range from ₱500 to over ₱50,000 per victim. It compounds because scammers hit dozens of buyers at once.',
-    narr:'For each victim, the numbers hurt. But multiplied by <em>thousands</em> of victims monthly — this is one of the biggest silent problems in Filipino e-commerce today. No one is protecting these people.' },
+    sub:'Amounts range from ₱500 for a small snack pasabuy to over ₱50,000 for gadget or luxury goods. Multiplied by dozens of buyers per scam, and thousands of new scams per month — this is a nine-figure problem.',
+    narr:'For a single victim, the numbers already hurt — that&apos;s a week&apos;s salary or a month&apos;s rent. But when you multiply by <em>thousands</em> of victims every month, this becomes one of the biggest silent problems in Filipino e-commerce. Nobody at scale is protecting these buyers. That&apos;s the gap we&apos;re filling.' },
   // ACT 3 · THE SOLUTION (34–66s)
   { s:34, e:42, dom:5, num:'06', tag:'Solution', act:'03', actName:'THE SOLUTION',
     title:'Hold the funds in code.',
-    sub:'Not in the organizer&apos;s wallet. Not in our wallet. In a Soroban smart contract on the Stellar blockchain — provably immutable and inspectable by anyone.',
-    narr:'Our answer is not another reputation system. It&apos;s a <strong>smart contract</strong>. Money enters, gets locked, and only leaves when three specific on-chain conditions are met — enforced by code that no one, not even us, can override.' },
+    sub:'Not in the organizer&apos;s wallet. Not in our wallet. In an <strong>immutable Soroban smart contract on Stellar</strong>. Provably fair, publicly inspectable, and beyond anyone&apos;s ability to override.',
+    narr:'Our answer isn&apos;t another reputation system or another support ticket queue — those approaches have failed for a decade. Our answer is a <strong>smart contract</strong>. Money enters, gets locked, and only leaves when three specific on-chain conditions are met. The rules are enforced by <em>math</em>, executed by the Stellar network, and no one — not even us — can override them.' },
   { s:42, e:50, dom:5, num:'07', tag:'3-Step Flow', act:'03', actName:'THE SOLUTION',
     title:'Three steps. Zero trust.',
-    sub:'You Pay → They Deliver → You Confirm. That&apos;s the entire flow. No escrow agent, no PayPal-style dispute team, no "3-5 business days."',
-    narr:'It works like this. Step one, <em>you pay</em> into the contract. Step two, the organizer ships and marks delivered on-chain. Step three, <em>you confirm</em> — which triggers the release. If any step is missed, the money returns to you automatically.' },
+    sub:'<strong>You Pay → They Deliver → You Confirm.</strong> That&apos;s the entire flow. No escrow agent, no PayPal-style dispute team, no "3-5 business days," no signup approvals, no minimum balance requirements.',
+    narr:'It works like this. Step one, <em>you pay</em> into the contract — funds locked, receipt on-chain. Step two, the organizer purchases and ships, then marks the order delivered on-chain. Step three, <em>you confirm</em> when the item arrives — and that release triggers the payment to the organizer. If any step is missed or the deadline passes, the money returns to you <em>automatically</em>. That&apos;s the whole thing.' },
   { s:50, e:60, dom:6, num:'08', tag:'Tech Stack', act:'03', actName:'THE SOLUTION',
     title:'Freighter → Soroban → Stellar.',
-    sub:'Buyer signs in <strong>Freighter wallet</strong>. Transaction routes through <strong>Soroban RPC</strong> to our escrow contract deployed on <strong>Stellar Testnet</strong>. Zero custodial backend.',
-    narr:'Behind the button, here&apos;s the actual path. Your click opens Freighter. Freighter cryptographically signs the call. The signed transaction goes through Soroban RPC to Stellar. The contract enforces the rules. Everything is <em>on-chain</em> and <em>public</em>.' },
+    sub:'The buyer signs the transaction in the <strong>Freighter wallet</strong> browser extension. The signed call routes through <strong>Soroban RPC</strong> to our escrow contract deployed on <strong>Stellar Testnet</strong>. There is <em>no custodial backend</em>, no company holding your money.',
+    narr:'Behind every button click, here&apos;s the actual technical path. Your click triggers the Freighter extension, which asks you to review and cryptographically sign the transaction. That signed transaction gets sent through Soroban RPC — the Stellar smart-contract endpoint — to the PasabuySafe contract. The contract validates the rules and updates state. Every step is <em>on-chain</em>, <em>public</em>, and <em>independently verifiable</em> on Stellar Expert.' },
   { s:60, e:66, dom:7, num:'09', tag:'The Vault', act:'03', actName:'THE SOLUTION',
     title:'An immutable escrow vault.',
-    sub:'Written in Rust with the Soroban SDK. 5.1 KB of compiled WASM. No withdraw function. No admin key. No upgrade path. Ever.',
-    narr:'The contract is deliberately minimal. It has no <em>withdraw()</em> function, no admin, no way to change the deadline once set. We couldn&apos;t drain it even if we wanted to. That&apos;s the point.' },
+    sub:'Written in <strong>Rust</strong> with the Soroban SDK. Compiles to just 5.1 KB of WASM. No withdraw function. No admin key. No upgrade path. No emergency backdoor. <strong>Ever.</strong>',
+    narr:'The contract itself is deliberately minimal — five kilobytes of Rust. It has <em>no withdraw()</em> function, so nobody can drain balances. It has <em>no admin key</em>, so nobody can seize funds. It has <em>no upgrade path</em>, so future us can&apos;t change the rules on you. Once your deposit is inside, only your on-chain confirmation — or the deadline — can release it.' },
   // ACT 4 · THE PRODUCT (66–104s)
   { s:66, e:74, dom:8, num:'10', tag:'Browse', act:'04', actName:'THE PRODUCT',
     title:'Browse pasabuys safely.',
-    sub:'The Explore page shows every active listing with price in <strong>PHP + XLM</strong>, deadline countdown, slots remaining, and the organizer&apos;s public wallet address — all pulled from on-chain state.',
-    narr:'When you open the Explore page, this is what you see. Real pasabuys — Cebu chicharon, Ilocos empanada, Osaka moshi manju — each showing price in pesos and XLM, deadline, and the organizer&apos;s wallet. Every field is <em>verifiable</em>.' },
+    sub:'The <strong>Explore page</strong> shows every active pasabuy with price in <strong>PHP + XLM</strong>, live deadline countdown, slots remaining, and the organizer&apos;s public wallet address. Every field is pulled from on-chain state — <em>nothing is faked</em>.',
+    narr:'When you open the Explore page, this is what you see — real pasabuys ready to join. Cebu chicharon, Ilocos empanada, Osaka moshi manju. Each card shows the price in both pesos and XLM so Filipinos can price things the way they think about them. You see the deadline, how many slots are left, and — critically — the organizer&apos;s wallet address. Every single field is <em>independently verifiable</em>.' },
   { s:74, e:82, dom:9, num:'11', tag:'Join Form', act:'04', actName:'THE PRODUCT',
-    title:'Fill in your delivery.',
-    sub:'The join form collects name, PH phone, meetup location, note, quantity, and delivery method. Contact fields are protected by Supabase RLS — <strong>only the organizer can see them.</strong>',
-    narr:'Filling in the form takes ten seconds. Full name, PH phone in +63 format, where to meet, and how many items. Your contact info is visible <em>only to the organizer</em> — not to us, not to other buyers.' },
+    title:'Fill in your delivery details.',
+    sub:'The join form collects your <strong>name, PH phone, meetup location, delivery note, quantity, and delivery method</strong>. Contact fields are protected by Supabase Row-Level Security — <strong>only the organizer can read them.</strong>',
+    narr:'Filling in the form takes ten seconds. Full name, your PH phone in the +63 format we validate strictly, where you want to meet, any notes, and how many items you&apos;re ordering. Your contact info is stored securely and is visible <em>only to the organizer of this specific pasabuy</em> — never to us, never to other buyers, and never publicly on-chain.' },
   { s:82, e:90, dom:9, num:'12', tag:'Freighter Sign', act:'04', actName:'THE PRODUCT',
     title:'Sign the deposit on-chain.',
-    sub:'One Freighter popup: <code style="background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px">contract.deposit(pasabuy_id, buyer, amount)</code>. Once the Stellar network confirms, your row is inserted in the database.',
-    narr:'This is the moment your money goes on-chain. Freighter shows the exact call — deposit, with the pasabuy ID, your address, and the amount. You approve. A few seconds later, the network confirms. Your order is <em>locked</em>.' },
+    sub:'A single Freighter popup shows the exact contract call: <code style="background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px">contract.deposit(pasabuy_id, buyer, amount)</code>. Once the Stellar network confirms the transaction, <strong>only then</strong> your row is inserted in the database.',
+    narr:'This is the actual moment your money goes on-chain. When you click Deposit, Freighter opens and shows you the exact call it&apos;s about to sign — the function name, the pasabuy ID, your wallet address, and the amount in stroops. You review, you approve. A few seconds later, the Stellar network confirms and returns a transaction hash. That hash becomes your <em>proof of deposit</em>, forever visible on Stellar Expert.' },
   { s:90, e:98, dom:10, num:'13', tag:'Track Order', act:'04', actName:'THE PRODUCT',
     title:'Track every step on-chain.',
-    sub:'The buyer dashboard shows a 3-stage timeline — Paid → Delivered → Confirmed — plus your order details and a transaction receipt with a live link to Stellar Expert.',
-    narr:'From here, you watch your order move. Paid means it&apos;s in escrow. Delivered means the organizer marked it shipped on-chain. When you receive it, you tap confirm — and your deposit releases to the organizer <em>instantly</em>.' },
+    sub:'The buyer dashboard shows a 3-stage timeline — <strong>Paid → Delivered → Confirmed</strong> — plus your submitted order details and a transaction receipt with a live clickable link to <strong>Stellar Expert</strong>.',
+    narr:'From your dashboard, you watch the order progress in real time. "Paid" means it&apos;s locked in escrow. "Delivered" means the organizer marked it shipped — and that mark itself is an on-chain transaction you can verify. Every step you take generates a fresh receipt with a tx hash. Click any hash and you jump straight to Stellar Expert to see the raw ledger data.' },
   { s:98, e:104, dom:10, num:'14', tag:'Confirm & Release', act:'04', actName:'THE PRODUCT',
     title:'One click releases the escrow.',
-    sub:'Confirmation is a single wallet-signed transaction. There is no support ticket, no cooling-off period, no intermediary. Funds move from the contract to the organizer in one Stellar ledger.',
-    narr:'When your item arrives, this is what a confirm looks like. You sign once. The contract sends the funds to the organizer. Done. No middleman. No 3-5 business days. Just <em>math</em>.' },
+    sub:'Confirmation is a single wallet-signed transaction that calls <code style="background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px">confirm_delivery()</code>. Funds move from the contract to the organizer in a single Stellar ledger. <strong>No support ticket, no cooling-off period, no intermediary.</strong>',
+    narr:'The moment your item actually arrives, this is what a confirm looks like. One click, one Freighter signature. The contract validates that you are the buyer, checks the order is in the "delivered" state, and transfers the escrowed XLM directly to the organizer&apos;s wallet in the same Stellar ledger. There&apos;s no middleman, no 3-to-5 business days, no "we&apos;ll get back to you." Just <em>math</em>, executed by the network.' },
   // ACT 5 · THE BENEFITS (104–120s)
   { s:104, e:110, dom:11, num:'15', tag:'Refund Safety Net', act:'05', actName:'THE BENEFITS',
     title:'Refunds are automatic.',
-    sub:'If the deadline passes and the organizer never ships, one click calls <code style="background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px">refund()</code> and the contract returns your XLM. No approval needed.',
-    narr:'Now — what if the organizer disappears? The deadline passes. You tap refund. The contract checks — deadline elapsed, no confirmation — and returns your funds. <em>Automatically.</em> No support ticket. No begging.' },
+    sub:'If the deadline passes and the organizer never ships, one click calls <code style="background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px">refund()</code> and the contract returns your XLM to your wallet. <strong>No approval, no forms, no waiting period.</strong>',
+    narr:'Now — the honest question — what happens if the organizer disappears? The deadline passes without a delivery mark. You tap Refund. The contract checks two conditions: deadline elapsed, no confirmation given. Both true, it returns your funds immediately. <em>Automatically.</em> No support ticket, no email chain, no begging on Facebook.' },
   { s:110, e:115, dom:12, num:'16', tag:'Anti-Scam Rules', act:'05', actName:'THE BENEFITS',
     title:'Four attacks made impossible.',
-    sub:'Collect-and-block, fake confirmations, direct withdraws, deadline changes — all four common scam patterns are structurally impossible in our contract.',
-    narr:'Here are the four ways scammers steal in the traditional flow. The contract blocks <em>all four</em> by design. No withdraw function, no admin key, no way to fake a signature, no way to change the deadline. Structural, not policy.' },
+    sub:'Collect-and-block, fake confirmations, direct withdraws, and deadline changes — <strong>all four</strong> classic Filipino pasabuy scam patterns are made <em>structurally impossible</em> by the contract&apos;s design.',
+    narr:'Here are the four ways scammers steal in the traditional flow. The contract blocks <em>every single one</em> by design. No withdraw function means the organizer can&apos;t drain funds. No admin key means we can&apos;t help them do it either. Signatures can&apos;t be faked because they need your private key. And deadlines are frozen at creation time — no changing the rules mid-flight. This is structural safety, not policy safety.' },
   { s:115, e:120, dom:13, num:'17', tag:'Try It', act:'05', actName:'THE BENEFITS',
     title:'Ready to pasabuy without fear?',
-    sub:'Live on Stellar Testnet at <strong>pasabuysafe.vercel.app</strong>. Free XLM from Friendbot. Free Freighter browser wallet. Zero risk.',
-    narr:'You can try this right now — <em>free</em>. Grab test XLM from Friendbot, install Freighter, and join or create a pasabuy at pasabuysafe.vercel.app. Every transaction is real and viewable on Stellar Expert.' }
+    sub:'Live on Stellar Testnet at <strong>pasabuysafe.vercel.app</strong>. Free XLM from Stellar&apos;s Friendbot. Free Freighter browser wallet. <strong>Zero real money at risk while you learn.</strong>',
+    narr:'You can try all of this right now — <em>completely free</em>. Grab test XLM from Stellar&apos;s Friendbot, install the Freighter browser extension, and join or create a real pasabuy at pasabuysafe.vercel.app. Every transaction is real and independently viewable on Stellar Expert. If you&apos;re a Filipino organizer or buyer, this is your invitation to help end pasabuy scams for good.' }
 ];
 const TOTAL = 120;
 
 const CAPTIONS = [
+  // Roughly one caption every 2-3 seconds — matches natural narration rhythm.
   { at:0,   text:'Hi. Meet <em>PasabuySafe</em> — the anti-scam escrow for Filipino pasabuy.' },
-  { at:4,   text:'We make sure the organizer never touches the money until you receive your item.' },
-  { at:7,   text:'Our tagline: <em>Buy together.</em> <em>Pay securely.</em>' },
-  { at:10,  text:'One principle drives everything — the organizer never holds the funds.' },
-  { at:14,  text:'Here&apos;s how a typical Filipino pasabuy scam plays out.' },
-  { at:17,  text:'You send GCash. They read the message. Then you&apos;re <strong>blocked</strong>.' },
-  { at:22,  text:'Scammers spend months building trust before one massive scam run.' },
-  { at:25,  text:'Reputation systems fail. GCash offers no dispute. <strong>Nobody stops them.</strong>' },
-  { at:28,  text:'Victims lose ₱500 to over ₱50,000 per scam, thousands per month.' },
+  { at:3,   text:'Powered by Stellar Soroban smart contracts.' },
+  { at:5,   text:'The organizer never touches the money until <em>you</em> confirm delivery.' },
+  { at:7,   text:'Our tagline says it plainly: <em>Buy together. Pay securely.</em>' },
+  { at:10,  text:'Everything else follows from one principle — funds locked by code, not trust.' },
+  { at:12,  text:'This is a real problem in Filipino online communities.' },
+  { at:14,  text:'Watch a typical pasabuy scam play out in the chat on the right.' },
+  { at:17,  text:'GCash sent. Message read. Then — <strong>blocked</strong>. Money gone.' },
+  { at:20,  text:'Facebook bans the account. It never returns the money.' },
+  { at:22,  text:'The worst part? Scammers build trust for <em>months</em> first.' },
+  { at:25,  text:'Real receipts, testimonials, past small orders — a patient con.' },
+  { at:28,  text:'Victims lose anywhere from ₱500 to <strong>over ₱50,000</strong>.' },
+  { at:31,  text:'Multiplied by thousands of victims a month. A nine-figure silent problem.' },
   { at:34,  text:'Our fix isn&apos;t another reputation platform. It&apos;s <em>math</em>.' },
-  { at:38,  text:'We put your money into a smart contract on Stellar — locked by code.' },
-  { at:42,  text:'The user flow is three steps. You Pay. They Deliver. You Confirm.' },
+  { at:37,  text:'Money enters a smart contract, locked until conditions are met.' },
+  { at:40,  text:'Enforced by code. Not by policy. Not even by us.' },
+  { at:42,  text:'The user flow is three steps. <em>You Pay. They Deliver. You Confirm.</em>' },
   { at:46,  text:'If any step is missed, funds return to the buyer <em>automatically</em>.' },
-  { at:50,  text:'Under the hood: buyer wallet → <em>Freighter</em> → Soroban RPC → contract.' },
-  { at:55,  text:'Every action is a signed on-chain transaction. Nothing is custodial.' },
-  { at:60,  text:'The contract is 5.1 KB of Rust. No withdraw. No admin. No upgrade.' },
-  { at:63,  text:'We couldn&apos;t drain the escrow even if we wanted to. That&apos;s the point.' },
-  { at:66,  text:'Browse active pasabuys on the <em>Explore</em> page.' },
-  { at:70,  text:'Every listing shows price in ₱ and XLM, deadline, and organizer wallet.' },
-  { at:74,  text:'To join, fill in your delivery details — name, PH phone, meetup, quantity.' },
-  { at:78,  text:'Contact fields are visible <em>only to the organizer</em>, protected by RLS.' },
-  { at:82,  text:'Now the important part: sign the deposit with <em>Freighter</em>.' },
-  { at:86,  text:'One popup, one signature, and your XLM is locked in escrow.' },
-  { at:90,  text:'Track your order status from the buyer dashboard.' },
-  { at:94,  text:'Every step is verifiable on <em>Stellar Expert</em> — full transparency.' },
-  { at:98,  text:'When your item arrives, one click releases the escrow to the organizer.' },
-  { at:102, text:'No support ticket, no delay — the contract executes it in one ledger.' },
-  { at:104, text:'But what if nothing arrives? The deadline passes…' },
-  { at:107, text:'…and one tap on <em>refund()</em> returns your funds. <strong>Automatically.</strong>' },
-  { at:110, text:'Four common scam attacks are all made <strong>structurally impossible</strong>.' },
-  { at:113, text:'Not by policy. Not by trust. By code.' },
-  { at:115, text:'Ready to <em>pasabuy without fear?</em>' },
-  { at:118, text:'Live on Stellar Testnet at <em>pasabuysafe.vercel.app</em>. Free forever.' }
+  { at:50,  text:'Under the hood, here&apos;s the actual path…' },
+  { at:52,  text:'Your wallet → <em>Freighter</em> browser extension → Soroban RPC → contract.' },
+  { at:55,  text:'Every action is a signed, on-chain transaction. Zero custodial backend.' },
+  { at:58,  text:'You can verify every step on Stellar Expert — publicly, forever.' },
+  { at:60,  text:'The contract itself is just 5.1 KB of Rust.' },
+  { at:62,  text:'No <em>withdraw()</em>. No admin key. No upgrade path.' },
+  { at:64,  text:'We couldn&apos;t drain it even if we wanted to. That&apos;s the whole point.' },
+  { at:66,  text:'This is the <em>Explore</em> page — every active pasabuy.' },
+  { at:69,  text:'Real listings: Cebu chicharon, Ilocos empanada, Osaka moshi manju.' },
+  { at:72,  text:'Prices in ₱ and XLM. Live deadlines. Organizer wallet public.' },
+  { at:74,  text:'To join, fill in your delivery details.' },
+  { at:77,  text:'Name, PH phone in +63 format, meetup location, quantity, notes.' },
+  { at:80,  text:'Contact info is visible <em>only to the organizer</em>. RLS-protected.' },
+  { at:82,  text:'Now the moment of truth — sign the deposit with <em>Freighter</em>.' },
+  { at:85,  text:'One popup. Review the exact call and amount.' },
+  { at:88,  text:'One signature. Your XLM is <em>locked</em> on Stellar.' },
+  { at:90,  text:'From here, track your order live on the dashboard.' },
+  { at:93,  text:'Paid → Delivered → Confirmed. Fully bounded state machine.' },
+  { at:96,  text:'Every transaction linked to Stellar Expert. <em>Full transparency.</em>' },
+  { at:98,  text:'When your item arrives, one click releases the escrow.' },
+  { at:101, text:'Funds move to the organizer in a single Stellar ledger.' },
+  { at:103, text:'No support ticket. No delay. Just math.' },
+  { at:104, text:'But — what if nothing ever arrives?' },
+  { at:107, text:'The deadline passes. You tap <em>refund()</em>.' },
+  { at:109, text:'The contract returns your XLM <strong>automatically</strong>. No approval.' },
+  { at:110, text:'Four classic scam attacks are made <strong>impossible</strong>.' },
+  { at:112, text:'Collect-and-block. Fake confirms. Direct withdraw. Deadline change.' },
+  { at:114, text:'All four — <em>structural</em> failure by design. Not policy.' },
+  { at:115, text:'You can try all of this right now, <em>completely free.</em>' },
+  { at:117, text:'Free test XLM. Free Freighter wallet. Zero real money at risk.' },
+  { at:119, text:'Live at <em>pasabuysafe.vercel.app</em>. Made in the Philippines. 🇵🇭' }
 ];
 
 const $ = (s) => document.querySelector(s);
