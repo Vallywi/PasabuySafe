@@ -231,7 +231,7 @@ Each pasabuy — and each buyer's order within it — moves through a bounded st
 
 - **PasabuySafe Soroban contract (Stellar Testnet):**
   `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB` · [view on Stellar Expert ↗](https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB)
-  
+
   ![Stellar Expert Contract](./pasabuy-safe-web/public/soroban.png)
   
 - **Live web app:** [pasabuysafe.vercel.app](https://pasabuysafe.vercel.app)
@@ -242,20 +242,30 @@ Every deposit, mark-delivered, confirm, and refund transaction can be verified i
 
 ## 📸 Screenshots
 
-| Landing / Explore | Buyer flow | Organizer dashboard |
-|:---:|:---:|:---:|
-| ![Explore page](./docs/screenshots/explore.png) | ![Buyer order](./docs/screenshots/buyer-order.png) | ![Organizer dashboard](./docs/screenshots/organizer.png) |
-| Browse active pasabuys, see slots, price, deadline | Deposit, track status, confirm delivery or claim refund | Manage participants, mark delivered, view transaction history |
+| Landing page | Explore |
+|:---:|:---:|
+| ![Landing page](./docs/screenshots/landing.png) | ![Explore page](./docs/screenshots/explore.png) |
+| Hero section, how it works, trust signals | Browse active pasabuys, see slots, price, deadline |
 
-| Landing page | FAQ | Auth |
-|:---:|:---:|:---:|
-| ![Landing page](./docs/screenshots/landing.png) | ![FAQ](./docs/screenshots/faq.png) | ![Auth](./docs/screenshots/auth.png) |
-| Hero section, how it works, trust signals | Common questions about escrow and pasabuy | Sign in / sign up with wallet or email |
+| Buyer flow | Organizer dashboard |
+|:---:|:---:|
+| ![Buyer order](./docs/screenshots/buyer-order.png) | ![Organizer dashboard](./docs/screenshots/organizer.png) |
+| Deposit, track status, confirm delivery or claim refund | Manage participants, mark delivered, view transaction history |
 
-| Create Pasabuy | Profile | Pasabuy Detail |
-|:---:|:---:|:---:|
-| ![Create Pasabuy](./docs/screenshots/create-pasabuy.png) | ![Profile](./docs/screenshots/profile.png) | ![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png) |
-| Organizer form to create a new group buy | User profile with wallet info and order history | Detailed view of a pasabuy with join options |
+| FAQ | Auth |
+|:---:|:---:|
+| ![FAQ](./docs/screenshots/faq.png) | ![Auth](./docs/screenshots/auth.png) |
+| Common questions about escrow and pasabuy | Sign in / sign up with wallet or email |
+
+| Create Pasabuy | Profile |
+|:---:|:---:|
+| ![Create Pasabuy](./docs/screenshots/create-pasabuy.png) | ![Profile](./docs/screenshots/profile.png) |
+| Organizer form to create a new group buy | User profile with wallet info and order history |
+
+| Pasabuy Detail | |
+|:---:|:---:|
+| ![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png) | |
+| Detailed view of a pasabuy with join options | |
 
 > Drop PNGs into `docs/screenshots/` with the filenames above and they will render automatically. Recommended width: 1200 px. Missing screenshots render as broken-image icons on GitHub; delete the row until the file exists if that bothers you.
 
