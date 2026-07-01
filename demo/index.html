@@ -567,7 +567,94 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 </head>
 <body>
 
+<!-- Reusable SVG icon library (Lucide-style stroke icons) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></symbol>
+    <symbol id="i-heartcrack" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/><path d="m12 13-1-1 2-2-3-2 2-2"/></symbol>
+    <symbol id="i-coins" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+    <symbol id="i-mappin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="m18 5 3 3"/><path d="m15 8 3 3"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></symbol>
+    <symbol id="i-ph" viewBox="0 0 24 16" fill="#0038a8"><rect width="24" height="8" fill="#0038a8"/><rect y="8" width="24" height="8" fill="#ce1126"/><polygon points="0,0 12,8 0,16" fill="#fff"/><polygon points="4,7 6,4 6,10" fill="#fcd116"/></symbol>
+  </defs>
+</svg>
+
+<style>
+  /* Style tuning for the new inline SVG icons */
+  .ic-svg{display:inline-block;vertical-align:middle}
+  .ic-svg svg{width:100%;height:100%}
+  .always-animate{animation:always-breathe 3.5s ease-in-out infinite}
+  @keyframes always-breathe{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.04)}
+  }
+  .always-float{animation:always-float 4s ease-in-out infinite}
+  @keyframes always-float{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-4px)}
+  }
+  .always-spin-slow{animation:always-spin 20s linear infinite}
+  @keyframes always-spin{
+    to{transform:rotate(360deg)}
+  }
+  .shimmer{
+    position:relative;overflow:hidden;
+  }
+  .shimmer::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.4) 50%,transparent 70%);
+    transform:translateX(-100%);
+    animation:shimmer-sweep 3s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes shimmer-sweep{
+    to{transform:translateX(100%)}
+  }
+  /* Ambient background particles on every scene */
+  .ambient{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+  .ambient .p{
+    position:absolute;width:6px;height:6px;border-radius:50%;
+    background:rgba(251,191,36,.35);
+    animation:ambient-drift 8s ease-in-out infinite;
+  }
+  .ambient .p:nth-child(1){top:20%;left:8%;animation-delay:0s}
+  .ambient .p:nth-child(2){top:70%;left:18%;animation-delay:1s;width:4px;height:4px}
+  .ambient .p:nth-child(3){top:30%;left:88%;animation-delay:2s}
+  .ambient .p:nth-child(4){top:80%;left:82%;animation-delay:3s;width:4px;height:4px}
+  .ambient .p:nth-child(5){top:50%;left:50%;animation-delay:4s;width:3px;height:3px}
+  @keyframes ambient-drift{
+    0%,100%{transform:translate(0,0);opacity:.35}
+    50%{transform:translate(20px,-20px);opacity:.8}
+  }
+  /* Smoother scene cross-fade (700ms overlap instead of 500ms hard switch) */
+  .scene{transition:opacity 700ms cubic-bezier(.4,0,.2,1),transform 700ms cubic-bezier(.4,0,.2,1) !important}
+</style>
+
 <div class="stage" id="stage">
+
+<!-- Ambient background particles (always drifting) -->
+<div class="ambient">
+  <div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div>
+</div>
 
 <!-- Act indicator (updates on act change) -->
 <div class="act-bar" id="actBar">
@@ -594,8 +681,13 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   <div class="scene active" data-scene="1">
     <div class="body">
       <div class="brand-intro">
-        <div class="sparkles"><span>✨</span><span>💛</span><span>🛡️</span><span>✨</span></div>
-        <div class="logo-big"><img src="../pasabuy-safe-web/public/logo.png" alt="PasabuySafe"></div>
+        <div class="sparkles">
+          <span><svg width="22" height="22" viewBox="0 0 24 24" fill="#FCD34D"><use href="#i-sparkles"/></svg></span>
+          <span><svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B"><use href="#i-sparkles"/></svg></span>
+          <span><svg width="24" height="24" viewBox="0 0 24 24" fill="#FBBF24"><use href="#i-sparkles"/></svg></span>
+          <span><svg width="18" height="18" viewBox="0 0 24 24" fill="#FCD34D"><use href="#i-sparkles"/></svg></span>
+        </div>
+        <div class="logo-big always-float"><img src="../pasabuy-safe-web/public/logo.png" alt="PasabuySafe"></div>
         <h1>Pasabuy<span class="safe">Safe</span></h1>
         <div class="divider"></div>
         <div class="strap">ANTI-SCAM ESCROW · POWERED BY STELLAR SOROBAN</div>
@@ -615,10 +707,10 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
         </h2>
         <p>Blockchain-powered escrow for Filipino group buying — no more scammers walking away with your money.</p>
         <div class="badges">
-          <div class="b hot">🇵🇭 Made in Philippines</div>
-          <div class="b">🔒 Non-custodial</div>
-          <div class="b">⚡ Instant refunds</div>
-          <div class="b">💛 Free forever</div>
+          <div class="b hot"><svg width="16" height="11" viewBox="0 0 24 16" style="margin-right:6px;vertical-align:middle;border-radius:2px"><use href="#i-ph"/></svg>Made in Philippines</div>
+          <div class="b"><svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--sl9);margin-right:6px;vertical-align:middle"><use href="#i-lock"/></svg>Non-custodial</div>
+          <div class="b"><svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--y6);margin-right:6px;vertical-align:middle" fill="var(--y5)"><use href="#i-zap"/></svg>Instant refunds</div>
+          <div class="b"><svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--y5);margin-right:6px;vertical-align:middle"><use href="#i-heart"/></svg>Free forever</div>
         </div>
       </div>
     </div>
@@ -637,10 +729,10 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
             <div class="bubble them b1">Hi po! Interested sa Korean skincare batch? ₱2,500 lang po, 3-day delivery 🙏</div>
             <div class="bubble me b2">Sige po! Send ko na?</div>
             <div class="bubble them b3">Yes po! GCash to 09XX-XXX-1234 · thank u!</div>
-            <div class="bubble me b4 gcash">💸 GCash sent · ₱2,500</div>
+            <div class="bubble me b4 gcash"><svg width="14" height="14" viewBox="0 0 24 24" style="color:#fff;margin-right:6px;vertical-align:-2px"><use href="#i-send"/></svg>GCash sent · ₱2,500</div>
           </div>
         </div>
-        <div class="blocked-stamp">🚫 BLOCKED</div>
+        <div class="blocked-stamp"><svg width="30" height="30" viewBox="0 0 24 24" style="color:var(--rd6);margin-right:8px;vertical-align:-6px;stroke-width:3"><use href="#i-ban"/></svg>BLOCKED</div>
       </div>
     </div>
   </div>
@@ -650,19 +742,19 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="body">
       <div class="problem-grid">
         <div class="problem-card">
-          <div class="icon">💸</div>
+          <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" style="color:var(--rd6)"><use href="#i-send"/></svg></div>
           <div class="big">₱500 – 50K</div>
           <div class="lbl">Lost per victim</div>
           <div class="txt">GCash sent, item never arrives. <strong>Zero buyer protection.</strong> No chargeback, no dispute.</div>
         </div>
         <div class="problem-card">
-          <div class="icon">🚫</div>
+          <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" style="color:var(--rd6)"><use href="#i-ban"/></svg></div>
           <div class="big">0</div>
           <div class="lbl">Recourse</div>
           <div class="txt">Facebook bans the scammer, but <strong>never returns the money.</strong> Police reports go nowhere.</div>
         </div>
         <div class="problem-card">
-          <div class="icon">💔</div>
+          <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" style="color:var(--rd6)"><use href="#i-heartcrack"/></svg></div>
           <div class="big">1,000s</div>
           <div class="lbl">Victims monthly</div>
           <div class="txt">Reputation systems fail. Scammers <strong>build trust for months</strong>, then vanish overnight.</div>
@@ -677,21 +769,21 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
       <div class="intro-flow">
         <div class="flow-step">
           <div class="num">01</div>
-          <div class="ico">💰</div>
+          <div class="ico always-breathe"><svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--y6)"><use href="#i-coins"/></svg></div>
           <h4>You Pay</h4>
           <p>Money locked in a smart contract. Organizer cannot touch it.</p>
         </div>
-        <div class="flow-arrow">→</div>
+        <div class="flow-arrow"><svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--y5)"><use href="#i-arrow-right"/></svg></div>
         <div class="flow-step">
           <div class="num">02</div>
-          <div class="ico">📦</div>
+          <div class="ico always-breathe" style="animation-delay:.3s"><svg width="28" height="28" viewBox="0 0 24 24" style="color:#C2410C"><use href="#i-package"/></svg></div>
           <h4>They Deliver</h4>
           <p>Organizer ships. Money stays locked in escrow.</p>
         </div>
-        <div class="flow-arrow">→</div>
+        <div class="flow-arrow"><svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--y5)"><use href="#i-arrow-right"/></svg></div>
         <div class="flow-step">
           <div class="num">03</div>
-          <div class="ico">✅</div>
+          <div class="ico always-breathe" style="animation-delay:.6s"><svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--em6)"><use href="#i-check-circle"/></svg></div>
           <h4>You Confirm</h4>
           <p>Got your item? One click releases funds. Done.</p>
         </div>
@@ -705,28 +797,28 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
       <div class="stack-wrap">
         <div class="stack-node buyer">
           <div class="badge">BUYER</div>
-          <div class="ico">👤</div>
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" style="color:var(--sl9)"><use href="#i-user"/></svg></div>
           <h5>Any wallet</h5>
           <p>Filipino buyer with XLM on Stellar Testnet.</p>
         </div>
-        <div class="stack-arrow">→</div>
+        <div class="stack-arrow"><svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--y6)"><use href="#i-arrow-right"/></svg></div>
         <div class="stack-node freighter">
           <div class="badge">FREIGHTER</div>
-          <div class="ico">🚀</div>
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" style="color:#4338CA"><use href="#i-wallet"/></svg></div>
           <h5>Wallet signing</h5>
           <p>Browser extension signs every transaction.</p>
         </div>
-        <div class="stack-arrow">→</div>
+        <div class="stack-arrow"><svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--y6)"><use href="#i-arrow-right"/></svg></div>
         <div class="stack-node soroban">
           <div class="badge">SOROBAN RPC</div>
-          <div class="ico">◎</div>
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" style="color:var(--stellar)"><use href="#i-code"/></svg></div>
           <h5>Stellar network</h5>
           <p>Testnet RPC relays the signed call to the contract.</p>
         </div>
-        <div class="stack-arrow">→</div>
+        <div class="stack-arrow"><svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--y6)"><use href="#i-arrow-right"/></svg></div>
         <div class="stack-node contract">
           <div class="badge">PASABUYSAFE</div>
-          <div class="ico">🔒</div>
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" style="color:var(--y6)"><use href="#i-lock"/></svg></div>
           <h5>Escrow contract</h5>
           <p>Rust + Soroban SDK · 5.1 KB WASM.</p>
         </div>
@@ -749,7 +841,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
         </div>
         <div class="vault-box">
           <div class="chain">STELLAR · SOROBAN</div>
-          <div class="lock">🔒</div>
+          <div class="lock"><svg width="80" height="80" viewBox="0 0 24 24" style="color:#fff;stroke-width:2"><use href="#i-lock"/></svg></div>
         </div>
         <div class="vault-info">
           <span class="badge">CONTRACT · CBSPN43…7OKB</span>
@@ -776,39 +868,39 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
         </div>
         <div class="pasabuy-grid">
           <div class="pasabuy-card">
-            <div class="cover">🌶️<span class="chip-cat">Food</span><span class="chip-hot">🔥 URGENT</span></div>
+            <div class="cover">🌶<span class="chip-cat">Food</span><span class="chip-hot"><svg width="10" height="10" viewBox="0 0 24 24" style="color:#fff;vertical-align:-1px;margin-right:3px"><use href="#i-flame"/></svg>URGENT</span></div>
             <div class="body">
               <div class="title">Carcar Chicharon #12</div>
-              <div class="loc">📍 Cebu City · Pickup</div>
+              <div class="loc"><svg width="11" height="11" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-mappin"/></svg>Cebu City · Pickup</div>
               <div class="price-row">
                 <div><div class="php">₱420</div><div class="xlm">7 XLM per slot</div></div>
-                <div class="clk">⏰ 6h left</div>
+                <div class="clk"><svg width="11" height="11" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-clock"/></svg>6h left</div>
               </div>
-              <div class="join">Join Safely →</div>
+              <div class="join">Join Safely <svg width="12" height="12" viewBox="0 0 24 24" style="color:currentColor;vertical-align:-2px"><use href="#i-arrow-right"/></svg></div>
             </div>
           </div>
           <div class="pasabuy-card">
             <div class="cover">🥟<span class="chip-cat">Food</span></div>
             <div class="body">
               <div class="title">Ilocos Empanada ng Quiapo</div>
-              <div class="loc">📍 Metro Manila · Meetup</div>
+              <div class="loc"><svg width="11" height="11" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-mappin"/></svg>Metro Manila · Meetup</div>
               <div class="price-row">
                 <div><div class="php">₱180</div><div class="xlm">3 XLM per slot</div></div>
-                <div class="clk" style="color:#334155">⏰ 2 days</div>
+                <div class="clk" style="color:#334155"><svg width="11" height="11" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-clock"/></svg>2 days</div>
               </div>
-              <div class="join">Join Safely →</div>
+              <div class="join">Join Safely <svg width="12" height="12" viewBox="0 0 24 24" style="color:currentColor;vertical-align:-2px"><use href="#i-arrow-right"/></svg></div>
             </div>
           </div>
           <div class="pasabuy-card">
             <div class="cover">🍡<span class="chip-cat">Food</span></div>
             <div class="body">
               <div class="title">Osaka Moshi Manju</div>
-              <div class="loc">📍 NAIA · Airport pickup</div>
+              <div class="loc"><svg width="11" height="11" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-mappin"/></svg>NAIA · Airport pickup</div>
               <div class="price-row">
                 <div><div class="php">₱660</div><div class="xlm">11 XLM per slot</div></div>
-                <div class="clk" style="color:#334155">⏰ 5 days</div>
+                <div class="clk" style="color:#334155"><svg width="11" height="11" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-clock"/></svg>5 days</div>
               </div>
-              <div class="join">Join Safely →</div>
+              <div class="join">Join Safely <svg width="12" height="12" viewBox="0 0 24 24" style="color:currentColor;vertical-align:-2px"><use href="#i-arrow-right"/></svg></div>
             </div>
           </div>
         </div>
@@ -841,15 +933,15 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
             <div><label>Delivery</label><div class="input">Meetup</div></div>
           </div>
           <div class="field"><div class="total"><span class="k">ORDER TOTAL</span><div style="text-align:right"><div class="v">14 XLM</div><div style="font-size:10px;color:#92400E">≈ ₱840</div></div></div></div>
-          <div class="btn">💳 Deposit 14 XLM to escrow</div>
+          <div class="btn"><svg width="14" height="14" viewBox="0 0 24 24" style="color:currentColor;vertical-align:-2px;margin-right:6px"><use href="#i-wallet"/></svg>Deposit 14 XLM to escrow</div>
         </div>
       </div>
       <div class="freighter-pop">
-        <div class="rocket">🚀</div>
+        <div class="rocket"><svg width="20" height="20" viewBox="0 0 24 24" style="color:#fff"><use href="#i-wallet"/></svg></div>
         <div class="txt"><strong>Freighter · Sign transaction</strong><code>contract.deposit(1, buyer, 140000000)</code></div>
       </div>
       <div class="confirmed-badge">
-        <div class="ic">✓</div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" style="color:#fff;stroke-width:3"><use href="#i-check"/></svg></div>
         <div><strong>Confirmed on-chain</strong><div class="hash">tx: a3f21b…c8de49</div></div>
       </div>
     </div>
@@ -876,7 +968,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
           <div><div class="k">Delivered at</div><div class="v">Jul 3 · 5:40 PM</div></div>
         </div>
         <div class="tl-receipt">
-          <h5>🧾 Transaction receipt</h5>
+          <h5><svg width="13" height="13" viewBox="0 0 24 24" style="color:currentColor;vertical-align:-2px;margin-right:6px"><use href="#i-receipt"/></svg>TRANSACTION RECEIPT</h5>
           <div class="tx"><div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;letter-spacing:.08em;font-weight:700">Deposit</div><span class="hash">a3f21b…c8de49</span></div><span class="link">View on Stellar Expert ↗</span></div>
         </div>
       </div>
@@ -890,10 +982,10 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="body">
       <div class="refund-wrap">
         <div style="text-align:center">
-          <div class="deadline-clock">⏰</div>
+          <div class="deadline-clock"><svg width="70" height="70" viewBox="0 0 24 24" style="color:var(--y6);stroke-width:1.8"><use href="#i-clock"/></svg></div>
           <div style="margin-top:14px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Deadline passed</div>
         </div>
-        <div class="arrow-flow">➜</div>
+        <div class="arrow-flow"><svg width="44" height="44" viewBox="0 0 24 24" style="color:currentColor;stroke-width:2.5"><use href="#i-arrow-right"/></svg></div>
         <div class="refund-wallet">
           <div class="amt">+ 14 XLM</div>
           <div class="lbl">Refunded automatically</div>
@@ -907,10 +999,10 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   <div class="scene" data-scene="12">
     <div class="body">
       <div class="attack-grid">
-        <div class="attack"><div class="ic">🚫</div><div><div class="att">Attack · Collect and block buyers</div><div class="def">Money never reaches the organizer. Buyer refunds on-chain after the deadline.</div></div></div>
-        <div class="attack"><div class="ic">🔐</div><div><div class="att">Attack · Fake buyer confirmation</div><div class="def">Confirming requires the buyer's private-key signature. Cannot be forged.</div></div></div>
-        <div class="attack"><div class="ic">⛔</div><div><div class="att">Attack · Direct withdraw of funds</div><div class="def">Contract has no <code>withdraw()</code> function. Only buyer-signed confirms release money.</div></div></div>
-        <div class="attack"><div class="ic">📆</div><div><div class="att">Attack · Change deadline mid-flight</div><div class="def">Deadline is set once at creation and stored immutably on Stellar forever.</div></div></div>
+        <div class="attack"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--rd6)"><use href="#i-ban"/></svg></div><div><div class="att">Attack · Collect and block buyers</div><div class="def">Money never reaches the organizer. Buyer refunds on-chain after the deadline.</div></div></div>
+        <div class="attack"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--rd6)"><use href="#i-key"/></svg></div><div><div class="att">Attack · Fake buyer confirmation</div><div class="def">Confirming requires the buyer's private-key signature. Cannot be forged.</div></div></div>
+        <div class="attack"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--rd6)"><use href="#i-x"/></svg></div><div><div class="att">Attack · Direct withdraw of funds</div><div class="def">Contract has no <code>withdraw()</code> function. Only buyer-signed confirms release money.</div></div></div>
+        <div class="attack"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--rd6)"><use href="#i-calendar"/></svg></div><div><div class="att">Attack · Change deadline mid-flight</div><div class="def">Deadline is set once at creation and stored immutably on Stellar forever.</div></div></div>
       </div>
     </div>
   </div>
@@ -923,8 +1015,8 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
         <h2>Ready to pasabuy<br><span class="grad">without fear?</span></h2>
         <p>Live on Stellar Testnet. Real transactions verifiable on Stellar Expert. Free XLM from Friendbot, free Freighter wallet, zero risk.</p>
         <div class="cta-btns">
-          <div class="cta-btn p">🚀 pasabuysafe.vercel.app</div>
-          <div class="cta-btn s">⭐ github.com/Vallywi/PasabuySafe</div>
+          <div class="cta-btn p"><svg width="16" height="16" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-shield"/></svg>pasabuysafe.vercel.app</div>
+          <div class="cta-btn s"><svg width="16" height="16" viewBox="0 0 24 24" style="color:currentColor"><use href="#i-code"/></svg>github.com/Vallywi/PasabuySafe</div>
         </div>
         <div class="cid">CONTRACT · CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB</div>
       </div>
