@@ -185,22 +185,35 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Start overlay */
+    /* Auto-start intro overlay (replaces manual Start button) */
     .start-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(10px);
+      background: radial-gradient(ellipse at center, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.98) 100%);
+      backdrop-filter: blur(12px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 100;
       color: white;
-      gap: 20px;
-      transition: opacity 400ms ease;
+      gap: 24px;
+      transition: opacity 700ms ease;
     }
     .start-overlay.hidden { opacity: 0; pointer-events: none; }
+    .start-overlay .countdown {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 96px;
+      font-weight: 800;
+      color: var(--yellow-300);
+      line-height: 1;
+      text-shadow: 0 0 60px rgba(251, 191, 36, 0.5);
+      animation: countdownPulse 1s ease infinite;
+    }
+    @keyframes countdownPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.85; }
+    }
     .start-overlay .big-shield {
       width: 100px; height: 100px;
       border-radius: 24px;
@@ -251,6 +264,121 @@
       margin: 0 2px;
       font-family: inherit;
     }
+
+    /* ---------------------------------------------------------------------
+       Cinematic overlays — voiceover-style captions + lower-third chapter label
+       + chapter dots. These sit above the scenes and drive the video feel.
+    --------------------------------------------------------------------- */
+    .chapter-label {
+      position: absolute;
+      bottom: 70px;
+      left: 32px;
+      z-index: 45;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      opacity: 0;
+      transform: translateX(-16px);
+      transition: opacity 500ms ease, transform 500ms ease;
+      pointer-events: none;
+      max-width: 60%;
+    }
+    .chapter-label.show { opacity: 1; transform: translateX(0); }
+    .chapter-label .num {
+      background: linear-gradient(135deg, var(--yellow-300), var(--yellow-500));
+      color: var(--slate-900);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+      box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+    }
+    .chapter-label .title {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .caption-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      max-width: 74%;
+      z-index: 45;
+      opacity: 0;
+      transition: opacity 350ms ease, transform 350ms ease;
+      pointer-events: none;
+      text-align: center;
+    }
+    .caption-bar.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .caption-bar .box {
+      display: inline-block;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 12px 22px;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: -0.005em;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .caption-bar .box em {
+      color: var(--yellow-300);
+      font-style: normal;
+      font-weight: 800;
+    }
+    .caption-bar .box strong {
+      color: #F87171;
+      font-weight: 800;
+    }
+
+    /* Chapter dots (above the progress bar) */
+    .chapter-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 32px;
+      right: 32px;
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      z-index: 46;
+      pointer-events: none;
+    }
+    .chapter-dot {
+      flex: 1;
+      height: 3px;
+      background: rgba(15, 23, 42, 0.12);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .chapter-dot .fill {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, var(--yellow-400), var(--yellow-500));
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 200ms linear;
+    }
+    .chapter-dot.done .fill { transform: scaleX(1); }
+    .chapter-dot.active .fill { transform: scaleX(var(--chapter-progress, 0)); }
 
     /* Utility */
     .center-col { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -1710,19 +1838,36 @@
 
   </div>
 
+  <!-- Lower-third chapter label (updates per scene) -->
+  <div class="chapter-label" id="chapterLabel">
+    <span class="num" id="chapterNum">01</span>
+    <span class="title" id="chapterTitle">The Problem</span>
+  </div>
+
+  <!-- Voiceover-style caption bar (updates by timeline) -->
+  <div class="caption-bar" id="captionBar">
+    <div class="box" id="captionText">Every year, thousands of Filipinos lose money to pasabuy scams.</div>
+  </div>
+
+  <!-- Chapter dots strip -->
+  <div class="chapter-dots" id="chapterDots"></div>
+
   <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
   <div class="pip" id="pip">SCENE 1 / 9  ·  0:00</div>
 
-  <!-- Start overlay -->
+  <!-- Auto-start intro overlay (3-2-1 countdown, no button) -->
   <div class="start-overlay" id="startOverlay">
     <div class="big-shield">
       <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
     </div>
-    <h1>PasabuySafe · Demo</h1>
-    <p>A 2-minute walkthrough of the escrow flow, built to match the real MVP UI. Full-screen the browser (F11), start your recorder, then hit Start.</p>
-    <button class="start-btn" id="startBtn">▶  Start Demo (2:00)</button>
+    <h1>PasabuySafe</h1>
+    <p style="font-size:16px;color:rgba(255,255,255,0.75);letter-spacing:0.02em;">
+      A 2-minute walkthrough of the escrow flow.<br>
+      <span style="color:rgba(255,255,255,0.45);font-size:13px;">Auto-starting…</span>
+    </p>
+    <div class="countdown" id="countdown">3</div>
     <div class="shortcuts">
-      <kbd>Space</kbd> play/pause  ·  <kbd>←</kbd> <kbd>→</kbd> prev/next  ·  <kbd>R</kbd> restart
+      <kbd>Space</kbd> pause  ·  <kbd>←</kbd> <kbd>→</kbd> chapter  ·  <kbd>R</kbd> replay
     </div>
   </div>
 </div>
