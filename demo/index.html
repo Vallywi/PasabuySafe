@@ -16,6 +16,7 @@
   --em4:#34D399;--em5:#10B981;--em6:#059669;
   --r5:#F43F5E;--rd5:#EF4444;--rd6:#DC2626;--rd7:#991B1B;
   --sl9:#0F172A;--sl8:#1E293B;
+  --stellar:#7D00FF;--stellar-2:#3E1E68;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;color:var(--text);background:#0F172A;overflow:hidden;-webkit-font-smoothing:antialiased}
@@ -28,6 +29,23 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   box-shadow:0 40px 100px -20px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05);
 }
 
+/* --- Act indicator (top-right, per act) --- */
+.act-bar{
+  position:absolute;top:20px;right:24px;z-index:47;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(15,23,42,.88);backdrop-filter:blur(8px);
+  color:#fff;padding:6px 12px;border-radius:999px;
+  font-size:11px;font-weight:700;letter-spacing:.1em;
+  opacity:0;transform:translateY(-6px);
+  transition:opacity 400ms ease,transform 400ms ease;
+}
+.act-bar.show{opacity:1;transform:translateY(0)}
+.act-bar .num{
+  background:linear-gradient(135deg,var(--y3),var(--y5));
+  color:var(--sl9);padding:2px 8px;border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;
+}
+
 /* --- Scenes --- */
 .scenes{position:absolute;inset:0;z-index:10}
 .scene{position:absolute;inset:0;opacity:0;transform:translateY(12px);
@@ -37,7 +55,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .scene .body{height:100%;padding:56px 60px 100px;display:flex;flex-direction:column;justify-content:center}
 
 /* --- Big flashing scene title/description block --- */
-.title-flash{position:absolute;left:60px;top:56px;z-index:14;max-width:80%;pointer-events:none}
+.title-flash{position:absolute;left:60px;top:60px;z-index:14;max-width:80%;pointer-events:none}
 .title-flash .eyebrow{
   display:inline-flex;align-items:center;gap:10px;
   padding:6px 14px;background:rgba(15,23,42,.08);
@@ -50,7 +68,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   background:var(--y2);padding:2px 8px;border-radius:5px;font-weight:800;
 }
 .title-flash .title{
-  font-size:56px;font-weight:800;letter-spacing:-.03em;line-height:1.02;
+  font-size:52px;font-weight:800;letter-spacing:-.03em;line-height:1.02;
   color:var(--sl9);
   opacity:0;animation:flashInY 600ms cubic-bezier(.22,1,.36,1) 120ms forwards;
 }
@@ -59,7 +77,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .title-flash .subtitle{
-  font-size:19px;color:var(--muted);margin-top:12px;max-width:720px;line-height:1.45;
+  font-size:17px;color:var(--muted);margin-top:10px;max-width:720px;line-height:1.45;
   opacity:0;animation:flashInY 500ms cubic-bezier(.22,1,.36,1) 260ms forwards;
 }
 @keyframes flashInY{
@@ -76,7 +94,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   border-radius:999px;font-family:'JetBrains Mono',monospace;
   font-size:11px;font-weight:700;letter-spacing:.1em
 }
-.chapter-dots{position:absolute;bottom:12px;left:32px;right:32px;display:flex;gap:4px;z-index:46;pointer-events:none}
+.chapter-dots{position:absolute;bottom:12px;left:32px;right:32px;display:flex;gap:3px;z-index:46;pointer-events:none}
 .chapter-dot{flex:1;height:3px;background:rgba(15,23,42,.12);border-radius:999px;overflow:hidden;position:relative}
 .chapter-dot .fill{position:absolute;inset:0;background:linear-gradient(90deg,var(--y4),var(--y5));transform:scaleX(0);transform-origin:left center;transition:transform 200ms linear}
 .chapter-dot.done .fill{transform:scaleX(1)}
@@ -109,8 +127,9 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   background:linear-gradient(135deg,var(--y3),var(--y5));
   display:grid;place-items:center;
   box-shadow:0 20px 60px rgba(251,191,36,.5);
-  animation:bob 3s ease infinite
+  animation:bob 3s ease infinite;overflow:hidden
 }
+.start-overlay .big-shield img{width:110%;height:110%;object-fit:cover}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .start-overlay h1{font-size:44px;font-weight:800;letter-spacing:-.03em}
 .start-overlay p{color:rgba(255,255,255,.7);text-align:center;line-height:1.6;font-size:15px;max-width:460px}
@@ -126,40 +145,109 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* Yellow gradient text helper */
 .grad{background:linear-gradient(90deg,var(--y5),var(--y4),var(--y5));-webkit-background-clip:text;background-clip:text;color:transparent}
 
-/* --------- SCENE 1 · The Hook (scam chat sim) --------- */
-.hook-wrap{max-width:600px;margin:0 auto;position:relative;padding-top:110px}
+/* ============================================================
+   SCENE 1 · BRAND INTRO — animated logo reveal
+============================================================ */
+.brand-intro{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;position:relative}
+.brand-intro .logo-big{
+  width:200px;height:200px;border-radius:44px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(251,191,36,.5),0 0 0 8px rgba(251,191,36,.15);
+  animation:logoIn 900ms cubic-bezier(.22,1.4,.36,1) forwards;
+  opacity:0;transform:scale(.6) rotate(-8deg);
+}
+.brand-intro .logo-big img{width:100%;height:100%;object-fit:cover;display:block}
+@keyframes logoIn{
+  to{opacity:1;transform:scale(1) rotate(0deg)}
+}
+.brand-intro h1{
+  font-size:96px;font-weight:800;letter-spacing:-.04em;color:var(--sl9);
+  margin-top:20px;opacity:0;
+  animation:brandTextIn 700ms cubic-bezier(.22,1,.36,1) 700ms forwards;
+}
+.brand-intro h1 .safe{color:var(--y5)}
+.brand-intro .divider{
+  width:120px;height:3px;background:linear-gradient(90deg,transparent,var(--y5),transparent);
+  margin:20px auto 0;opacity:0;transform:scaleX(0);
+  animation:dividerIn 500ms ease 1200ms forwards;
+}
+@keyframes dividerIn{to{opacity:1;transform:scaleX(1)}}
+.brand-intro .strap{
+  margin-top:14px;font-size:18px;color:var(--muted);letter-spacing:.06em;
+  opacity:0;animation:brandTextIn 500ms ease 1400ms forwards;
+}
+@keyframes brandTextIn{
+  from{opacity:0;transform:translateY(14px);filter:blur(6px)}
+  to{opacity:1;transform:translateY(0);filter:blur(0)}
+}
+.brand-intro .sparkles{position:absolute;inset:0;pointer-events:none}
+.brand-intro .sparkles span{
+  position:absolute;font-size:22px;
+  animation:twinkle 3s ease infinite;
+}
+.brand-intro .sparkles span:nth-child(1){top:22%;left:20%;animation-delay:.4s}
+.brand-intro .sparkles span:nth-child(2){top:30%;right:22%;animation-delay:.9s}
+.brand-intro .sparkles span:nth-child(3){bottom:28%;left:32%;animation-delay:1.4s}
+.brand-intro .sparkles span:nth-child(4){bottom:22%;right:28%;animation-delay:.6s}
+@keyframes twinkle{
+  0%,100%{transform:scale(.6) rotate(0);opacity:.2}
+  50%{transform:scale(1.2) rotate(180deg);opacity:.9}
+}
+
+/* ============================================================
+   SCENE 2 · TAGLINE
+============================================================ */
+.tag-scene{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:80px 60px}
+.tag-scene h2{
+  font-size:110px;font-weight:800;letter-spacing:-.04em;line-height:1.02;color:var(--sl9);
+}
+.tag-scene h2 .w{display:inline-block;opacity:0;filter:blur(10px);transform:translateY(20px);animation:wIn 600ms cubic-bezier(.22,1,.36,1) forwards;margin-right:16px}
+.tag-scene h2 .w:nth-child(1){animation-delay:200ms}
+.tag-scene h2 .w:nth-child(2){animation-delay:340ms}
+.tag-scene h2 .w:nth-child(3){animation-delay:480ms}
+.tag-scene h2 .w:nth-child(4){animation-delay:620ms;color:var(--y5)}
+@keyframes wIn{to{opacity:1;filter:blur(0);transform:translateY(0)}}
+.tag-scene p{font-size:22px;color:var(--muted);margin-top:24px;max-width:800px;line-height:1.5;opacity:0;animation:wIn 500ms ease 900ms forwards}
+.tag-scene .badges{margin-top:32px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;opacity:0;animation:wIn 500ms ease 1200ms forwards}
+.tag-scene .badges .b{padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--border);color:var(--sl9)}
+.tag-scene .badges .b.hot{background:var(--y3)}
+
+/* ============================================================
+   SCENE 3 · THE HOOK (scam chat)
+============================================================ */
+.hook-wrap{max-width:600px;margin:0 auto;position:relative;padding-top:130px}
 .chat-app{background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.15);overflow:hidden;border:1px solid var(--border)}
 .chat-head{background:#F8FAFC;padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
 .chat-head .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#94A3B8,#64748B);display:grid;place-items:center;color:#fff;font-weight:700}
 .chat-head .who{flex:1}
 .chat-head .name{font-size:14px;font-weight:700;color:var(--sl9)}
 .chat-head .sub{font-size:11px;color:var(--muted-2);font-family:'JetBrains Mono',monospace}
-.chat-body{padding:20px;background:linear-gradient(180deg,#F8FAFC 0%,#FFFFFF 100%);min-height:280px;display:flex;flex-direction:column;gap:10px}
-.bubble{max-width:75%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;opacity:0;transform:translateY(8px);animation:bubbleIn 400ms ease forwards}
+.chat-body{padding:20px;background:linear-gradient(180deg,#F8FAFC 0%,#FFFFFF 100%);min-height:240px;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:75%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.4;opacity:0;transform:translateY(8px);animation:bubbleIn 400ms ease forwards}
 .bubble.them{align-self:flex-start;background:#F1F5F9;color:var(--sl9);border-top-left-radius:4px}
 .bubble.me{align-self:flex-end;background:#0EA5E9;color:#fff;border-top-right-radius:4px}
-.bubble.b1{animation-delay:.3s}
-.bubble.b2{animation-delay:1.2s}
-.bubble.b3{animation-delay:2.4s}
-.bubble.b4{animation-delay:3.4s}
+.bubble.b1{animation-delay:.2s}
+.bubble.b2{animation-delay:.9s}
+.bubble.b3{animation-delay:1.8s}
+.bubble.b4{animation-delay:2.6s}
 .bubble.gcash{background:linear-gradient(135deg,#3B82F6,#1D4ED8);color:#fff;font-weight:700;border:2px solid #93C5FD;box-shadow:0 6px 20px rgba(59,130,246,.4)}
 .blocked-stamp{
   position:absolute;top:200px;left:50%;transform:translate(-50%,-50%) rotate(-12deg);
   color:var(--rd6);border:6px solid var(--rd6);padding:14px 26px;
   font-size:38px;font-weight:900;letter-spacing:.15em;
   border-radius:8px;text-transform:uppercase;background:rgba(254,226,226,.9);
-  opacity:0;animation:stampIn 400ms ease 5s forwards;box-shadow:0 20px 60px rgba(220,38,38,.4);
-  z-index:10;
+  opacity:0;animation:stampIn 400ms ease 3.8s forwards;box-shadow:0 20px 60px rgba(220,38,38,.4);z-index:10;
 }
 @keyframes stampIn{
-  0%{opacity:0;transform:translate(-50%,-50%) rotate(-12deg) scale(2)}
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(-12deg) scale(2.2)}
   60%{opacity:1;transform:translate(-50%,-50%) rotate(-12deg) scale(.9)}
   100%{opacity:1;transform:translate(-50%,-50%) rotate(-12deg) scale(1)}
 }
 @keyframes bubbleIn{to{opacity:1;transform:translateY(0)}}
 
-/* --------- SCENE 2 · The Problem (stats grid) --------- */
-.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:120px}
+/* ============================================================
+   SCENE 4 · THE PROBLEM (stats grid)
+============================================================ */
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:140px}
 .problem-card{
   background:#fff;border:2px solid #FCA5A5;border-radius:18px;padding:22px;
   opacity:0;transform:translateY(20px);animation:cardUp 500ms ease forwards
@@ -174,10 +262,12 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .problem-card .txt{font-size:14px;color:var(--text-2);line-height:1.5;margin-top:10px}
 .problem-card .txt strong{color:var(--rd7)}
 
-/* --------- SCENE 3 · Introducing PasabuySafe (3-step flow) --------- */
-.intro-flow{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:120px}
+/* ============================================================
+   SCENE 5 · SOLUTION (3-step flow)
+============================================================ */
+.intro-flow{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:130px}
 .flow-step{
-  background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px;width:200px;text-align:center;
+  background:#fff;border:1px solid var(--border);border-radius:20px;padding:20px 18px;width:200px;text-align:center;
   box-shadow:0 10px 30px rgba(15,23,42,.06);
   opacity:0;transform:translateY(20px) scale(.95);animation:stepIn 500ms cubic-bezier(.22,1.5,.36,1) forwards
 }
@@ -190,23 +280,71 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .flow-step:nth-child(1) .ico{background:linear-gradient(135deg,#FEF3C7,#FCD34D)}
 .flow-step:nth-child(3) .ico{background:linear-gradient(135deg,#FFEDD5,#FDBA74)}
 .flow-step:nth-child(5) .ico{background:linear-gradient(135deg,#DCFCE7,#86EFAC)}
-.flow-step h4{font-size:17px;font-weight:800;color:var(--sl9);margin-bottom:4px}
+.flow-step h4{font-size:16px;font-weight:800;color:var(--sl9);margin-bottom:4px}
 .flow-step p{font-size:12px;color:var(--muted);line-height:1.45}
 .flow-arrow{font-size:28px;color:var(--y5);opacity:0;animation:fadeIn 500ms ease forwards}
 .flow-arrow:nth-of-type(1){animation-delay:.5s}
 .flow-arrow:nth-of-type(2){animation-delay:1.1s}
 @keyframes fadeIn{to{opacity:1}}
 
-/* --------- SCENE 4 · The Vault --------- */
-.vault-wrap{display:flex;align-items:center;justify-content:center;gap:60px;margin-top:120px}
+/* ============================================================
+   SCENE 6 · TECH STACK (Freighter → Soroban → Stellar)
+============================================================ */
+.stack-wrap{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:130px;flex-wrap:nowrap}
+.stack-node{
+  background:#fff;border-radius:18px;padding:20px 18px;width:190px;text-align:center;
+  border:2px solid var(--border);box-shadow:0 10px 30px rgba(15,23,42,.06);
+  opacity:0;transform:translateY(16px);animation:stackIn 500ms ease forwards;position:relative;
+}
+.stack-node.buyer{animation-delay:.1s}
+.stack-node.freighter{animation-delay:.5s;border-color:#6366F1}
+.stack-node.soroban{animation-delay:.9s;border-color:var(--stellar)}
+.stack-node.contract{animation-delay:1.3s;border-color:var(--y5);background:linear-gradient(180deg,#FEFCE8,#FEF3C7)}
+@keyframes stackIn{to{opacity:1;transform:translateY(0)}}
+.stack-node .badge{
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  padding:2px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.08em;
+  font-family:'JetBrains Mono',monospace;
+}
+.stack-node.buyer .badge{background:#0F172A;color:#fff}
+.stack-node.freighter .badge{background:#6366F1;color:#fff}
+.stack-node.soroban .badge{background:var(--stellar);color:#fff}
+.stack-node.contract .badge{background:var(--y5);color:#fff}
+.stack-node .ico{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:24px;margin:8px auto 10px}
+.stack-node.buyer .ico{background:linear-gradient(135deg,#F1F5F9,#CBD5E1)}
+.stack-node.freighter .ico{background:linear-gradient(135deg,#EEF2FF,#C7D2FE);color:#4338CA;font-weight:900}
+.stack-node.soroban .ico{background:linear-gradient(135deg,#F3E8FF,#D8B4FE);color:var(--stellar);font-weight:900;font-family:'JetBrains Mono',monospace}
+.stack-node.contract .ico{background:linear-gradient(135deg,#FEF3C7,#FCD34D)}
+.stack-node h5{font-size:15px;font-weight:800;color:var(--sl9);margin-bottom:4px}
+.stack-node p{font-size:11px;color:var(--muted);line-height:1.4}
+.stack-arrow{
+  color:var(--y6);font-size:32px;font-weight:800;
+  opacity:0;animation:fadeIn 400ms ease forwards;
+}
+.stack-arrow:nth-of-type(1){animation-delay:.4s}
+.stack-arrow:nth-of-type(2){animation-delay:.8s}
+.stack-arrow:nth-of-type(3){animation-delay:1.2s}
+.stack-note{
+  margin:30px auto 0;max-width:900px;text-align:center;
+  padding:14px 22px;background:rgba(15,23,42,.06);border-radius:14px;
+  font-size:14px;color:var(--text-2);line-height:1.6;
+  opacity:0;animation:fadeIn 500ms ease 1.8s forwards;
+}
+.stack-note code{background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px}
+
+/* ============================================================
+   SCENE 7 · THE VAULT (escrow visualization)
+============================================================ */
+.vault-wrap{display:flex;align-items:center;justify-content:center;gap:50px;margin-top:120px}
 .wallet-ill{position:relative}
 .wallet{
-  width:150px;height:110px;background:linear-gradient(135deg,#1E293B,#0F172A);
+  width:150px;height:110px;background:linear-gradient(135deg,#4338CA,#1E1B4B);
   border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,.3);position:relative;
   display:flex;align-items:center;justify-content:center;color:#fff;
-  font-size:12px;letter-spacing:.1em;
+  font-size:11px;letter-spacing:.1em;font-weight:700;text-align:center;
 }
-.wallet::before{content:'';position:absolute;top:16px;left:16px;right:16px;height:6px;background:rgba(255,255,255,.1);border-radius:3px}
+.wallet::before{content:'FREIGHTER';position:absolute;top:14px;left:0;right:0;font-size:10px;color:rgba(255,255,255,.6);letter-spacing:.15em}
+.wallet-address{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)}
 .coin-fly{
   position:absolute;width:44px;height:44px;border-radius:50%;
   background:radial-gradient(circle at 30% 30%,#FDE68A,#F59E0B);
@@ -237,7 +375,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   position:absolute;top:-16px;left:50%;transform:translateX(-50%);
   background:#0F172A;color:var(--y3);padding:4px 10px;border-radius:999px;
   font-size:10px;font-weight:700;letter-spacing:.1em;
-  font-family:'JetBrains Mono',monospace;box-shadow:0 6px 12px rgba(0,0,0,.25);
+  font-family:'JetBrains Mono',monospace;box-shadow:0 6px 12px rgba(0,0,0,.25);white-space:nowrap;
 }
 .vault-info{max-width:280px}
 .vault-info .badge{display:inline-flex;align-items:center;gap:6px;background:#0F172A;color:var(--y3);padding:4px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-bottom:8px}
@@ -245,112 +383,120 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .vault-info p{color:var(--muted);font-size:14px;line-height:1.55;margin-top:6px}
 .vault-info .tag{display:inline-block;margin-top:8px;background:#F1F5F9;color:var(--muted);padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;margin-right:4px}
 
-/* --------- SCENE 5 · Browse (real explore grid) --------- */
-.browse-wrap{max-width:1200px;margin:110px auto 0}
-.browse-filters{display:flex;gap:6px;margin-bottom:16px}
-.filter-chip{padding:7px 14px;border-radius:999px;font-size:12px;font-weight:600;background:#fff;border:1px solid var(--border);color:var(--muted)}
+/* ============================================================
+   SCENE 8 · BROWSE (explore grid)
+============================================================ */
+.browse-wrap{max-width:1200px;margin:120px auto 0}
+.browse-filters{display:flex;gap:6px;margin-bottom:14px}
+.filter-chip{padding:6px 13px;border-radius:999px;font-size:12px;font-weight:600;background:#fff;border:1px solid var(--border);color:var(--muted)}
 .filter-chip.on{background:var(--em6);color:#fff;border-color:var(--em6);box-shadow:0 4px 12px rgba(16,185,129,.3)}
-.pasabuy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.pasabuy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .pasabuy-card{background:#fff;border:1px solid var(--border);border-radius:20px;overflow:hidden;opacity:0;transform:translateY(20px) scale(.96);animation:cardIn 500ms cubic-bezier(.22,1.4,.36,1) forwards}
 .pasabuy-card:nth-child(1){animation-delay:.2s}
 .pasabuy-card:nth-child(2){animation-delay:.45s}
 .pasabuy-card:nth-child(3){animation-delay:.7s}
 @keyframes cardIn{to{opacity:1;transform:translateY(0) scale(1)}}
-.pasabuy-card .cover{height:130px;display:grid;place-items:center;font-size:58px;position:relative}
+.pasabuy-card .cover{height:120px;display:grid;place-items:center;font-size:54px;position:relative}
 .pasabuy-card:nth-child(1) .cover{background:linear-gradient(135deg,#FFEDD5,#FCD34D)}
 .pasabuy-card:nth-child(2) .cover{background:linear-gradient(135deg,#FEE2E2,#FCA5A5)}
 .pasabuy-card:nth-child(3) .cover{background:linear-gradient(135deg,#DBEAFE,#93C5FD)}
 .pasabuy-card .chip-cat{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.92);padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sl9)}
 .pasabuy-card .chip-hot{position:absolute;top:10px;right:10px;background:var(--rd5);color:#fff;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:800;animation:pulseHot 1.5s ease infinite}
 @keyframes pulseHot{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.pasabuy-card .body{padding:14px 16px 16px}
-.pasabuy-card .title{font-weight:700;font-size:15px;color:var(--sl9);margin-bottom:4px}
-.pasabuy-card .loc{font-size:11px;color:var(--muted);display:inline-flex;gap:4px;align-items:center;margin-bottom:10px}
+.pasabuy-card .body{padding:12px 14px 14px}
+.pasabuy-card .title{font-weight:700;font-size:14px;color:var(--sl9);margin-bottom:3px}
+.pasabuy-card .loc{font-size:11px;color:var(--muted);display:inline-flex;gap:4px;align-items:center;margin-bottom:8px}
 .pasabuy-card .price-row{display:flex;justify-content:space-between;align-items:flex-end}
-.pasabuy-card .php{font-size:22px;font-weight:800;color:var(--y6);line-height:1}
+.pasabuy-card .php{font-size:20px;font-weight:800;color:var(--y6);line-height:1}
 .pasabuy-card .xlm{font-size:10px;color:var(--muted-2);margin-top:2px}
 .pasabuy-card .clk{font-size:11px;font-weight:600;color:var(--rd6);display:inline-flex;gap:3px;align-items:center}
-.pasabuy-card .join{margin-top:12px;background:linear-gradient(90deg,var(--y4),var(--y5));color:var(--sl9);padding:9px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 4px 10px rgba(251,191,36,.3)}
+.pasabuy-card .join{margin-top:10px;background:linear-gradient(90deg,var(--y4),var(--y5));color:var(--sl9);padding:8px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;box-shadow:0 4px 10px rgba(251,191,36,.3)}
 
-/* --------- SCENE 6 · Deposit (join form + Freighter) --------- */
-.dep-layout{display:grid;grid-template-columns:1fr 400px;gap:32px;max-width:1150px;margin:110px auto 0;align-items:center}
-.dep-left h3{font-size:36px;font-weight:800;color:var(--sl9);letter-spacing:-.03em;line-height:1.05}
-.dep-left p{color:var(--muted);font-size:15px;margin-top:8px;line-height:1.5}
-.dep-left ul{margin-top:16px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-2)}
+/* ============================================================
+   SCENE 9 · DEPOSIT (join form + Freighter)
+============================================================ */
+.dep-layout{display:grid;grid-template-columns:1fr 380px;gap:28px;max-width:1150px;margin:120px auto 0;align-items:center}
+.dep-left h3{font-size:34px;font-weight:800;color:var(--sl9);letter-spacing:-.03em;line-height:1.05}
+.dep-left p{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.5}
+.dep-left ul{margin-top:14px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text-2)}
 .dep-left ul li{display:flex;gap:8px;align-items:center}
 .dep-left ul li::before{content:"✓";color:var(--em5);font-weight:900}
-.jform{background:#fff;border:2px solid var(--y2);border-radius:20px;padding:22px;box-shadow:0 20px 40px rgba(15,23,42,.08)}
-.jform h4{font-size:16px;font-weight:700;color:var(--sl9)}
-.jform .desc{font-size:12px;color:var(--muted);margin-bottom:14px}
-.jform .field{margin-bottom:10px;opacity:0;animation:fdIn 300ms ease forwards}
+.jform{background:#fff;border:2px solid var(--y2);border-radius:18px;padding:18px;box-shadow:0 20px 40px rgba(15,23,42,.08)}
+.jform h4{font-size:14px;font-weight:700;color:var(--sl9)}
+.jform .desc{font-size:11px;color:var(--muted);margin-bottom:12px}
+.jform .field{margin-bottom:8px;opacity:0;animation:fdIn 300ms ease forwards}
 .jform .field:nth-child(3){animation-delay:.2s}
 .jform .field:nth-child(4){animation-delay:.5s}
 .jform .field:nth-child(5){animation-delay:.9s}
 .jform .field:nth-child(6){animation-delay:1.3s}
 .jform .field:nth-child(7){animation-delay:1.7s}
 @keyframes fdIn{to{opacity:1}}
-.jform label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
-.jform .input{background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:8px;padding:8px 10px;font-size:13px;color:var(--sl9)}
+.jform label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.jform .input{background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:8px;padding:7px 10px;font-size:12px;color:var(--sl9)}
 .jform .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.jform .total{background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:10px;padding:12px 14px;margin:6px 0;display:flex;justify-content:space-between;align-items:center}
-.jform .total .k{font-size:11px;color:#92400E;font-weight:700}
-.jform .total .v{font-size:20px;font-weight:800;color:#92400E}
-.jform .btn{margin-top:8px;background:var(--y3);color:var(--sl9);padding:11px;border-radius:10px;font-weight:800;text-align:center;font-size:13px;box-shadow:0 6px 16px rgba(251,191,36,.35);opacity:0;animation:fdIn 400ms ease 2s forwards}
+.jform .total{background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:10px;padding:10px 12px;margin:6px 0;display:flex;justify-content:space-between;align-items:center}
+.jform .total .k{font-size:10px;color:#92400E;font-weight:700;letter-spacing:.05em}
+.jform .total .v{font-size:18px;font-weight:800;color:#92400E}
+.jform .btn{margin-top:6px;background:var(--y3);color:var(--sl9);padding:10px;border-radius:10px;font-weight:800;text-align:center;font-size:12px;box-shadow:0 6px 16px rgba(251,191,36,.35);opacity:0;animation:fdIn 400ms ease 2s forwards}
 .freighter-pop{
-  position:absolute;top:120px;right:30px;background:#1E1B4B;color:#fff;
-  padding:14px 18px;border-radius:14px;display:flex;gap:12px;align-items:center;
+  position:absolute;top:140px;right:36px;background:#1E1B4B;color:#fff;
+  padding:12px 16px;border-radius:14px;display:flex;gap:10px;align-items:center;
   box-shadow:0 20px 40px rgba(0,0,0,.4);opacity:0;
-  animation:frIn 500ms ease 3s forwards,frOut 400ms ease 8s forwards;z-index:30;
-  max-width:320px;
+  animation:frIn 500ms ease 3s forwards,frOut 400ms ease 8.5s forwards;z-index:30;
+  max-width:300px;
 }
 @keyframes frIn{to{opacity:1}}
 @keyframes frOut{to{opacity:0;transform:translateY(-8px)}}
-.freighter-pop .rocket{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:grid;place-items:center;font-size:20px;flex-shrink:0}
-.freighter-pop .txt strong{display:block;font-size:13px;margin-bottom:2px}
-.freighter-pop .txt code{font-size:11px;color:rgba(255,255,255,.6);font-family:'JetBrains Mono',monospace}
+.freighter-pop .rocket{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.freighter-pop .txt strong{display:block;font-size:12px;margin-bottom:2px}
+.freighter-pop .txt code{font-size:10px;color:rgba(255,255,255,.6);font-family:'JetBrains Mono',monospace}
 .confirmed-badge{
-  position:absolute;top:120px;right:30px;background:linear-gradient(135deg,#059669,#10B981);
-  color:#fff;padding:14px 18px;border-radius:14px;display:flex;gap:12px;align-items:center;
+  position:absolute;top:140px;right:36px;background:linear-gradient(135deg,#059669,#10B981);
+  color:#fff;padding:12px 16px;border-radius:14px;display:flex;gap:10px;align-items:center;
   box-shadow:0 20px 40px rgba(16,185,129,.4);opacity:0;
-  animation:frIn 400ms ease 9s forwards;z-index:30;
+  animation:frIn 400ms ease 9.5s forwards;z-index:30;
 }
-.confirmed-badge .ic{font-size:24px}
-.confirmed-badge strong{display:block;font-size:14px}
-.confirmed-badge .hash{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.85)}
+.confirmed-badge .ic{font-size:22px}
+.confirmed-badge strong{display:block;font-size:12px}
+.confirmed-badge .hash{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.85)}
 
-/* --------- SCENE 7 · Track (order timeline) --------- */
-.track-wrap{max-width:700px;margin:110px auto 0}
-.tl-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:14px}
-.tl-card h5{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:18px;text-transform:uppercase;letter-spacing:.06em}
+/* ============================================================
+   SCENE 10 · TRACK (order timeline + confirm)
+============================================================ */
+.track-wrap{max-width:700px;margin:120px auto 0}
+.tl-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:12px}
+.tl-card h5{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:18px;text-transform:uppercase;letter-spacing:.06em}
 .tl-track{display:flex;align-items:center}
-.tl-step{flex:1;display:flex;align-items:center}
+.tl-step{flex:1;display:flex;align-items:center;position:relative}
 .tl-step:last-child{flex:0}
-.tl-circ{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:#F1F5F9;color:#94A3B8;position:relative;flex-shrink:0}
+.tl-circ{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:#F1F5F9;color:#94A3B8;flex-shrink:0}
 .tl-circ.done{background:var(--y4);color:#fff}
 .tl-circ.act{background:var(--y4);color:#fff;box-shadow:0 0 0 6px rgba(251,191,36,.25);animation:pulseAct 1.5s ease infinite}
 @keyframes pulseAct{0%,100%{box-shadow:0 0 0 6px rgba(251,191,36,.25)}50%{box-shadow:0 0 0 10px rgba(251,191,36,.12)}}
-.tl-lbl{position:absolute;top:48px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tl-lbl{position:absolute;top:46px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap}
 .tl-circ.done+.tl-lbl,.tl-circ.act+.tl-lbl{color:#B45309}
 .tl-line{flex:1;height:2px;background:#F1F5F9;margin:0 8px}
 .tl-line.done{background:var(--em4)}
-.tl-details{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px 20px;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:12px;margin-bottom:14px}
-.tl-details .k{font-size:10px;font-weight:700;color:var(--muted-2);text-transform:uppercase;letter-spacing:.08em}
+.tl-details{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:11px;margin-bottom:12px}
+.tl-details .k{font-size:9px;font-weight:700;color:var(--muted-2);text-transform:uppercase;letter-spacing:.08em}
 .tl-details .v{color:var(--sl9);font-weight:600;margin-top:1px}
-.tl-receipt{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px 20px}
-.tl-receipt h5{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.tl-receipt{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px 20px}
+.tl-receipt h5{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px}
 .tl-receipt .tx{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#F8FAFC;border-radius:8px}
-.tl-receipt .tx .hash{font-family:'JetBrains Mono',monospace;color:var(--y6);font-weight:600;font-size:12px}
-.tl-receipt .tx .link{margin-left:auto;color:var(--muted);font-size:11px}
+.tl-receipt .tx .hash{font-family:'JetBrains Mono',monospace;color:var(--y6);font-weight:600;font-size:11px}
+.tl-receipt .tx .link{margin-left:auto;color:var(--muted);font-size:10px}
 .confirm-btn{
   position:absolute;bottom:180px;left:50%;transform:translateX(-50%);
-  background:var(--y3);color:var(--sl9);padding:14px 28px;border-radius:14px;font-weight:800;font-size:16px;
+  background:var(--y3);color:var(--sl9);padding:14px 28px;border-radius:14px;font-weight:800;font-size:15px;
   box-shadow:0 12px 30px rgba(251,191,36,.4);z-index:20;
-  opacity:0;animation:fdIn 400ms ease 6s forwards
+  opacity:0;animation:fdIn 400ms ease 5s forwards
 }
 .confetti-piece{position:absolute;width:8px;height:12px;opacity:0;top:0}
 
-/* --------- SCENE 8 · Refund --------- */
-.refund-wrap{display:flex;align-items:center;justify-content:center;gap:50px;margin-top:120px}
+/* ============================================================
+   SCENE 11 · REFUND
+============================================================ */
+.refund-wrap{display:flex;align-items:center;justify-content:center;gap:50px;margin-top:130px}
 .deadline-clock{
   width:180px;height:180px;border-radius:50%;
   background:linear-gradient(135deg,#FEF3C7,#FCD34D);
@@ -365,76 +511,92 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .refund-wallet .lbl{color:var(--em6);font-weight:700;margin-top:2px;font-size:13px}
 .refund-wallet .sub{color:var(--em6);opacity:.7;margin-top:4px;font-size:11px}
 
-/* --------- SCENE 9 · Organizer (create + participants) --------- */
-.org-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1150px;margin:110px auto 0}
-.org-form,.org-list{background:#fff;border-radius:18px;border:1px solid var(--border);padding:20px;box-shadow:0 12px 30px rgba(15,23,42,.05)}
-.org-form h4,.org-list h4{font-size:14px;color:var(--sl9);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.org-form .badge{font-size:10px;background:var(--y2);color:var(--y6);padding:2px 6px;border-radius:4px;font-weight:800;letter-spacing:.05em}
-.org-form .field{margin-bottom:12px;opacity:0;animation:fdIn 300ms ease forwards}
-.org-form .field:nth-child(2){animation-delay:.15s}
-.org-form .field:nth-child(3){animation-delay:.3s}
-.org-form .field:nth-child(4){animation-delay:.45s}
-.org-form .field:nth-child(5){animation-delay:.6s}
-.org-form label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
-.org-form .input{background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:8px;padding:8px 10px;font-size:13px;color:var(--sl9)}
-.org-form .publish{background:var(--y3);color:var(--sl9);padding:10px;border-radius:10px;font-weight:800;text-align:center;font-size:13px;margin-top:6px;box-shadow:0 6px 16px rgba(251,191,36,.3);opacity:0;animation:fdIn 400ms ease 1s forwards}
-.org-list .participant{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#F8FAFC;margin-bottom:8px;opacity:0;animation:fdIn 300ms ease forwards}
-.org-list .participant:nth-child(2){animation-delay:.3s}
-.org-list .participant:nth-child(3){animation-delay:.6s}
-.org-list .participant:nth-child(4){animation-delay:.9s}
-.org-list .participant:nth-child(5){animation-delay:1.2s}
-.org-list .participant .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--y3),var(--y5));display:grid;place-items:center;color:var(--sl9);font-weight:800;font-size:12px}
-.org-list .participant .info{flex:1;min-width:0}
-.org-list .participant .n{font-size:12px;font-weight:700;color:var(--sl9)}
-.org-list .participant .a{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
-.org-list .participant .status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px}
-.org-list .participant .status.p{background:#FEF3C7;color:#92400E}
-.org-list .participant .status.d{background:#DBEAFE;color:#1E40AF}
-.org-list .participant .status.c{background:#DCFCE7;color:#166534}
-
-/* --------- SCENE 10 · Anti-Scam --------- */
-.attack-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:1100px;margin:110px auto 0}
-.attack{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;gap:12px;opacity:0;transform:translateY(10px);animation:fdIn 400ms ease forwards}
+/* ============================================================
+   SCENE 12 · ANTI-SCAM
+============================================================ */
+.attack-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:1100px;margin:130px auto 0}
+.attack{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;gap:12px;opacity:0;transform:translateY(10px);animation:fdIn 400ms ease forwards}
 .attack:nth-child(1){animation-delay:.15s}
 .attack:nth-child(2){animation-delay:.3s}
 .attack:nth-child(3){animation-delay:.45s}
 .attack:nth-child(4){animation-delay:.6s}
-.attack .ic{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#FEF3C7,var(--y3));display:grid;place-items:center;flex-shrink:0}
-.attack .att{font-size:11px;font-weight:800;color:var(--rd6);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
-.attack .def{font-size:12px;color:var(--text-2);line-height:1.45}
+.attack .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#FEF3C7,var(--y3));display:grid;place-items:center;flex-shrink:0;font-size:16px}
+.attack .att{font-size:10px;font-weight:800;color:var(--rd6);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.attack .def{font-size:12px;color:var(--text-2);line-height:1.4}
 
-/* --------- SCENE 11 · CTA --------- */
+/* ============================================================
+   SCENE 13 · CTA
+============================================================ */
 .cta-wrap{text-align:center;padding-top:80px;display:flex;flex-direction:column;align-items:center}
 .cta-shield{
-  width:100px;height:100px;border-radius:26px;
-  background:linear-gradient(135deg,var(--y3),var(--y5));
-  display:grid;place-items:center;box-shadow:0 20px 60px rgba(251,191,36,.5);
-  animation:bob 3s ease infinite
+  width:130px;height:130px;border-radius:32px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(251,191,36,.5);animation:bob 3s ease infinite;
 }
+.cta-shield img{width:100%;height:100%;object-fit:cover}
 .cta-wrap h2{font-size:64px;font-weight:800;color:var(--sl9);letter-spacing:-.03em;line-height:1.05;margin-top:18px}
 .cta-wrap p{font-size:17px;color:var(--muted);margin-top:10px;max-width:620px;line-height:1.5}
 .cta-btns{display:flex;gap:12px;margin-top:22px}
 .cta-btn{padding:13px 26px;border-radius:14px;font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(15,23,42,.15)}
 .cta-btn.p{background:var(--y3);color:var(--sl9)}
 .cta-btn.s{background:#fff;color:var(--sl9);border:2px solid var(--sl9)}
-.cta-wrap .cid{margin-top:16px;padding:6px 14px;background:rgba(15,23,42,.08);border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.cta-wrap .cid{margin-top:14px;padding:6px 14px;background:rgba(15,23,42,.08);border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
 
 <div class="stage" id="stage">
 
+<!-- Act indicator (updates on act change) -->
+<div class="act-bar" id="actBar">
+  <span class="num" id="actNum">ACT 1</span>
+  <span id="actName">OPENING</span>
+</div>
+
 <!-- Flashing title block (updated per scene by JS) -->
 <div class="title-flash" id="titleFlash">
   <div class="eyebrow"><span class="num" id="tfNum">01</span><span id="tfTag">SCENE</span></div>
-  <div class="title" id="tfTitle">The Hook</div>
-  <div class="subtitle" id="tfSubtitle">Scam chat simulation</div>
+  <div class="title" id="tfTitle">PasabuySafe</div>
+  <div class="subtitle" id="tfSubtitle">Anti-scam escrow for Filipino pasabuy</div>
 </div>
 
 <div class="scenes" id="scenes">
 
-  <!-- SCENE 1 · THE HOOK -->
+  <!-- SCENE 1 · BRAND INTRO -->
   <div class="scene active" data-scene="1">
+    <div class="body">
+      <div class="brand-intro">
+        <div class="sparkles"><span>✨</span><span>💛</span><span>🛡️</span><span>✨</span></div>
+        <div class="logo-big"><img src="../pasabuy-safe-web/public/logo1.png" alt="PasabuySafe"></div>
+        <h1>Pasabuy<span class="safe">Safe</span></h1>
+        <div class="divider"></div>
+        <div class="strap">ANTI-SCAM ESCROW · POWERED BY STELLAR SOROBAN</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 2 · TAGLINE -->
+  <div class="scene" data-scene="2">
+    <div class="body">
+      <div class="tag-scene">
+        <h2>
+          <span class="w">Buy</span>
+          <span class="w">together.</span>
+          <span class="w">Pay</span>
+          <span class="w">securely.</span>
+        </h2>
+        <p>Blockchain-powered escrow for Filipino group buying — no more scammers walking away with your money.</p>
+        <div class="badges">
+          <div class="b hot">🇵🇭 Made in Philippines</div>
+          <div class="b">🔒 Non-custodial</div>
+          <div class="b">⚡ Instant refunds</div>
+          <div class="b">💛 Free forever</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 3 · THE HOOK -->
+  <div class="scene" data-scene="3">
     <div class="body">
       <div class="hook-wrap">
         <div class="chat-app">
@@ -454,8 +616,8 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
   </div>
 
-  <!-- SCENE 2 · THE PROBLEM -->
-  <div class="scene" data-scene="2">
+  <!-- SCENE 4 · THE PROBLEM -->
+  <div class="scene" data-scene="4">
     <div class="body">
       <div class="problem-grid">
         <div class="problem-card">
@@ -474,66 +636,106 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
           <div class="icon">💔</div>
           <div class="big">1,000s</div>
           <div class="lbl">Victims monthly</div>
-          <div class="txt">Reputation systems fail. Scammers <strong>build trust for months</strong>, then vanish.</div>
+          <div class="txt">Reputation systems fail. Scammers <strong>build trust for months</strong>, then vanish overnight.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCENE 3 · INTRODUCING PASABUYSAFE -->
-  <div class="scene" data-scene="3">
+  <!-- SCENE 5 · SOLUTION 3-STEP -->
+  <div class="scene" data-scene="5">
     <div class="body">
       <div class="intro-flow">
         <div class="flow-step">
           <div class="num">01</div>
           <div class="ico">💰</div>
           <h4>You Pay</h4>
-          <p>Money locked in smart contract. Organizer cannot touch it.</p>
+          <p>Money locked in a smart contract. Organizer cannot touch it.</p>
         </div>
         <div class="flow-arrow">→</div>
         <div class="flow-step">
           <div class="num">02</div>
           <div class="ico">📦</div>
           <h4>They Deliver</h4>
-          <p>Organizer ships. Money still locked in escrow.</p>
+          <p>Organizer ships. Money stays locked in escrow.</p>
         </div>
         <div class="flow-arrow">→</div>
         <div class="flow-step">
           <div class="num">03</div>
           <div class="ico">✅</div>
           <h4>You Confirm</h4>
-          <p>Got your item? Click confirm. Money released. Done.</p>
+          <p>Got your item? One click releases funds. Done.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCENE 4 · THE VAULT -->
-  <div class="scene" data-scene="4">
+  <!-- SCENE 6 · TECH STACK (Freighter → Soroban → Stellar) -->
+  <div class="scene" data-scene="6">
+    <div class="body">
+      <div class="stack-wrap">
+        <div class="stack-node buyer">
+          <div class="badge">BUYER</div>
+          <div class="ico">👤</div>
+          <h5>Any wallet</h5>
+          <p>Filipino buyer with XLM on Stellar Testnet.</p>
+        </div>
+        <div class="stack-arrow">→</div>
+        <div class="stack-node freighter">
+          <div class="badge">FREIGHTER</div>
+          <div class="ico">🚀</div>
+          <h5>Wallet signing</h5>
+          <p>Browser extension signs every transaction.</p>
+        </div>
+        <div class="stack-arrow">→</div>
+        <div class="stack-node soroban">
+          <div class="badge">SOROBAN RPC</div>
+          <div class="ico">◎</div>
+          <h5>Stellar network</h5>
+          <p>Testnet RPC relays the signed call to the contract.</p>
+        </div>
+        <div class="stack-arrow">→</div>
+        <div class="stack-node contract">
+          <div class="badge">PASABUYSAFE</div>
+          <div class="ico">🔒</div>
+          <h5>Escrow contract</h5>
+          <p>Rust + Soroban SDK · 5.1 KB WASM.</p>
+        </div>
+      </div>
+      <div class="stack-note">
+        <strong>Everything is on-chain.</strong> No custodial backend. No middleman. Every deposit, mark-delivered, and confirm flows through
+        <code>@stellar/freighter-api</code> → Soroban RPC → the smart contract in a single wallet-signed transaction.
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 7 · THE VAULT -->
+  <div class="scene" data-scene="7">
     <div class="body">
       <div class="vault-wrap">
         <div class="wallet-ill">
-          <div class="wallet">FREIGHTER WALLET</div>
+          <div class="wallet">🚀<br>WALLET</div>
+          <div class="wallet-address">GB2A…V6UW</div>
           <div class="coin-fly">₳</div>
         </div>
         <div class="vault-box">
-          <div class="chain">STELLAR · TESTNET</div>
+          <div class="chain">STELLAR · SOROBAN</div>
           <div class="lock">🔒</div>
         </div>
         <div class="vault-info">
-          <span class="badge">SOROBAN CONTRACT</span>
+          <span class="badge">CONTRACT · CBSPN43…7OKB</span>
           <h4>Immutable escrow.</h4>
           <p>Every deposit lives inside the contract. Not in the organizer's wallet. Not in ours.</p>
           <span class="tag">no withdraw()</span>
-          <span class="tag">no admin</span>
-          <span class="tag">no keys</span>
+          <span class="tag">no admin key</span>
+          <span class="tag">no upgrade path</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCENE 5 · BROWSE -->
-  <div class="scene" data-scene="5">
+  <!-- SCENE 8 · BROWSE -->
+  <div class="scene" data-scene="8">
     <div class="body">
       <div class="browse-wrap">
         <div class="browse-filters">
@@ -585,13 +787,13 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
   </div>
 
-  <!-- SCENE 6 · DEPOSIT -->
-  <div class="scene" data-scene="6">
+  <!-- SCENE 9 · DEPOSIT (join form + Freighter) -->
+  <div class="scene" data-scene="9">
     <div class="body">
       <div class="dep-layout">
         <div class="dep-left">
           <h3>Fill in delivery.<br>Sign once.<br><span class="grad">Done.</span></h3>
-          <p>The join form collects name, PH phone, meetup, quantity — visible only to the organizer.</p>
+          <p>Join form collects name, PH phone, meetup, quantity — visible only to the organizer.</p>
           <ul>
             <li>PH phone format validated</li>
             <li>Contact fields RLS-protected</li>
@@ -601,7 +803,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
         </div>
         <div class="jform">
           <h4>Join Carcar Chicharon #12</h4>
-          <div class="desc">Escrow amount locked until you confirm delivery.</div>
+          <div class="desc">Escrow locked until you confirm delivery.</div>
           <div class="field"><label>Full name</label><div class="input">Vallirie Winnie</div></div>
           <div class="field"><label>PH phone</label><div class="input">+63 917 555 1234</div></div>
           <div class="field"><label>Meetup location</label><div class="input">Ayala Cebu · main entrance</div></div>
@@ -615,7 +817,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
       </div>
       <div class="freighter-pop">
         <div class="rocket">🚀</div>
-        <div class="txt"><strong>Freighter · Sign transaction</strong><code>contract.deposit(pasabuyId=1, buyer, 140000000)</code></div>
+        <div class="txt"><strong>Freighter · Sign transaction</strong><code>contract.deposit(1, buyer, 140000000)</code></div>
       </div>
       <div class="confirmed-badge">
         <div class="ic">✓</div>
@@ -624,8 +826,8 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
   </div>
 
-  <!-- SCENE 7 · TRACK -->
-  <div class="scene" data-scene="7">
+  <!-- SCENE 10 · TRACK -->
+  <div class="scene" data-scene="10">
     <div class="body">
       <div class="track-wrap">
         <div class="tl-card">
@@ -654,8 +856,8 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
   </div>
 
-  <!-- SCENE 8 · REFUND -->
-  <div class="scene" data-scene="8">
+  <!-- SCENE 11 · REFUND -->
+  <div class="scene" data-scene="11">
     <div class="body">
       <div class="refund-wrap">
         <div style="text-align:center">
@@ -672,48 +874,23 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
   </div>
 
-  <!-- SCENE 9 · ORGANIZER -->
-  <div class="scene" data-scene="9">
-    <div class="body">
-      <div class="org-layout">
-        <div class="org-form">
-          <h4>📋 Create Pasabuy <span class="badge">/organizer/create</span></h4>
-          <div class="field"><label>Title</label><div class="input">Carcar Chicharon #12</div></div>
-          <div class="field"><label>Price per slot</label><div class="input">7 XLM · ≈ ₱420</div></div>
-          <div class="field"><label>Deadline</label><div class="input">📅 Jul 10, 6:00 PM</div></div>
-          <div class="field"><label>Meetup method</label><div class="input">🛵 Pickup in Cebu City</div></div>
-          <div class="publish">Publish · create_pasabuy()</div>
-        </div>
-        <div class="org-list">
-          <h4>👥 Participants (18 / 30 slots)</h4>
-          <div class="participant"><div class="av">V</div><div class="info"><div class="n">Vallirie W.</div><div class="a">GB2A…V6UW</div></div><div class="status c">CONFIRMED</div></div>
-          <div class="participant"><div class="av">J</div><div class="info"><div class="n">Juan D.</div><div class="a">GB7X…LM3P</div></div><div class="status d">DELIVERED</div></div>
-          <div class="participant"><div class="av">A</div><div class="info"><div class="n">Ana R.</div><div class="a">GC1Q…4KE9</div></div><div class="status p">DEPOSITED</div></div>
-          <div class="participant"><div class="av">M</div><div class="info"><div class="n">Maria S.</div><div class="a">GDF3…Y7HN</div></div><div class="status p">DEPOSITED</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCENE 10 · ANTI-SCAM -->
-  <div class="scene" data-scene="10">
+  <!-- SCENE 12 · ANTI-SCAM -->
+  <div class="scene" data-scene="12">
     <div class="body">
       <div class="attack-grid">
-        <div class="attack"><div class="ic">🚫</div><div><div class="att">Attack · Collect and block</div><div class="def">Money never reaches the organizer. Buyer refunds on-chain after deadline.</div></div></div>
-        <div class="attack"><div class="ic">🔐</div><div><div class="att">Attack · Fake confirmation</div><div class="def">Confirming requires the buyer's private-key signature. Cannot be forged.</div></div></div>
-        <div class="attack"><div class="ic">⛔</div><div><div class="att">Attack · Direct withdraw</div><div class="def">Contract has no withdraw function. Only buyer-signed confirms release funds.</div></div></div>
-        <div class="attack"><div class="ic">📆</div><div><div class="att">Attack · Change the deadline</div><div class="def">Deadline is set once at creation and stored immutably on Stellar forever.</div></div></div>
+        <div class="attack"><div class="ic">🚫</div><div><div class="att">Attack · Collect and block buyers</div><div class="def">Money never reaches the organizer. Buyer refunds on-chain after the deadline.</div></div></div>
+        <div class="attack"><div class="ic">🔐</div><div><div class="att">Attack · Fake buyer confirmation</div><div class="def">Confirming requires the buyer's private-key signature. Cannot be forged.</div></div></div>
+        <div class="attack"><div class="ic">⛔</div><div><div class="att">Attack · Direct withdraw of funds</div><div class="def">Contract has no <code>withdraw()</code> function. Only buyer-signed confirms release money.</div></div></div>
+        <div class="attack"><div class="ic">📆</div><div><div class="att">Attack · Change deadline mid-flight</div><div class="def">Deadline is set once at creation and stored immutably on Stellar forever.</div></div></div>
       </div>
     </div>
   </div>
 
-  <!-- SCENE 11 · CTA -->
-  <div class="scene" data-scene="11">
+  <!-- SCENE 13 · CTA -->
+  <div class="scene" data-scene="13">
     <div class="body">
       <div class="cta-wrap">
-        <div class="cta-shield">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-        </div>
+        <div class="cta-shield"><img src="../pasabuy-safe-web/public/logo1.png" alt="PasabuySafe"></div>
         <h2>Ready to pasabuy<br><span class="grad">without fear?</span></h2>
         <p>Live on Stellar Testnet. Real transactions verifiable on Stellar Expert. Free XLM from Friendbot, free Freighter wallet, zero risk.</p>
         <div class="cta-btns">
@@ -733,13 +910,11 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 <!-- Chapter dots -->
 <div class="chapter-dots" id="chapterDots"></div>
 <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
-<div class="pip" id="pip">01/11 · 0:00</div>
+<div class="pip" id="pip">01/13 · 0:00</div>
 
 <!-- Auto-start intro -->
 <div class="start-overlay" id="startOverlay">
-  <div class="big-shield">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-  </div>
+  <div class="big-shield"><img src="../pasabuy-safe-web/public/logo1.png" alt="PasabuySafe"></div>
   <h1>PasabuySafe</h1>
   <p>A 2-minute walkthrough of the escrow flow.<br><span style="color:rgba(255,255,255,.45);font-size:13px">Auto-starting…</span></p>
   <div class="countdown" id="countdown">3</div>
@@ -750,48 +925,59 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 
 <script>
 // ============================================================================
-// 11 scenes, 120 seconds total. Each scene has a title/subtitle flashed on
-// screen at scene entry via the .title-flash element, plus timed voiceover
-// captions and a chapter-dots progress row.
+// 13 scenes, 120s total, organized into 5 acts.
 // ============================================================================
 
 const SCENES = [
-  { s:0,   e:10,  num:'01', tag:'The Hook',              title:'The Hook',                 sub:'A pasabuy scam takes 30 seconds to happen.' },
-  { s:10,  e:22,  num:'02', tag:'The Problem',           title:'Trust is broken.',         sub:'GCash, bank transfers, DM screenshots — all fail buyers.' },
-  { s:22,  e:34,  num:'03', tag:'Introducing PasabuySafe', title:'A safer way to pasabuy.', sub:'Three steps. Zero trust required.' },
-  { s:34,  e:46,  num:'04', tag:'The Vault',             title:'Money lives in code.',     sub:'Every deposit is locked inside an immutable Soroban contract.' },
-  { s:46,  e:60,  num:'05', tag:'Browse',                title:'Browse safely.',           sub:'Every listing shows price, deadline, and organizer address.' },
-  { s:60,  e:76,  num:'06', tag:'Deposit',               title:'Join · Sign · Locked.',    sub:'Fill the form, sign with Freighter, and your deposit is on-chain.' },
-  { s:76,  e:92,  num:'07', tag:'Track',                 title:'Track every step.',        sub:'Paid → Delivered → Confirmed. Bounded, deterministic, verifiable.' },
-  { s:92,  e:104, num:'08', tag:'Refund',                title:'Refunds are automatic.',   sub:'If the deadline passes without delivery, one click reclaims your funds.' },
-  { s:104, e:114, num:'09', tag:'Organizer',             title:'Anyone can organize.',     sub:'No approval, no gatekeepers. Manage buyers from a single dashboard.' },
-  { s:114, e:118, num:'10', tag:'Anti-Scam',             title:'What the contract prevents.', sub:'Four attacks. Four blocks. Enforced by code, not policy.' },
-  { s:118, e:120, num:'11', tag:'Try It',                title:'Buy together. Pay securely.', sub:'Live on Stellar Testnet. Free forever.' }
+  // ACT 1 · OPENING (0–12s)
+  { s:0,   e:6,   num:'01', tag:'Brand',      act:'01', actName:'OPENING',   title:'PasabuySafe',              sub:'Anti-scam escrow for Filipino pasabuy — powered by Stellar Soroban.' },
+  { s:6,   e:12,  num:'02', tag:'Tagline',    act:'01', actName:'OPENING',   title:'Buy together. Pay securely.', sub:'Blockchain protection for group buys, made for Filipino communities.' },
+  // ACT 2 · THE PROBLEM (12–30s)
+  { s:12,  e:22,  num:'03', tag:'The Hook',   act:'02', actName:'THE PROBLEM', title:'The Hook',                sub:'A pasabuy scam takes 30 seconds to happen.' },
+  { s:22,  e:30,  num:'04', tag:'Impact',     act:'02', actName:'THE PROBLEM', title:'Why traditional fails.',  sub:'GCash, bank transfers, DM trust — zero buyer protection.' },
+  // ACT 3 · THE SOLUTION (30–60s)
+  { s:30,  e:42,  num:'05', tag:'3-Step Flow', act:'03', actName:'THE SOLUTION', title:'The solution: hold funds in code.', sub:'Three steps. Zero trust required. Money only moves when the buyer confirms.' },
+  { s:42,  e:54,  num:'06', tag:'How It Connects', act:'03', actName:'THE SOLUTION', title:'Freighter → Soroban → Stellar.', sub:'End-to-end on-chain path. No custodial backend, no middleman.' },
+  { s:54,  e:60,  num:'07', tag:'The Vault',  act:'03', actName:'THE SOLUTION', title:'Immutable escrow.',       sub:'Deposits live inside the contract. No withdraw. No admin key.' },
+  // ACT 4 · THE PRODUCT (60–96s)
+  { s:60,  e:72,  num:'08', tag:'Browse',     act:'04', actName:'THE PRODUCT', title:'Browse safely.',          sub:'Every listing shows price, deadline, and organizer address on-chain.' },
+  { s:72,  e:84,  num:'09', tag:'Deposit',    act:'04', actName:'THE PRODUCT', title:'Join · Sign · Locked.',   sub:'Fill the form, sign with Freighter, deposit lands on Soroban.' },
+  { s:84,  e:96,  num:'10', tag:'Track',      act:'04', actName:'THE PRODUCT', title:'Track every step.',       sub:'Paid → Delivered → Confirmed. Verifiable on Stellar Expert.' },
+  // ACT 5 · THE BENEFITS (96–120s)
+  { s:96,  e:108, num:'11', tag:'Refund',     act:'05', actName:'THE BENEFITS', title:'Refunds are automatic.', sub:'Deadline passes without delivery? One click reclaims your funds.' },
+  { s:108, e:116, num:'12', tag:'Anti-Scam',  act:'05', actName:'THE BENEFITS', title:'What the contract prevents.', sub:'Four attacks. Four blocks. Enforced by code, not policy.' },
+  { s:116, e:120, num:'13', tag:'Try It',     act:'05', actName:'THE BENEFITS', title:'Buy together. Pay securely.', sub:'Live on Stellar Testnet. Free forever.' }
 ];
 const TOTAL = 120;
 
 const CAPTIONS = [
-  { at:0,   text:'Every year, thousands of Filipinos lose money to pasabuy scams.' },
-  { at:4,   text:'One GCash transfer. One "read". One <strong>block</strong>.' },
-  { at:10,  text:'The old way: money leaves your wallet before the item ever ships.' },
-  { at:16,  text:'No chargeback. No dispute. <strong>No refund.</strong>' },
-  { at:22,  text:'Meet <em>PasabuySafe</em> — the anti-scam escrow for Filipino group buying.' },
-  { at:28,  text:'You pay. They deliver. You confirm. That&apos;s it.' },
-  { at:34,  text:'Behind the scenes: money goes into a <em>Soroban smart contract</em>.' },
-  { at:40,  text:'Not the organizer&apos;s wallet. Not ours. Locked. On-chain.' },
-  { at:46,  text:'Browse the <em>Explore</em> page. Every pasabuy shows what you&apos;re paying for.' },
-  { at:52,  text:'Prices in ₱ and XLM. Deadline visible. Organizer address public.' },
-  { at:60,  text:'Tap "Join Safely" and fill in your details.' },
-  { at:66,  text:'Sign the deposit with <em>Freighter</em> — it&apos;s locked in escrow.' },
-  { at:72,  text:'Your row is inserted <em>only after</em> the on-chain confirmation.' },
-  { at:76,  text:'Track your order status live from the buyer dashboard.' },
-  { at:82,  text:'Every transaction linked to <em>Stellar Expert</em>.' },
-  { at:88,  text:'Once your item arrives, one click releases the escrow.' },
-  { at:92,  text:'What if the organizer disappears? The deadline passes…' },
-  { at:98,  text:'…and your funds return automatically. <em>No approval needed.</em>' },
-  { at:104, text:'Want to sell? Any wallet can create a pasabuy. No approval, no fees.' },
-  { at:114, text:'Four common scam attacks. All <strong>impossible</strong> by design.' },
-  { at:118, text:'Ready to <em>pasabuy without fear?</em>' }
+  { at:0,   text:'This is <em>PasabuySafe</em>.' },
+  { at:3,   text:'The anti-scam escrow for Filipino pasabuy.' },
+  { at:6,   text:'<em>Buy together.</em> <em>Pay securely.</em>' },
+  { at:9,   text:'Blockchain protection for group buys, made for Filipinos.' },
+  { at:12,  text:'Every year, thousands lose money to pasabuy scams.' },
+  { at:16,  text:'One GCash transfer. One "read". One <strong>block</strong>.' },
+  { at:22,  text:'GCash. Bank transfer. Trust. All fail buyers.' },
+  { at:26,  text:'No chargeback. No dispute. <strong>No refund.</strong>' },
+  { at:30,  text:'The fix: hold funds in code, not a wallet.' },
+  { at:34,  text:'You pay. They deliver. You confirm. That&apos;s it.' },
+  { at:42,  text:'Under the hood: your wallet → Freighter → Soroban RPC → contract.' },
+  { at:48,  text:'End-to-end on-chain. No custodial backend. No middleman.' },
+  { at:54,  text:'Every deposit lives <em>inside</em> the contract.' },
+  { at:57,  text:'No <code>withdraw()</code>. No admin. No keys.' },
+  { at:60,  text:'Browse active pasabuys on the <em>Explore</em> page.' },
+  { at:66,  text:'Prices in ₱ and XLM. Deadline visible. Organizer wallet public.' },
+  { at:72,  text:'Tap "Join Safely" and fill in delivery details.' },
+  { at:78,  text:'Sign the deposit with <em>Freighter</em>. Funds locked on Stellar.' },
+  { at:84,  text:'Track your order live from the buyer dashboard.' },
+  { at:88,  text:'Every transaction linked to <em>Stellar Expert</em>.' },
+  { at:92,  text:'Received your item? One click releases the escrow.' },
+  { at:96,  text:'What if the organizer disappears? Deadline passes…' },
+  { at:102, text:'…and your funds return <em>automatically</em>. No approval needed.' },
+  { at:108, text:'Four attacks the contract makes <strong>impossible</strong>.' },
+  { at:113, text:'No withdraw. No fake confirms. No deadline tricks. No custody.' },
+  { at:116, text:'Ready to <em>pasabuy without fear?</em>' },
+  { at:118, text:'Live on Stellar Testnet. <em>Free forever.</em>' }
 ];
 
 const $ = (s) => document.querySelector(s);
@@ -805,10 +991,9 @@ const captionBar = $('#captionBar');
 const captionText = $('#captionText');
 const chapterDots = $('#chapterDots');
 const titleFlash = $('#titleFlash');
-const tfNum = $('#tfNum');
-const tfTag = $('#tfTag');
-const tfTitle = $('#tfTitle');
-const tfSubtitle = $('#tfSubtitle');
+const actBar = $('#actBar');
+const actNum = $('#actNum');
+const actName = $('#actName');
 
 SCENES.forEach(() => {
   const d = document.createElement('div');
@@ -819,7 +1004,7 @@ SCENES.forEach(() => {
 const dotEls = chapterDots.querySelectorAll('.chapter-dot');
 
 let t = 0, playing = false, rafId = null, lastTs = 0;
-let lastSceneIdx = -1, lastCaption = '', confettiInjected = false;
+let lastSceneIdx = -1, lastCaption = '', lastAct = '', confettiInjected = false;
 
 function fmt(sec) { const m = Math.floor(sec/60); const s = Math.floor(sec%60); return `${m}:${String(s).padStart(2,'0')}`; }
 function sceneIdx() { for (let i=0;i<SCENES.length;i++) if (t>=SCENES[i].s && t<SCENES[i].e) return i; return SCENES.length-1; }
@@ -828,8 +1013,8 @@ function currentCaption() { let m=null; for (const c of CAPTIONS) { if (t>=c.at)
 function injectConfetti() {
   if (confettiInjected) return;
   confettiInjected = true;
-  const s7 = $$('[data-scene="7"]')[0];
-  const c = s7.querySelector('#confetti'); if (!c) return;
+  const s10 = $$('[data-scene="10"]')[0];
+  const c = s10.querySelector('#confetti'); if (!c) return;
   const colors = ['#FBBF24','#F59E0B','#10B981','#3B82F6','#EF4444','#8B5CF6','#FCD34D'];
   for (let i=0;i<60;i++) {
     const el = document.createElement('div');
@@ -837,11 +1022,10 @@ function injectConfetti() {
     el.style.left = (Math.random()*100)+'%';
     el.style.background = colors[i%colors.length];
     el.style.transform = `rotate(${Math.random()*360}deg)`;
-    el.style.animation = `confettiFall ${2.5+Math.random()*1.5}s ease-out ${8000+Math.random()*400}ms forwards`;
+    el.style.animation = `confettiFall ${2.5+Math.random()*1.5}s ease-out ${7000+Math.random()*400}ms forwards`;
     c.appendChild(el);
   }
 }
-// inject the confetti keyframe once
 const kfStyle = document.createElement('style');
 kfStyle.textContent = '@keyframes confettiFall{0%{opacity:0;transform:translateY(-30vh) rotate(0)}10%{opacity:1}100%{opacity:0;transform:translateY(60vh) rotate(720deg)}}';
 document.head.appendChild(kfStyle);
@@ -850,20 +1034,26 @@ function updateTitleFlash(idx) {
   if (idx === lastSceneIdx) return;
   lastSceneIdx = idx;
   const sc = SCENES[idx];
-  // Restart the entry animations by removing then re-appending the element
   const clone = titleFlash.cloneNode(true);
   titleFlash.parentNode.replaceChild(clone, titleFlash);
-  // Reattach references
-  const nTfNum = clone.querySelector('#tfNum');
-  const nTfTag = clone.querySelector('#tfTag');
-  const nTfTitle = clone.querySelector('#tfTitle');
-  const nTfSubtitle = clone.querySelector('#tfSubtitle');
-  nTfNum.textContent = sc.num;
-  nTfTag.textContent = sc.tag;
-  nTfTitle.textContent = sc.title;
-  nTfSubtitle.textContent = sc.sub;
-  // Keep visible for 5s, then let it fade
+  clone.querySelector('#tfNum').textContent = sc.num;
+  clone.querySelector('#tfTag').textContent = sc.tag;
+  clone.querySelector('#tfTitle').textContent = sc.title;
+  clone.querySelector('#tfSubtitle').textContent = sc.sub;
   setTimeout(() => { clone.style.transition = 'opacity 600ms ease'; clone.style.opacity = '0.15'; }, 5000);
+}
+
+function updateAct(idx) {
+  const sc = SCENES[idx];
+  const actKey = sc.act + sc.actName;
+  if (actKey === lastAct) return;
+  lastAct = actKey;
+  actBar.classList.remove('show');
+  setTimeout(() => {
+    actNum.textContent = 'ACT ' + sc.act;
+    actName.textContent = sc.actName;
+    actBar.classList.add('show');
+  }, 250);
 }
 
 function updateCaption() {
@@ -894,12 +1084,13 @@ function updateDots(idx) {
 function render() {
   const idx = sceneIdx();
   scenes.forEach((el, i) => el.classList.toggle('active', i === idx));
-  pip.textContent = `${String(idx+1).padStart(2,'0')}/11 · ${fmt(t)}`;
+  pip.textContent = `${String(idx+1).padStart(2,'0')}/13 · ${fmt(t)}`;
   progressFill.style.width = `${(t/TOTAL)*100}%`;
   updateTitleFlash(idx);
+  updateAct(idx);
   updateCaption();
   updateDots(idx);
-  if (idx === 6) injectConfetti();
+  if (idx === 9) injectConfetti();
 }
 
 function tick(ts) {
@@ -909,8 +1100,8 @@ function tick(ts) {
   lastTs = ts;
   t += dt;
   if (t >= TOTAL) {
-    t = 0; confettiInjected = false; lastSceneIdx = -1; lastCaption = '';
-    const c = $$('[data-scene="7"]')[0].querySelector('#confetti'); if (c) c.innerHTML = '';
+    t = 0; confettiInjected = false; lastSceneIdx = -1; lastCaption = ''; lastAct = '';
+    const c = $$('[data-scene="10"]')[0].querySelector('#confetti'); if (c) c.innerHTML = '';
   }
   render();
   rafId = requestAnimationFrame(tick);
@@ -939,7 +1130,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ') { e.preventDefault(); playing ? pause() : play(); }
   else if (e.key === 'ArrowRight') { const i = sceneIdx(); if (i < SCENES.length-1) { t = SCENES[i+1].s; lastSceneIdx = -1; } render(); }
   else if (e.key === 'ArrowLeft') { const i = sceneIdx(); t = i > 0 ? SCENES[i-1].s : 0; lastSceneIdx = -1; render(); }
-  else if (e.key === 'r' || e.key === 'R') { t = 0; lastSceneIdx = -1; lastCaption = ''; confettiInjected = false; render(); play(); }
+  else if (e.key === 'r' || e.key === 'R') { t = 0; lastSceneIdx = -1; lastCaption = ''; lastAct = ''; confettiInjected = false; render(); play(); }
 });
 
 render();
