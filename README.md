@@ -296,10 +296,6 @@ Every deposit, mark-delivered, confirm, and refund transaction can be verified i
 
 ---
 
-> Drop PNGs into `docs/screenshots/` with the filenames above and they will render automatically. Recommended width: 1200 px. Missing screenshots render as broken-image icons on GitHub; delete the row until the file exists if that bothers you.
-
----
-
 ## 🏗️ Architecture
 
 ```
