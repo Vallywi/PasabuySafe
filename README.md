@@ -244,55 +244,55 @@ Every deposit, mark-delivered, confirm, and refund transaction can be verified i
 
 ### 1. Landing page
 ![Landing page](./docs/screenshots/landing.png)
-> Hero section, how it works, trust signals
+> The first thing users see — a bold hero section explaining PasabuySafe's value proposition ("Buy together. Pay securely."), a 3-step "How it works" breakdown, trust signals powered by Stellar blockchain, and clear CTAs to connect wallet or browse pasabuys.
 
 ---
 
 ### 2. Auth
 ![Auth](./docs/screenshots/auth.png)
-> Sign in / sign up with wallet or email
+> Clean authentication page where users connect their Freighter wallet or sign in with email. Displays wallet address, XLM balance, and trust score. New users get onboarded with a guided wallet setup flow.
 
 ---
 
 ### 3. Explore
 ![Explore page](./docs/screenshots/explore.png)
-> Browse active pasabuys, see slots, price, deadline
+> Discover active pasabuys with category filters (Skincare, Food, Electronics, Fashion). Each card shows the item name, organizer location, price in PHP/XLM, available slots, and countdown to deadline. Hot deals are tagged for urgency.
 
 ---
 
 ### 4. Pasabuy Detail
 ![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png)
-> Detailed view of a pasabuy with join options
+> Full detail view of a specific pasabuy showing item description, organizer info, escrow terms, delivery method (Meetup/Shipping), price breakdown, slot availability, and a prominent "Join & Deposit" button that triggers the on-chain escrow.
 
 ---
 
 ### 5. Buyer flow
 ![Buyer order](./docs/screenshots/buyer-order.png)
-> Deposit, track status, confirm delivery or claim refund
+> The complete buyer journey after joining — deposit confirmation via Freighter wallet signing, real-time order status timeline (Paid → Delivered → Confirm now), transaction receipt with Stellar Explorer link, and the one-click "Confirm Delivery · Release XLM" button.
 
 ---
 
 ### 6. Create Pasabuy
 ![Create Pasabuy](./docs/screenshots/create-pasabuy.png)
-> Organizer form to create a new group buy
+> Organizer form to create a new group buy — set item name, description, category, price per slot, max participants, delivery method, meetup location, deadline, and upload product images. Submitting deploys the escrow contract on-chain.
 
 ---
 
 ### 7. Organizer dashboard
 ![Organizer dashboard](./docs/screenshots/organizer.png)
-> Manage participants, mark delivered, view transaction history
+> Central hub for organizers to manage all their pasabuys — view participant list with deposit status, mark orders as delivered, monitor escrow balances, see transaction history, and track which buyers have confirmed delivery.
 
 ---
 
 ### 8. Profile
 ![Profile](./docs/screenshots/profile.png)
-> User profile with wallet info and order history
+> User profile page showing connected wallet address, XLM balance, completed orders, trust score, and order history. Users can update their display name, phone number, and preferred delivery locations.
 
 ---
 
 ### 9. FAQ
 ![FAQ](./docs/screenshots/faq.png)
-> Common questions about escrow and pasabuy
+> Frequently asked questions covering how escrow works, what happens if the organizer doesn't deliver, how refunds are triggered automatically after deadline, Stellar network fees, and wallet setup instructions.
 
 ---
 
