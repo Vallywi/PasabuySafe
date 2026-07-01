@@ -17,14 +17,14 @@
   <img src="https://img.shields.io/badge/RUST-EDITION%202021-CE412B?style=for-the-badge&logo=rust&logoColor=white&labelColor=1F2937" alt="Rust">
 </p>
 
-<h3 align="center">Safe group buying for Filipino communities — powered by blockchain escrow.</h3>
-
 <p align="center">
   <img src="https://img.shields.io/badge/WALLET-FREIGHTER-FDB92B?style=for-the-badge&logo=stellar&logoColor=black&labelColor=1F2937" alt="Freighter Wallet">
   <img src="https://img.shields.io/badge/PRIVACY-NON--CUSTODIAL-2563EB?style=for-the-badge&labelColor=1F2937" alt="Non-Custodial">
   <img src="https://img.shields.io/badge/LICENSE-MIT-EAB308?style=for-the-badge&labelColor=1F2937" alt="MIT License">
   <img src="https://img.shields.io/badge/MADE%20IN-🇵🇭%20PHILIPPINES-2563EB?style=for-the-badge&labelColor=1F2937" alt="Made in Philippines">
 </p>
+
+<h3 align="center">Safe group buying for Filipino communities — powered by blockchain escrow.</h3>
 
 <p align="center">PasabuySafe is an anti-scam platform that protects buyers in pasabuy (group buy) transactions. Instead of sending money directly to an organizer and hoping for the best, your payment is locked in a smart contract that only releases funds when you confirm you received your order.</p>
 
@@ -231,6 +231,7 @@ Each pasabuy — and each buyer's order within it — moves through a bounded st
 
 - **PasabuySafe Soroban contract (Stellar Testnet):**
   `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB` · [view on Stellar Expert ↗](https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB)
+  
   ![Stellar Expert Contract](./pasabuy-safe-web/public/soroban.png)
   
 - **Live web app:** [pasabuysafe.vercel.app](https://pasabuysafe.vercel.app)
@@ -245,6 +246,16 @@ Every deposit, mark-delivered, confirm, and refund transaction can be verified i
 |:---:|:---:|:---:|
 | ![Explore page](./docs/screenshots/explore.png) | ![Buyer order](./docs/screenshots/buyer-order.png) | ![Organizer dashboard](./docs/screenshots/organizer.png) |
 | Browse active pasabuys, see slots, price, deadline | Deposit, track status, confirm delivery or claim refund | Manage participants, mark delivered, view transaction history |
+
+| Landing page | FAQ | Auth |
+|:---:|:---:|:---:|
+| ![Landing page](./docs/screenshots/landing.png) | ![FAQ](./docs/screenshots/faq.png) | ![Auth](./docs/screenshots/auth.png) |
+| Hero section, how it works, trust signals | Common questions about escrow and pasabuy | Sign in / sign up with wallet or email |
+
+| Create Pasabuy | Profile | Pasabuy Detail |
+|:---:|:---:|:---:|
+| ![Create Pasabuy](./docs/screenshots/create-pasabuy.png) | ![Profile](./docs/screenshots/profile.png) | ![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png) |
+| Organizer form to create a new group buy | User profile with wallet info and order history | Detailed view of a pasabuy with join options |
 
 > Drop PNGs into `docs/screenshots/` with the filenames above and they will render automatically. Recommended width: 1200 px. Missing screenshots render as broken-image icons on GitHub; delete the row until the file exists if that bothers you.
 
