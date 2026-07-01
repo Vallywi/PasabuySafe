@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Plus, Search, ClipboardList, Wallet, ArrowRight, ExternalLink } from 'lucide-react';
+import { Plus, Search, ClipboardList, Wallet, ArrowRight, ExternalLink, Trash2 } from 'lucide-react';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { supabase } from '@/lib/supabase/client';
 import { truncateAddress } from '@/lib/utils/format';
@@ -15,6 +16,7 @@ interface MyGroupBuy {
   price_per_slot: number;
   status: string;
   created_at: string;
+  image_url: string | null;
 }
 
 const categoryEmoji: Record<string, string> = {
@@ -30,25 +32,63 @@ export default function DashboardPage() {
   const { isConnected, publicKey } = useWallet();
   const [myOrganized, setMyOrganized] = useState<MyGroupBuy[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchOrganized = useCallback(async () => {
     if (!publicKey) {
       setLoading(false);
       return;
     }
 
-    async function fetch() {
-      const { data } = await supabase
-        .from('group_buys')
-        .select('*')
-        .eq('organizer_address', publicKey)
-        .order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from('group_buys')
+      .select('id, title, category, price_per_slot, status, created_at, image_url')
+      .eq('organizer_address', publicKey)
+      .order('created_at', { ascending: false });
 
-      setMyOrganized(data || []);
-      setLoading(false);
-    }
-    fetch();
+    setMyOrganized((data as MyGroupBuy[] | null) ?? []);
+    setLoading(false);
   }, [publicKey]);
+
+  useEffect(() => {
+    fetchOrganized();
+  }, [fetchOrganized]);
+
+  /**
+   * Delete a cancelled pasabuy directly from the list. Only allowed when
+   * `status === 'cancelled'` — the organizer detail page enforces the same
+   * rule, this just brings the shortcut to the dashboard so the user
+   * doesn't have to open each one.
+   *
+   * `e.preventDefault()` + `e.stopPropagation()` are required because the
+   * whole row is wrapped in a <Link> that would otherwise steal the click.
+   */
+  async function handleDelete(
+    e: React.MouseEvent<HTMLButtonElement>,
+    groupBuy: MyGroupBuy
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (groupBuy.status !== 'cancelled') return;
+    if (
+      !window.confirm(
+        `Delete "${groupBuy.title}"? This removes it from your list. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(groupBuy.id);
+    const { error } = await supabase
+      .from('group_buys')
+      .delete()
+      .eq('id', groupBuy.id);
+    setDeletingId(null);
+    if (error) {
+      window.alert(`Could not delete: ${error.message}`);
+      return;
+    }
+    setMyOrganized((rows) => rows.filter((r) => r.id !== groupBuy.id));
+  }
 
   if (!isConnected) {
     return (
@@ -160,29 +200,70 @@ export default function DashboardPage() {
 
         {!loading && myOrganized.length > 0 && (
           <div className="space-y-3">
-            {myOrganized.map((gb) => (
-              <Link
-                key={gb.id}
-                href={`/dashboard/organizer/${gb.id}`}
-                className="block bg-white border border-slate-100 hover:border-yellow-200 hover:shadow-md transition-all rounded-2xl p-4 group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-100 to-blue-100 flex items-center justify-center text-2xl">
-                    {categoryEmoji[gb.category] || '🛍️'}
+            {myOrganized.map((gb) => {
+              const isCancelled = gb.status === 'cancelled';
+              const isDeleting = deletingId === gb.id;
+              return (
+                <Link
+                  key={gb.id}
+                  href={`/dashboard/organizer/${gb.id}`}
+                  className="block bg-white border border-slate-100 hover:border-yellow-200 hover:shadow-md transition-all rounded-2xl p-4 group"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Thumbnail — prefer the uploaded image; fall back to the
+                        category emoji tile if none was uploaded. */}
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-100 to-blue-100 flex items-center justify-center text-2xl overflow-hidden shrink-0">
+                      {gb.image_url ? (
+                        <Image
+                          src={gb.image_url}
+                          alt={gb.title}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <span>{categoryEmoji[gb.category] || '🛍️'}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-slate-900 truncate">{gb.title}</h3>
+                      <p className="text-sm text-slate-500">
+                        {(gb.price_per_slot / 10_000_000).toFixed(0)} XLM per slot •{' '}
+                        <span
+                          className={
+                            isCancelled
+                              ? 'text-rose-600 font-medium'
+                              : gb.status === 'active'
+                                ? 'text-emerald-600 font-medium'
+                                : ''
+                          }
+                        >
+                          {gb.status}
+                        </span>
+                      </p>
+                    </div>
+                    {isCancelled ? (
+                      <button
+                        type="button"
+                        onClick={(e) => handleDelete(e, gb)}
+                        disabled={isDeleting}
+                        aria-label={`Delete ${gb.title}`}
+                        className="inline-flex items-center gap-1 text-sm text-rose-600 hover:text-rose-700 disabled:text-rose-300 font-medium px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {isDeleting ? 'Deleting…' : 'Delete'}
+                      </button>
+                    ) : (
+                      <span className="text-yellow-700 text-sm inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                        Manage
+                        <ArrowRight className="w-4 h-4" />
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-900 truncate">{gb.title}</h3>
-                    <p className="text-sm text-slate-500">
-                      {(gb.price_per_slot / 10_000_000).toFixed(0)} XLM per slot • {gb.status}
-                    </p>
-                  </div>
-                  <span className="text-yellow-700 text-sm inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Manage
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </motion.div>
