@@ -242,30 +242,41 @@ Every deposit, mark-delivered, confirm, and refund transaction can be verified i
 
 ## 📸 Screenshots
 
-| Landing page | Explore |
-|:---:|:---:|
-| ![Landing page](./docs/screenshots/landing.png) | ![Explore page](./docs/screenshots/explore.png) |
-| Hero section, how it works, trust signals | Browse active pasabuys, see slots, price, deadline |
+### Landing page
+![Landing page](./docs/screenshots/landing.png)
+> Hero section, how it works, trust signals
 
-| Buyer flow | Organizer dashboard |
-|:---:|:---:|
-| ![Buyer order](./docs/screenshots/buyer-order.png) | ![Organizer dashboard](./docs/screenshots/organizer.png) |
-| Deposit, track status, confirm delivery or claim refund | Manage participants, mark delivered, view transaction history |
+### Explore
+![Explore page](./docs/screenshots/explore.png)
+> Browse active pasabuys, see slots, price, deadline
 
-| FAQ | Auth |
-|:---:|:---:|
-| ![FAQ](./docs/screenshots/faq.png) | ![Auth](./docs/screenshots/auth.png) |
-| Common questions about escrow and pasabuy | Sign in / sign up with wallet or email |
+### Buyer flow
+![Buyer order](./docs/screenshots/buyer-order.png)
+> Deposit, track status, confirm delivery or claim refund
 
-| Create Pasabuy | Profile |
-|:---:|:---:|
-| ![Create Pasabuy](./docs/screenshots/create-pasabuy.png) | ![Profile](./docs/screenshots/profile.png) |
-| Organizer form to create a new group buy | User profile with wallet info and order history |
+### Organizer dashboard
+![Organizer dashboard](./docs/screenshots/organizer.png)
+> Manage participants, mark delivered, view transaction history
 
-| Pasabuy Detail | |
-|:---:|:---:|
-| ![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png) | |
-| Detailed view of a pasabuy with join options | |
+### FAQ
+![FAQ](./docs/screenshots/faq.png)
+> Common questions about escrow and pasabuy
+
+### Auth
+![Auth](./docs/screenshots/auth.png)
+> Sign in / sign up with wallet or email
+
+### Create Pasabuy
+![Create Pasabuy](./docs/screenshots/create-pasabuy.png)
+> Organizer form to create a new group buy
+
+### Profile
+![Profile](./docs/screenshots/profile.png)
+> User profile with wallet info and order history
+
+### Pasabuy Detail
+![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png)
+> Detailed view of a pasabuy with join options
 
 > Drop PNGs into `docs/screenshots/` with the filenames above and they will render automatically. Recommended width: 1200 px. Missing screenshots render as broken-image icons on GitHub; delete the row until the file exists if that bothers you.
 
