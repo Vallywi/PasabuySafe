@@ -1,6 +1,7 @@
+# 🛡️ PasabuySafe
+
 <p align="center">
-  <img src="pasabuy-safe-web/public/logo1.png
-" alt="IsdaSure" width="500" style="max-width:100%; height:auto; object-fit:cover; border-radius:8px;" />
+  <img src="./pasabuy-safe-web/public/logo1.png" alt="PasabuySafe" width="500" style="max-width:100%; height:auto; object-fit:cover; border-radius:8px;" />
 </p>
 
 **Safe group buying for Filipino communities — powered by blockchain escrow.**
