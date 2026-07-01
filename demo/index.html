@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PasabuySafe Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0F172A;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* SCENE SYSTEM */
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  pointer-events: none;
+  padding: 40px;
+}
+.scene.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* PROGRESS BAR */
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #FACC15, #F59E0B);
+  z-index: 9999;
+  transition: width 0.3s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+/* SCENE COUNTER */
+#scene-counter {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  color: rgba(255,255,255,0.4);
+  font-size: 14px;
+  z-index: 9999;
+  font-weight: 500;
+}
+
+/* SKIP HINT */
+#skip-hint {
+  position: fixed;
+  bottom: 20px;
+  left: 30px;
+  color: rgba(255,255,255,0.3);
+  font-size: 12px;
+  z-index: 9999;
+}
+
+/* TYPOGRAPHY */
+.headline {
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+}
+.subhead {
+  font-size: clamp(18px, 2.5vw, 28px);
+  font-weight: 500;
+  text-align: center;
+  max-width: 700px;
+  line-height: 1.5;
+}
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes coinDrop {
+  0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(0) rotate(360deg); opacity: 1; }
+}
+@keyframes lockClose {
+  0% { transform: rotate(-20deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes confetti {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(250,204,21,0.3); }
+  50% { box-shadow: 0 0 40px rgba(250,204,21,0.6); }
+}
+@keyframes progressFill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.animate-fadeUp { animation: fadeUp 0.6s ease forwards; }
+.animate-fadeIn { animation: fadeIn 0.6s ease forwards; }
+.animate-pulse { animation: pulse 2s ease infinite; }
+.animate-float { animation: float 3s ease infinite; }
+.animate-shake { animation: shake 0.5s ease; }
+.animate-slideInLeft { animation: slideInLeft 0.6s ease forwards; }
+.animate-slideInRight { animation: slideInRight 0.6s ease forwards; }
+.animate-scaleIn { animation: scaleIn 0.5s ease forwards; }
+.animate-glowPulse { animation: glowPulse 2s ease infinite; }
+
+.delay-1 { animation-delay: 0.2s; opacity: 0; }
+.delay-2 { animation-delay: 0.4s; opacity: 0; }
+.delay-3 { animation-delay: 0.6s; opacity: 0; }
+.delay-4 { animation-delay: 0.8s; opacity: 0; }
+.delay-5 { animation-delay: 1.0s; opacity: 0; }
+.delay-6 { animation-delay: 1.2s; opacity: 0; }
+.delay-7 { animation-delay: 1.4s; opacity: 0; }
+.delay-8 { animation-delay: 1.6s; opacity: 0; }
+
+/* COMPONENTS */
+.chat-bubble {
+  background: #E5E7EB;
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 18px;
+  max-width: 280px;
+  font-size: 14px;
+  color: #1F2937;
+  margin: 6px 0;
+}
+.chat-bubble.sent {
+  background: #3B82F6;
+  color: white;
+  border-radius: 18px 18px 4px 18px;
+  margin-left: auto;
+}
+.chat-bubble.scam {
+  background: #EF4444;
+  color: white;
+  border-radius: 18px;
+}
+
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: #FACC15;
+  color: #0F172A;
+}
+.btn-primary:hover { background: #EAB308; }
+
+.step-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  width: 220px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+}
+.step-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 12px;
+}
+
+.comparison-col {
+  border-radius: 20px;
+  padding: 30px;
+  width: 340px;
+}
+.comparison-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+/* PHONE MOCKUP */
+.phone-frame {
+  width: 300px;
+  height: 600px;
+  background: #1E293B;
+  border-radius: 40px;
+  padding: 12px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 24px;
+  background: #0F172A;
+  border-radius: 12px;
+  z-index: 10;
+}
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: #FFFBEB;
+  border-radius: 30px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* PHONE UI ELEMENTS */
+.phone-header {
+  background: white;
+  padding: 40px 16px 12px;
+  border-bottom: 1px solid #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.phone-logo {
+  font-weight: 800;
+  font-size: 14px;
+  color: #0F172A;
+}
+.phone-nav {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #64748B;
+}
+.phone-content {
+  padding: 16px;
+  overflow-y: auto;
+  height: calc(100% - 60px);
+}
+.mini-card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #F1F5F9;
+}
+.mini-btn {
+  background: #FACC15;
+  color: #0F172A;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-green { background: #10B981; }
+.status-yellow { background: #FACC15; }
+.status-red { background: #EF4444; }
+
+/* VAULT */
+.vault {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #334155, #1E293B);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.1);
+  position: relative;
+}
+.vault-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #FACC15, #10B981);
+  opacity: 0.5;
+  z-index: -1;
+  animation: glowPulse 2s ease infinite;
+}
+
+/* TIMELINE */
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 20px 0;
+}
+.timeline-node {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.5s ease;
+}
+.timeline-node.done {
+  background: #10B981;
+  color: white;
+}
+.timeline-node.active {
+  background: #FACC15;
+  color: #0F172A;
+  animation: pulse 1.5s ease infinite;
+}
+.timeline-node.pending {
+  background: #E2E8F0;
+  color: #94A3B8;
+}
+.timeline-line {
+  width: 60px;
+  height: 3px;
+  background: #E2E8F0;
+  position: relative;
+  overflow: hidden;
+}
+.timeline-line.done::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #10B981;
+  animation: progressFill 0.8s ease forwards;
+}
+</style>
+</head>
+<body>
+<div id="progress-bar" style="width: 0%"></div>
+<div id="scene-counter"></div>
+<div id="skip-hint">Press SPACE or click anywhere to advance</div>
+
+<!-- SCENE 1: THE HOOK -->
+<div class="scene active" id="scene-1" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);">
+  <div class="label animate-fadeUp" style="color: #EF4444; margin-bottom: 20px;">
+    <span style="display:inline-block;width:8px;height:8px;background:#EF4444;border-radius:50%;margin-right:8px;animation:blink 1.5s infinite;"></span>
+    A REAL STORY THAT HAPPENS EVERY DAY
+  </div>
+  <div style="max-width: 360px; width: 100%;">
+    <div class="chat-bubble animate-fadeUp delay-1">Pasabuy Korean skincare! Slots open! Only 850 per slot sis</div>
+    <div class="chat-bubble sent animate-fadeUp delay-2">Interested po! How to pay?</div>
+    <div class="chat-bubble animate-fadeUp delay-3">GCash mo na lang po dito: 09XX-XXX-XXXX</div>
+    <div class="chat-bubble sent animate-fadeUp delay-4">Sent na po! 850 via GCash</div>
+    <div class="chat-bubble sent animate-fadeUp delay-5">Hello po? When delivery?</div>
+    <div class="chat-bubble sent animate-fadeUp delay-6">????? Hello????</div>
+    <div class="chat-bubble scam animate-fadeUp delay-7" style="text-align:center; margin: 20px auto 0;">
+      This user has blocked you.
+    </div>
+  </div>
+  <div class="animate-fadeUp delay-8" style="margin-top: 30px; text-align: center;">
+    <p style="color: #EF4444; font-size: 24px; font-weight: 800;">Your money is GONE.</p>
+    <p style="color: #94A3B8; margin-top: 8px; font-size: 14px;">This happens to thousands of Filipinos every month.</p>
+  </div>
+</div>
+
+<!-- SCENE 2: THE PROBLEM -->
+<div class="scene" id="scene-2" style="background: linear-gradient(135deg, #1a0000 0%, #0F172A 100%);">
+  <div class="label animate-fadeUp" style="color: #F87171; margin-bottom: 24px;">THE PASABUY SCAM EPIDEMIC</div>
+  <div class="headline animate-fadeUp delay-1" style="color: white; margin-bottom: 30px;">
+    Why does this keep<br>happening?
+  </div>
+  <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; max-width: 700px;">
+    <div class="animate-fadeUp delay-2" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 24px;">❌</span>
+      <div>
+        <p style="color: white; font-weight: 600; font-size: 14px;">GCash / Maya</p>
+        <p style="color: #94A3B8; font-size: 12px;">No buyer protection at all</p>
+      </div>
+    </div>
+    <div class="animate-fadeUp delay-3" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 24px;">❌</span>
+      <div>
+        <p style="color: white; font-weight: 600; font-size: 14px;">Bank Transfer</p>
+        <p style="color: #94A3B8; font-size: 12px;">Gone forever, no recourse</p>
+      </div>
+    </div>
+    <div class="animate-fadeUp delay-4" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 24px;">❌</span>
+      <div>
+        <p style="color: white; font-weight: 600; font-size: 14px;">"Trust me po"</p>
+        <p style="color: #94A3B8; font-size: 12px;">Reputation easily faked</p>
+      </div>
+    </div>
+    <div class="animate-fadeUp delay-5" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 24px;">❌</span>
+      <div>
+        <p style="color: white; font-weight: 600; font-size: 14px;">Police Report</p>
+        <p style="color: #94A3B8; font-size: 12px;">Rarely leads to recovery</p>
+      </div>
+    </div>
+  </div>
+  <div class="animate-fadeUp delay-6" style="margin-top: 30px; text-align: center;">
+    <p style="color: #F87171; font-size: 32px; font-weight: 900;">500 — 50,000+ per victim</p>
+    <p style="color: #94A3B8; margin-top: 4px;">in Philippine Pesos lost</p>
+  </div>
+</div>
+<!-- SCENE 3: INTRODUCING PASABUYSAFE -->
+<div class="scene" id="scene-3" style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);">
+  <div class="label animate-fadeUp" style="color: #CA8A04; margin-bottom: 16px;">INTRODUCING</div>
+  <div class="animate-fadeUp delay-1" style="margin-bottom: 16px;">
+    <span style="font-size: 60px;">&#x1F6E1;&#xFE0F;</span>
+  </div>
+  <div class="headline animate-fadeUp delay-2" style="color: #0F172A; margin-bottom: 16px;">
+    PasabuySafe
+  </div>
+  <div class="subhead animate-fadeUp delay-3" style="color: #475569; margin-bottom: 40px;">
+    Your money is locked in a smart contract &mdash; not in anyone&rsquo;s wallet.<br>
+    <strong style="color: #0F172A;">No one touches it until YOU confirm delivery.</strong>
+  </div>
+  <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+    <div class="step-card animate-fadeUp delay-4">
+      <div class="step-icon" style="background: linear-gradient(135deg, #FACC15, #F59E0B);">&#x1F4B3;</div>
+      <h3 style="font-size: 16px; font-weight: 800; color: #0F172A;">You Pay</h3>
+      <p style="font-size: 12px; color: #64748B; margin-top: 4px;">Money locked in escrow</p>
+    </div>
+    <div class="step-card animate-fadeUp delay-5">
+      <div class="step-icon" style="background: linear-gradient(135deg, #FB923C, #EA580C);">&#x1F4E6;</div>
+      <h3 style="font-size: 16px; font-weight: 800; color: #0F172A;">They Deliver</h3>
+      <p style="font-size: 12px; color: #64748B; margin-top: 4px;">Money still locked</p>
+    </div>
+    <div class="step-card animate-fadeUp delay-6">
+      <div class="step-icon" style="background: linear-gradient(135deg, #10B981, #059669);">&#x2705;</div>
+      <h3 style="font-size: 16px; font-weight: 800; color: #0F172A;">You Confirm</h3>
+      <p style="font-size: 12px; color: #64748B; margin-top: 4px;">Money released. Done.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 4: THE VAULT CONCEPT -->
+<div class="scene" id="scene-4" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);">
+  <div class="label animate-fadeUp" style="color: #FACC15; margin-bottom: 24px;">BLOCKCHAIN ESCROW</div>
+  <div class="headline animate-fadeUp delay-1" style="color: white; font-size: clamp(28px, 4vw, 48px); margin-bottom: 30px;">
+    Your money goes into a<br><span style="color: #FACC15;">digital vault</span>
+  </div>
+  <div class="animate-scaleIn delay-2" style="position: relative; margin-bottom: 30px;">
+    <div class="vault-glow"></div>
+    <div class="vault animate-float">&#x1F512;</div>
+  </div>
+  <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; max-width: 600px;">
+    <div class="animate-fadeUp delay-3" style="text-align: center;">
+      <p style="font-size: 32px; margin-bottom: 4px;">&#x1F6AB;</p>
+      <p style="color: white; font-weight: 600; font-size: 13px;">Organizer can't<br>withdraw</p>
+    </div>
+    <div class="animate-fadeUp delay-4" style="text-align: center;">
+      <p style="font-size: 32px; margin-bottom: 4px;">&#x1F511;</p>
+      <p style="color: white; font-weight: 600; font-size: 13px;">Only YOUR key<br>releases it</p>
+    </div>
+    <div class="animate-fadeUp delay-5" style="text-align: center;">
+      <p style="font-size: 32px; margin-bottom: 4px;">&#x23F0;</p>
+      <p style="color: white; font-weight: 600; font-size: 13px;">Auto-refund<br>after deadline</p>
+    </div>
+    <div class="animate-fadeUp delay-6" style="text-align: center;">
+      <p style="font-size: 32px; margin-bottom: 4px;">&#x1F4DC;</p>
+      <p style="color: white; font-weight: 600; font-size: 13px;">Everything on<br>blockchain</p>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 5: BUYER FLOW - EXPLORE -->
+<div class="scene" id="scene-5" style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);">
+  <div class="label animate-fadeUp" style="color: #CA8A04; margin-bottom: 16px;">BUYER FLOW</div>
+  <div class="headline animate-fadeUp delay-1" style="color: #0F172A; font-size: clamp(24px, 4vw, 40px); margin-bottom: 24px;">
+    Browse &amp; Join a Pasabuy
+  </div>
+  <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap; justify-content: center;">
+    <div class="phone-frame animate-slideInLeft delay-2">
+      <div class="phone-screen">
+        <div class="phone-header">
+          <span class="phone-logo">&#x1F6E1;&#xFE0F; PasabuySafe</span>
+          <div class="phone-nav"><span>Explore</span><span>Dashboard</span></div>
+        </div>
+        <div class="phone-content">
+          <p style="font-weight: 700; font-size: 16px; color: #0F172A; margin-bottom: 12px;">Discover Pasabuys</p>
+          <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+            <span style="background: #059669; color: white; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;">All</span>
+            <span style="background: white; border: 1px solid #E2E8F0; padding: 4px 10px; border-radius: 20px; font-size: 10px;">Skincare</span>
+            <span style="background: white; border: 1px solid #E2E8F0; padding: 4px 10px; border-radius: 20px; font-size: 10px;">Food</span>
+          </div>
+          <div class="mini-card">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span style="font-size: 28px;">&#x1F9F4;</span>
+              <div>
+                <p style="font-weight: 700; font-size: 13px; color: #0F172A;">Korean Skincare Bundle</p>
+                <p style="font-size: 11px; color: #64748B;">&#x1F4CD; Manila &bull; 12 slots left</p>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+              <div>
+                <p style="font-size: 18px; font-weight: 800; color: #CA8A04;">&#x20B1;850</p>
+                <p style="font-size: 10px; color: #94A3B8;">50 XLM</p>
+              </div>
+              <span style="font-size: 10px; color: #64748B;">&#x23F0; 5 days left</span>
+            </div>
+            <button class="mini-btn">Join this Pasabuy</button>
+          </div>
+          <div class="mini-card">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span style="font-size: 28px;">&#x1F371;</span>
+              <div>
+                <p style="font-weight: 700; font-size: 13px; color: #0F172A;">Japanese Snack Box</p>
+                <p style="font-size: 11px; color: #64748B;">&#x1F4CD; Cebu &bull; 8 slots left</p>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+              <div>
+                <p style="font-size: 18px; font-weight: 800; color: #CA8A04;">&#x20B1;1,200</p>
+                <p style="font-size: 10px; color: #94A3B8;">70 XLM</p>
+              </div>
+              <span style="font-size: 10px; color: #EF4444; font-weight: 700;">&#x1F525; 1 day left</span>
+            </div>
+            <button class="mini-btn">Join this Pasabuy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="animate-slideInRight delay-3" style="max-width: 280px;">
+      <div style="margin-bottom: 20px;">
+        <span style="font-size: 28px;">&#x1F50D;</span>
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-top: 8px;">Browse safely</h3>
+        <p style="font-size: 14px; color: #64748B; margin-top: 4px;">Every pasabuy is protected by smart contracts</p>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <span style="font-size: 28px;">&#x1F3F7;&#xFE0F;</span>
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-top: 8px;">See prices in &#x20B1; PHP</h3>
+        <p style="font-size: 14px; color: #64748B; margin-top: 4px;">Real-time XLM to PHP conversion</p>
+      </div>
+      <div>
+        <span style="font-size: 28px;">&#x23F0;</span>
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-top: 8px;">Deadline protection</h3>
+        <p style="font-size: 14px; color: #64748B; margin-top: 4px;">Auto-refund if deadline passes</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 6: DEPOSIT & PAY -->
+<div class="scene" id="scene-6" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);">
+  <div class="label animate-fadeUp" style="color: #10B981; margin-bottom: 16px;">DEPOSIT INTO ESCROW</div>
+  <div class="headline animate-fadeUp delay-1" style="color: white; font-size: clamp(24px, 4vw, 40px); margin-bottom: 30px;">
+    Pay securely with<br><span style="color: #FACC15;">Freighter Wallet</span>
+  </div>
+  <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap; justify-content: center;">
+    <div class="phone-frame animate-slideInLeft delay-2">
+      <div class="phone-screen" style="background: white;">
+        <div style="padding: 50px 20px 20px;">
+          <p style="font-size: 12px; color: #64748B; margin-bottom: 4px;">Joining</p>
+          <p style="font-weight: 800; font-size: 16px; color: #0F172A; margin-bottom: 16px;">Korean Skincare Bundle</p>
+          <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+            <p style="font-size: 11px; color: #64748B;">Your Name</p>
+            <p style="font-size: 14px; color: #0F172A; font-weight: 500;">Maria Santos</p>
+          </div>
+          <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+            <p style="font-size: 11px; color: #64748B;">Contact Number</p>
+            <p style="font-size: 14px; color: #0F172A; font-weight: 500;">0917-123-4567</p>
+          </div>
+          <div style="background: #F8FAFC; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+            <p style="font-size: 11px; color: #64748B;">Delivery Address</p>
+            <p style="font-size: 14px; color: #0F172A; font-weight: 500;">Makati City, Metro Manila</p>
+          </div>
+          <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 12px; padding: 14px; margin-bottom: 16px; text-align: center;">
+            <p style="font-size: 11px; color: #92400E;">Total Amount</p>
+            <p style="font-size: 28px; font-weight: 900; color: #0F172A;">50 XLM</p>
+            <p style="font-size: 12px; color: #CA8A04;">&#x2248; &#x20B1;850</p>
+          </div>
+          <div style="background: #FACC15; border-radius: 12px; padding: 14px; text-align: center; font-weight: 700; color: #0F172A; font-size: 14px;">
+            &#x1F4B3; Deposit into Escrow
+          </div>
+          <p style="font-size: 10px; color: #94A3B8; text-align: center; margin-top: 8px;">&#x1F512; Protected by blockchain smart contract</p>
+        </div>
+      </div>
+    </div>
+    <div class="animate-slideInRight delay-3" style="max-width: 260px;">
+      <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+        <p style="color: #10B981; font-weight: 700; font-size: 14px;">&#x1F6E1;&#xFE0F; Money goes to:</p>
+        <p style="color: white; font-size: 13px; margin-top: 4px;">Smart Contract (not a person)</p>
+      </div>
+      <div style="background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.3); border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+        <p style="color: #FACC15; font-weight: 700; font-size: 14px;">&#x2728; Signed by you:</p>
+        <p style="color: white; font-size: 13px; margin-top: 4px;">Freighter wallet popup approves</p>
+      </div>
+      <div style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); border-radius: 14px; padding: 16px;">
+        <p style="color: #818CF8; font-weight: 700; font-size: 14px;">&#x26D3;&#xFE0F; Recorded on:</p>
+        <p style="color: white; font-size: 13px; margin-top: 4px;">Stellar blockchain (permanent)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 7: ORDER TRACKING -->
+<div class="scene" id="scene-7" style="background: linear-gradient(135deg, #FFFBEB 0%, #ECFDF5 100%);">
+  <div class="label animate-fadeUp" style="color: #059669; margin-bottom: 16px;">ORDER TRACKING</div>
+  <div class="headline animate-fadeUp delay-1" style="color: #0F172A; font-size: clamp(24px, 4vw, 40px); margin-bottom: 30px;">
+    Track every step
+  </div>
+  <div class="card animate-scaleIn delay-2" style="max-width: 500px; width: 100%;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+      <span style="font-size: 32px;">&#x1F9F4;</span>
+      <div>
+        <p style="font-weight: 700; color: #0F172A;">Korean Skincare Bundle</p>
+        <p style="font-size: 13px; color: #64748B;">Order #PB-2024-0847</p>
+      </div>
+    </div>
+    <div class="timeline" style="justify-content: center;">
+      <div class="timeline-node done">&#x2713;</div>
+      <div class="timeline-line done"></div>
+      <div class="timeline-node done">&#x2713;</div>
+      <div class="timeline-line done"></div>
+      <div class="timeline-node active">3</div>
+      <div class="timeline-line"></div>
+      <div class="timeline-node pending">4</div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 8px; padding: 0 10px;">
+      <span style="font-size: 10px; color: #10B981; font-weight: 600;">Deposited</span>
+      <span style="font-size: 10px; color: #10B981; font-weight: 600;">Delivered</span>
+      <span style="font-size: 10px; color: #CA8A04; font-weight: 700;">Confirm</span>
+      <span style="font-size: 10px; color: #94A3B8;">Done</span>
+    </div>
+    <div style="margin-top: 24px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px; padding: 16px; text-align: center;">
+      <p style="font-size: 14px; color: #065F46; font-weight: 600;">&#x1F4E6; Your order has been delivered!</p>
+      <p style="font-size: 12px; color: #047857; margin-top: 4px;">Click below to release payment to organizer</p>
+    </div>
+    <div style="margin-top: 16px; background: #10B981; border-radius: 12px; padding: 14px; text-align: center; font-weight: 700; color: white; font-size: 15px;">
+      &#x2705; Confirm Delivery &amp; Release Funds
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 8: REFUND PROTECTION -->
+<div class="scene" id="scene-8" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);">
+  <div class="label animate-fadeUp" style="color: #FACC15; margin-bottom: 16px;">REFUND PROTECTION</div>
+  <div class="headline animate-fadeUp delay-1" style="color: white; font-size: clamp(24px, 4vw, 48px); margin-bottom: 12px;">
+    Not delivered?<br><span style="color: #10B981;">Get your money back.</span>
+  </div>
+  <div class="subhead animate-fadeUp delay-2" style="color: #94A3B8; margin-bottom: 30px;">
+    After the deadline passes, click one button. Automatic refund.
+  </div>
+  <div class="card animate-scaleIn delay-3" style="max-width: 400px; width: 100%; text-align: center;">
+    <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+      <p style="font-size: 14px; color: #991B1B; font-weight: 600;">&#x23F0; Deadline has passed</p>
+      <p style="font-size: 12px; color: #B91C1C; margin-top: 4px;">Order was NOT delivered</p>
+    </div>
+    <div style="margin-bottom: 16px;">
+      <p style="font-size: 11px; color: #64748B; text-transform: uppercase; letter-spacing: 1px;">Your locked amount</p>
+      <p style="font-size: 36px; font-weight: 900; color: #0F172A;">50 XLM</p>
+      <p style="font-size: 14px; color: #CA8A04;">&#x2248; &#x20B1;850</p>
+    </div>
+    <div style="background: linear-gradient(135deg, #10B981, #059669); border-radius: 12px; padding: 16px; color: white; font-weight: 700; font-size: 16px;">
+      &#x1F4B0; Claim My Refund
+    </div>
+    <p style="font-size: 11px; color: #64748B; margin-top: 12px;">No approval needed. No waiting. Code does it automatically.</p>
+  </div>
+</div>
+
+<!-- SCENE 9: ORGANIZER FLOW -->
+<div class="scene" id="scene-9" style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);">
+  <div class="label animate-fadeUp" style="color: #CA8A04; margin-bottom: 16px;">FOR ORGANIZERS</div>
+  <div class="headline animate-fadeUp delay-1" style="color: #0F172A; font-size: clamp(24px, 4vw, 40px); margin-bottom: 24px;">
+    Prove you're legit.
+  </div>
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;">
+    <div class="step-card animate-fadeUp delay-2" style="width: 200px;">
+      <div style="font-size: 36px; margin-bottom: 8px;">&#x1F4DD;</div>
+      <h3 style="font-size: 14px; font-weight: 800; color: #0F172A;">1. Create Pasabuy</h3>
+      <p style="font-size: 11px; color: #64748B; margin-top: 4px;">Set title, price, deadline, slots</p>
+    </div>
+    <div class="step-card animate-fadeUp delay-3" style="width: 200px;">
+      <div style="font-size: 36px; margin-bottom: 8px;">&#x1F4E2;</div>
+      <h3 style="font-size: 14px; font-weight: 800; color: #0F172A;">2. Share Link</h3>
+      <p style="font-size: 11px; color: #64748B; margin-top: 4px;">Buyers join & deposit safely</p>
+    </div>
+    <div class="step-card animate-fadeUp delay-4" style="width: 200px;">
+      <div style="font-size: 36px; margin-bottom: 8px;">&#x1F4E6;</div>
+      <h3 style="font-size: 14px; font-weight: 800; color: #0F172A;">3. Deliver Orders</h3>
+      <p style="font-size: 11px; color: #64748B; margin-top: 4px;">Mark each buyer as delivered</p>
+    </div>
+    <div class="step-card animate-fadeUp delay-5" style="width: 200px;">
+      <div style="font-size: 36px; margin-bottom: 8px;">&#x1F4B0;</div>
+      <h3 style="font-size: 14px; font-weight: 800; color: #0F172A;">4. Get Paid</h3>
+      <p style="font-size: 11px; color: #64748B; margin-top: 4px;">Funds released on confirm</p>
+    </div>
+  </div>
+  <div class="animate-fadeUp delay-6" style="margin-top: 30px; background: white; border-radius: 14px; padding: 16px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); max-width: 500px; text-align: center;">
+    <p style="color: #0F172A; font-weight: 600;">&#x2728; Build REAL trust with blockchain proof</p>
+    <p style="color: #64748B; font-size: 13px; margin-top: 4px;">Every transaction is verifiable on Stellar Expert</p>
+  </div>
+</div>
+
+<!-- SCENE 10: ANTI-SCAM COMPARISON -->
+<div class="scene" id="scene-10" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);">
+  <div class="label animate-fadeUp" style="color: #FACC15; margin-bottom: 16px;">WHY SCAMMERS CAN'T WIN</div>
+  <div class="headline animate-fadeUp delay-1" style="color: white; font-size: clamp(24px, 4vw, 40px); margin-bottom: 30px;">
+    Every attack. Blocked.
+  </div>
+  <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+    <div class="comparison-col animate-slideInLeft delay-2" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
+      <h3 style="color: #F87171; font-weight: 800; font-size: 16px; margin-bottom: 16px;">&#x274C; Scam Attempt</h3>
+      <div class="comparison-item"><span style="color: #F87171;">&#x2022;</span><span style="color: #CBD5E1; font-size: 13px;">Takes money and runs</span></div>
+      <div class="comparison-item"><span style="color: #F87171;">&#x2022;</span><span style="color: #CBD5E1; font-size: 13px;">Marks "delivered" but didn't ship</span></div>
+      <div class="comparison-item"><span style="color: #F87171;">&#x2022;</span><span style="color: #CBD5E1; font-size: 13px;">Tries to fake buyer confirmation</span></div>
+      <div class="comparison-item"><span style="color: #F87171;">&#x2022;</span><span style="color: #CBD5E1; font-size: 13px;">Attempts direct withdrawal</span></div>
+      <div class="comparison-item"><span style="color: #F87171;">&#x2022;</span><span style="color: #CBD5E1; font-size: 13px;">Modifies the deadline</span></div>
+    </div>
+    <div class="comparison-col animate-slideInRight delay-3" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+      <h3 style="color: #10B981; font-weight: 800; font-size: 16px; margin-bottom: 16px;">&#x1F6E1;&#xFE0F; PasabuySafe Blocks It</h3>
+      <div class="comparison-item"><span style="color: #10B981;">&#x2713;</span><span style="color: #CBD5E1; font-size: 13px;">Money is in contract, not their wallet</span></div>
+      <div class="comparison-item"><span style="color: #10B981;">&#x2713;</span><span style="color: #CBD5E1; font-size: 13px;">Buyer must ALSO confirm to release</span></div>
+      <div class="comparison-item"><span style="color: #10B981;">&#x2713;</span><span style="color: #CBD5E1; font-size: 13px;">Needs buyer's private key (impossible)</span></div>
+      <div class="comparison-item"><span style="color: #10B981;">&#x2713;</span><span style="color: #CBD5E1; font-size: 13px;">No withdraw function exists</span></div>
+      <div class="comparison-item"><span style="color: #10B981;">&#x2713;</span><span style="color: #CBD5E1; font-size: 13px;">Deadline is immutable on-chain</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 11: FINAL CTA -->
+<div class="scene" id="scene-11" style="background: linear-gradient(135deg, #FACC15 0%, #F59E0B 50%, #FACC15 100%);">
+  <div class="animate-scaleIn" style="text-align: center;">
+    <div style="font-size: 80px; margin-bottom: 16px;">&#x1F6E1;&#xFE0F;</div>
+    <div class="headline" style="color: #0F172A; margin-bottom: 12px; animation: fadeUp 0.6s ease forwards;">
+      PasabuySafe
+    </div>
+    <div class="subhead animate-fadeUp delay-1" style="color: #713F12; margin-bottom: 30px;">
+      Buy together. Pay securely.<br>
+      <strong style="color: #0F172A;">Because your money should be safe.</strong>
+    </div>
+    <div class="animate-fadeUp delay-2" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
+      <div class="btn btn-primary animate-glowPulse" style="background: #0F172A; color: #FACC15; font-size: 18px; padding: 16px 32px;">
+        &#x1F680; Start for Free
+      </div>
+    </div>
+    <div class="animate-fadeUp delay-3" style="background: rgba(15,23,42,0.1); border-radius: 12px; padding: 12px 24px; display: inline-block;">
+      <p style="color: #713F12; font-weight: 600; font-size: 14px;">pasabuysafe.vercel.app</p>
+    </div>
+    <div class="animate-fadeUp delay-5" style="margin-top: 24px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <span style="font-size: 12px; color: #92400E;">&#x1F310; Built on Stellar</span>
+      <span style="font-size: 12px; color: #92400E;">&#x1F4BB; Open Source</span>
+      <span style="font-size: 12px; color: #92400E;">&#x1F1F5;&#x1F1ED; Made in Philippines</span>
+      <span style="font-size: 12px; color: #92400E;">&#x1F4B8; Free Forever</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// SCENE CONTROLLER
+const scenes = document.querySelectorAll('.scene');
+const totalScenes = scenes.length;
+let currentScene = 0;
+let transitioning = false;
+let autoPlayTimer = null;
+const AUTO_ADVANCE_MS = 5000; // 5 seconds per scene
+
+function updateProgressBar() {
+  const pct = ((currentScene + 1) / totalScenes) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function updateCounter() {
+  document.getElementById('scene-counter').textContent =
+    `${currentScene + 1} / ${totalScenes}`;
+}
+
+function goToScene(index) {
+  if (transitioning || index === currentScene) return;
+  if (index < 0 || index >= totalScenes) return;
+  transitioning = true;
+
+  scenes[currentScene].classList.remove('active');
+  currentScene = index;
+  scenes[currentScene].classList.add('active');
+  updateProgressBar();
+  updateCounter();
+
+  setTimeout(() => { transitioning = false; }, 900);
+  resetAutoPlay();
+}
+
+function nextScene() {
+  if (currentScene < totalScenes - 1) {
+    goToScene(currentScene + 1);
+  } else {
+    // Loop back to start
+    goToScene(0);
+  }
+}
+
+function prevScene() {
+  if (currentScene > 0) {
+    goToScene(currentScene - 1);
+  }
+}
+
+// AUTO-PLAY
+function resetAutoPlay() {
+  clearTimeout(autoPlayTimer);
+  autoPlayTimer = setTimeout(nextScene, AUTO_ADVANCE_MS);
+}
+
+// EVENT LISTENERS
+document.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter') {
+    e.preventDefault();
+    nextScene();
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    prevScene();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  // Click right half = next, left half = prev
+  if (e.clientX > window.innerWidth / 2) {
+    nextScene();
+  } else {
+    prevScene();
+  }
+});
+
+// Touch support for mobile
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+});
+document.addEventListener('touchend', (e) => {
+  const diff = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(diff) > 50) {
+    if (diff < 0) nextScene();
+    else prevScene();
+  }
+});
+
+// Initialize
+updateProgressBar();
+updateCounter();
+resetAutoPlay();
+
+// Hide hint after 5s
+setTimeout(() => {
+  document.getElementById('skip-hint').style.opacity = '0';
+}, 5000);
+</script>
+</body>
+</html>
