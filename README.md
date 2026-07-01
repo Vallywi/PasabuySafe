@@ -173,48 +173,113 @@ The PasabuySafe escrow contract is written in Rust and deployed on Stellar's Sor
 | ↩️ `refund` | Buyer | Returns funds to buyer (only after deadline passes) |
 | ⏰ `release_expired` | Anyone | Releases funds from expired confirmed orders |
 
-### 🔁 State Machine
+### 🔁 How PasabuySafe works
 
-Each buyer's order follows this lifecycle:
+Each pasabuy — and each buyer's order within it — moves through a bounded state machine enforced by the Soroban contract. Money only leaves the contract on the transitions that end in green.
 
 ```
-Deposited → Delivered → Confirmed (funds released to organizer)
-    ↓
- Refunded (after deadline, funds returned to buyer)
+                  create_pasabuy
+                        │
+                        ▼
+                  ┌───────────┐   organizer cancels       ┌────────────┐
+                  │  Active   │ ────────────────────────▶ │ Cancelled  │  (deposits refunded)
+                  └───────────┘                           └────────────┘
+                        │
+                buyer deposit
+                        │
+                        ▼
+                  ┌───────────┐   buyer cancels           ┌────────────┐
+                  │ Deposited │ ────────────────────────▶ │ Cancelled  │  (refund after deadline)
+                  └───────────┘                           └────────────┘
+                        │
+              organizer marks delivered
+                        │
+                        ▼
+                  ┌───────────┐   deadline passes,        ┌────────────┐
+                  │ Delivered │   buyer never confirms    │  Refunded  │  (funds → buyer)
+                  └───────────┘                           └────────────┘
+                        │
+             buyer confirms delivery
+                        │
+                        ▼
+                  ┌───────────┐
+                  │ Confirmed │  (funds released → organizer)
+                  └───────────┘
 ```
+
+**The protection model, honestly stated:** naive "lock all the money and trust the organizer" escrow is not safer than direct payment, because once capital reaches the organizer it cannot be clawed back. PasabuySafe's protection comes from three rules the contract enforces without exception:
+
+- **The organizer never holds the money.** Deposits go to the contract, never to a personal wallet.
+- **Only the buyer's signature releases funds.** `confirm_delivery` requires the buyer's private key. The organizer cannot forge it.
+- **Deadlines are immutable.** If the deadline passes without delivery, the buyer's refund is a one-transaction call, unstoppable by the organizer or the platform.
 
 ---
 
-## 🌐 Live Demo
+## 🌐 Deployed contract
 
-The contract is deployed on Stellar Testnet:
+- **PasabuySafe Soroban contract (Stellar Testnet):**
+  `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB` · [view on Stellar Expert ↗](https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB)
+- **Native XLM Stellar Asset Contract (Testnet):**
+  `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
+- **Live web app:** [pasabuysafe.vercel.app](https://pasabuysafe.vercel.app)
 
-- **Contract ID:** `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB`
-- **Stellar Expert:** [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB)
+Every deposit, mark-delivered, confirm, and refund transaction can be verified independently on Stellar Expert — the contract itself is the source of truth.
 
 ---
 
-## � CI / CD
+## 📸 Screenshots
 
-Every push and pull request to `main` runs through [GitHub Actions](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml) — three independent jobs that must all pass before code lands:
+| Landing / Explore | Buyer flow | Organizer dashboard |
+|:---:|:---:|:---:|
+| ![Explore page](./docs/screenshots/explore.png) | ![Buyer order](./docs/screenshots/buyer-order.png) | ![Organizer dashboard](./docs/screenshots/organizer.png) |
+| Browse active pasabuys, see slots, price, deadline | Deposit, track status, confirm delivery or claim refund | Manage participants, mark delivered, view transaction history |
 
-| Job | What it does |
-|-----|--------------|
-| 🦀 **Rust contract** | `cargo build` + `cargo test` against the Soroban escrow contract |
-| 🌐 **Web build** | `npm ci` + `npm run build` for the Next.js app (typechecks included) |
-| 📜 **Docs guard** | Verifies every contract-id literal in `docs/*.md` matches `.env.local` |
+> Drop PNGs into `docs/screenshots/` with the filenames above and they will render automatically. Recommended width: 1200 px. Missing screenshots render as broken-image icons on GitHub; delete the row until the file exists if that bothers you.
 
-Production deployment is handled by **Vercel** — every push to `main` triggers an automatic deploy at [pasabuysafe.vercel.app](https://pasabuysafe.vercel.app), and pull requests get unique preview URLs.
+---
+
+## 🏗️ Architecture
 
 ```
-Local commit ─▶ git push ─▶ GitHub Actions ─▶ (all green) ─▶ Vercel deploy
-                              │
-                              ├── 🦀 cargo test
-                              ├── 🌐 next build
-                              └── 📜 contract-id guard
+┌───────────────────── Browser (Next.js 14 App Router) ─────────────────────┐
+│                                                                              │
+│  React 19 + TypeScript + Tailwind CSS + Framer Motion                       │
+│                                                                              │
+│  UI screens ─▶ Stellar SDK bindings ─▶ Freighter wallet (signs txs)         │
+│      │                    │                       │                          │
+│      │ read/write         │ Soroban RPC           ▼                          │
+│      ▼                    ▼             ┌─────────────────────────┐         │
+│  Supabase (Postgres)   Soroban RPC ───▶ │  PasabuySafe contract   │         │
+│  ├─ profiles           (testnet)        │  + XLM SAC token        │         │
+│  ├─ group_buys                          └─────────────────────────┘         │
+│  ├─ participants                                     ▲                       │
+│  └─ contract_events ◀── sync-events edge fn ────────┘                       │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Live status of every run is visible from the badges at the top of this README and in the [Actions tab](https://github.com/Vallywi/PasabuySafe/actions).
+**The Soroban contract is the source of truth for money.** Supabase mirrors on-chain events into a queryable database so the UI can render lists, filters, participant details, and transaction history without hitting the RPC on every render. Writes are always wallet-signed transactions; reads are either free RPC calls or Supabase queries protected by Row Level Security.
+
+- **Smart contract** (`src/lib.rs`): escrow logic — deposit, mark delivered, confirm, refund. Each pasabuy is a keyed entry in contract storage; multiple organizers coexist inside a single contract instance.
+- **Web app** (`pasabuy-safe-web/`): Next.js App Router. Wallet connection via `@stellar/freighter-api`; contract calls go through a single `invokeContractWithStatus` helper that normalizes every failure mode into user-facing copy.
+- **Database** (`supabase/migrations/`): profiles, group buys, participants, contract-event mirror, with strict RLS that prevents non-organizers from reading buyer contact details.
+- **Edge function** (`sync-events`): reconciles on-chain events into the `contract_events` table so Transaction History stays current when users aren't on the page.
+
+---
+
+---
+
+## 🔄 CI / CD
+
+Every push and pull request to `main` runs an automated pipeline on GitHub Actions ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)):
+
+- **Contract** installs Rust stable, runs the full `cargo test` suite, and compiles the escrow contract for `wasm32v1-none`.
+- **Frontend** installs dependencies with `npm ci`, type-checks TypeScript, and builds the Next.js production bundle.
+- **Docs guard** verifies every Stellar contract-id literal in `docs/*.md` matches the canonical value in `.env.local` (soft-fails until the docs sweep lands).
+
+Continuous deployment is handled by **Vercel**: a successful push to `main` is auto-deployed to production at [pasabuysafe.vercel.app](https://pasabuysafe.vercel.app), and every pull request gets its own preview URL. The live build status is shown by the CI badge at the top of this README.
+
+[![CI](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml)
 
 ---
 

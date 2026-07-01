@@ -11,7 +11,7 @@ This is your single source of truth for getting the MVP live.
 - [x] 5 unit tests all passing
 - [x] Anti-scam protection: money locked until buyer confirms
 - [x] Anti-abuse protection: organizer auto-release after confirmation window expires
-- [x] Deployed to testnet at `CD5TYW7NH5BGFF4DNXKXTJEDIPPRBIC6MJ7M2STW3LLXKHGCOJRNNYON`
+- [x] Deployed to testnet at `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB`
 - [x] Verified working end-to-end via CLI test
 
 ### Frontend (Next.js 14 + TypeScript)
@@ -175,8 +175,8 @@ After deploying, go to Supabase → Auth → URL Configuration:
 
 ## 🔗 Live Contract Info
 
-- **Contract ID:** `CD5TYW7NH5BGFF4DNXKXTJEDIPPRBIC6MJ7M2STW3LLXKHGCOJRNNYON`
-- **Stellar Expert:** https://stellar.expert/explorer/testnet/contract/CD5TYW7NH5BGFF4DNXKXTJEDIPPRBIC6MJ7M2STW3LLXKHGCOJRNNYON
+- **Contract ID:** `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB`
+- **Stellar Expert:** https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB
 - **XLM Token (testnet SAC):** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 - **Deployer Address:** `GATG3QX42YG72TJVE2GCO3ZLQJZ424XVF4LILEGIMA5RMNCFE6N4VVH6`
 

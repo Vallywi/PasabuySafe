@@ -10,7 +10,7 @@
 **Platform:** Stellar Soroban (Blockchain Smart Contract)  
 **Version:** 1.0.0  
 **Status:** Deployed on Stellar Testnet  
-**Contract ID:** `CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW`
+**Contract ID:** `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB`
 
 ---
 
@@ -270,8 +270,8 @@ In Filipino online communities (Facebook groups, Viber GCs, Telegram), **pasabuy
 
 ## 12. Contract Reference
 
-**Testnet Contract ID:** `CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW`  
-**Stellar Expert:** https://stellar.expert/explorer/testnet/contract/CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW  
+**Testnet Contract ID:** `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB`  
+**Stellar Expert:** https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB  
 **Deployer:** `GATG3QX42YG72TJVE2GCO3ZLQJZ424XVF4LILEGIMA5RMNCFE6N4VVH6`  
 **WASM Hash:** `75e3d13b1da35012eb0b5f196cf5cfd6367bf3549d66da2c2dc6a02b53cb6850`  
 **WASM Size:** 5,131 bytes (optimized)

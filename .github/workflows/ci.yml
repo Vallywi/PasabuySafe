@@ -62,15 +62,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node 20
+      - name: Setup Node 22
+        # Node 22 is the current active LTS on GitHub Actions.
+        # We intentionally do NOT enable setup-node's built-in `cache: npm`
+        # because when combined with a nested `working-directory`, it tries
+        # to resolve the lock-file glob before checkout finishes and fails
+        # with "Some specified paths were not resolved". A dedicated
+        # `actions/cache` step below is more reliable.
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: pasabuy-safe-web/package-lock.json
+          node-version: '22'
+
+      - name: Cache npm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node22-${{ hashFiles('pasabuy-safe-web/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node22-
 
       - name: Install dependencies
-        run: npm ci
+        # `--legacy-peer-deps` keeps npm 10 from bailing on React 19 + Next 16
+        # peer-dep intersections that resolve fine at runtime. `--no-audit`
+        # and `--no-fund` cut noisy warnings from build logs.
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
 
       - name: Create stub .env.local for build
         # NEXT_PUBLIC_CONTRACT_ID etc. are referenced with non-null assertion
@@ -90,6 +106,8 @@ jobs:
           EOF
 
       - name: Build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
         run: npm run build
 
   # ---------------------------------------------------------------------------
@@ -104,10 +122,6 @@ jobs:
     name: Docs contract-id guard
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # TEMPORARY: non-blocking until the docs/*.md sweep replaces all stale
-    # contract ids with the canonical one. Once the sweep is done, remove
-    # this line so a mismatch fails the run.
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -120,4 +134,9 @@ jobs:
           echo "NEXT_PUBLIC_CONTRACT_ID=$CONTRACT_ID" > pasabuy-safe-web/.env.local
 
       - name: Run docs/contract-id check
+        # CONTRACT_ID_WHITELIST lists sibling on-chain contracts that are NOT
+        # the PasabuySafe pasabuy contract (e.g. the native XLM SAC used as
+        # the escrow's token). Extend here without touching the script.
+        env:
+          CONTRACT_ID_WHITELIST: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'
         run: bash scripts/check-contract-id.sh

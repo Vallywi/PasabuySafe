@@ -70,6 +70,16 @@ if ! printf '%s' "$CANONICAL_ID" | grep -qE "^${CONTRACT_ID_RE}\$"; then
   exit 2
 fi
 
+# Whitelist of sibling contract ids that legitimately appear in docs and are
+# NOT the PasabuySafe pasabuy contract (e.g. the XLM Stellar Asset Contract
+# used as the escrow's token). Comma-separated. Extend via the
+# CONTRACT_ID_WHITELIST env var without touching this file.
+#
+# Bundled whitelist:
+#   CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC  = native XLM SAC (testnet)
+DEFAULT_WHITELIST='CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'
+WHITELIST="${CONTRACT_ID_WHITELIST:-$DEFAULT_WHITELIST}"
+
 # Find every (file, line, id) occurrence inside docs/*.md.
 # grep -o emits one match per line; -H -n prefix file:line: to each.
 MATCHES=$(grep -rHnoE --include='*.md' "$CONTRACT_ID_RE" "$DOCS_DIR" 2>/dev/null || true)
@@ -80,15 +90,27 @@ if [ -z "$MATCHES" ]; then
 fi
 
 # Print mismatches and count them.
+# A match is a mismatch iff (a) id != expected AND (b) id is not on the
+# whitelist of sibling contracts.
 MISMATCHES=$(
   printf '%s\n' "$MATCHES" \
-    | awk -F: -v expected="$CANONICAL_ID" '
+    | awk -F: \
+        -v expected="$CANONICAL_ID" \
+        -v whitelist_csv="$WHITELIST" '
+        BEGIN {
+          n = split(whitelist_csv, tokens, ",")
+          for (i = 1; i <= n; i++) {
+            w = tokens[i]
+            gsub(/[[:space:]]/, "", w)
+            if (length(w) > 0) whitelist[w] = 1
+          }
+        }
         {
           # Last :-separated field is the matched contract id.
           id = $NF
-          if (id != expected) {
-            print $0 " (expected " expected ")"
-          }
+          if (id == expected) next
+          if (id in whitelist) next
+          print $0 " (expected " expected ")"
         }
       '
 )

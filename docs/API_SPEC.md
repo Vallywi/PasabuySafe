@@ -17,7 +17,7 @@ Most interactions go directly to the smart contract. Supabase is used for enrich
 ### Endpoint
 ```
 RPC: https://soroban-testnet.stellar.org:443
-Contract: CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW
+Contract: CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB
 ```
 
 ### Functions
@@ -72,7 +72,7 @@ Errors:  NotExpired, NotDeposited
 import { Contract, TransactionBuilder, Networks, xdr } from '@stellar/stellar-sdk';
 import freighterApi from '@stellar/freighter-api';
 
-const CONTRACT_ID = 'CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW';
+const CONTRACT_ID = 'CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB';
 const RPC_URL = 'https://soroban-testnet.stellar.org:443';
 const NETWORK = Networks.TESTNET;
 
@@ -324,7 +324,7 @@ Body: {
     "startLedger": <last_synced_ledger>,
     "filters": [{
       "type": "contract",
-      "contractIds": ["CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW"]
+      "contractIds": ["CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB"]
     }],
     "pagination": { "limit": 100 }
   }

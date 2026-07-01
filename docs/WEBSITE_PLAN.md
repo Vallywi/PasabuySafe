@@ -122,7 +122,7 @@ npm install @stellar/stellar-sdk @stellar/freighter-api
 ```typescript
 import { Contract, TransactionBuilder, Networks } from '@stellar/stellar-sdk';
 
-const contract = new Contract('CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW');
+const contract = new Contract('CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB');
 
 // Build invoke transaction
 const tx = new TransactionBuilder(account, { fee: '100', networkPassphrase: Networks.TESTNET })

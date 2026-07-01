@@ -137,7 +137,7 @@ CREATE POLICY "Auth upload avatars" ON storage.objects FOR INSERT WITH CHECK (bu
 ```bash
 # Set secrets
 supabase secrets set STELLAR_RPC_URL=https://soroban-testnet.stellar.org:443
-supabase secrets set CONTRACT_ID=CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW
+supabase secrets set CONTRACT_ID=CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB
 
 # Deploy functions
 supabase functions deploy link-wallet
@@ -175,7 +175,7 @@ stellar contract build
 
 # Deploy (already deployed)
 stellar contract alias ls
-# Output: pasabuy-safe: CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW
+# Output: pasabuy-safe: CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB
 ```
 
 ### 4.2 Mainnet (When Ready)
@@ -234,7 +234,7 @@ npx shadcn-ui@latest init
 Create `.env.local`:
 ```env
 # Stellar
-NEXT_PUBLIC_CONTRACT_ID=CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW
+NEXT_PUBLIC_CONTRACT_ID=CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB
 NEXT_PUBLIC_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
 NEXT_PUBLIC_RPC_URL=https://soroban-testnet.stellar.org:443
 NEXT_PUBLIC_HORIZON_URL=https://horizon-testnet.stellar.org

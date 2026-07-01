@@ -41,7 +41,7 @@ PasabuySafe is a hybrid dApp with two layers:
 
 ### Contract: PasabuySafe (Soroban)
 
-**Contract ID (Testnet):** `CCM2F2EHUAYPDW4FB2OUZOVD3ZOHPBFT5CTZ73GFA6OZCWDED6SFVRMW`
+**Contract ID (Testnet):** `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB`
 
 ### State Machine
 
@@ -229,7 +229,7 @@ User Action (e.g., "Pay ₱850")
 │  • Horizon API                       │
 │    └── horizon-testnet.stellar.org   │
 │  • PasabuySafe Contract              │
-│    └── CCM2F2EHUAYP...D6SFVRMW      │
+│    └── CBSPN43EXN...JRV4Y7OKB       │
 │  • SAC Token(s)                      │
 │    └── XLM or custom tokens          │
 └──────────────────────────────────────┘
