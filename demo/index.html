@@ -52,23 +52,23 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   transition:opacity 500ms cubic-bezier(.22,1,.36,1),transform 500ms cubic-bezier(.22,1,.36,1);
   pointer-events:none;overflow:hidden}
 .scene.active{opacity:1;transform:translateY(0);pointer-events:auto}
-.scene .body{height:100%;padding:56px 60px 100px;display:flex;flex-direction:column;justify-content:center}
+.scene .body{height:100%;padding:150px 60px 90px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 
 /* --- Big flashing scene title/description block --- */
-.title-flash{position:absolute;left:60px;top:56px;z-index:14;max-width:64%;pointer-events:none}
+.title-flash{position:absolute;left:56px;top:56px;z-index:14;max-width:60%;pointer-events:none}
 .title-flash .eyebrow{
-  display:inline-flex;align-items:center;gap:10px;
-  padding:6px 14px;background:rgba(15,23,42,.08);
-  border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--sl9);margin-bottom:10px;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 12px;background:rgba(15,23,42,.08);
+  border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--sl9);margin-bottom:8px;
   opacity:0;animation:flashInY 500ms cubic-bezier(.22,1,.36,1) forwards;
 }
 .title-flash .eyebrow .num{
   font-family:'JetBrains Mono',monospace;color:var(--y6);
-  background:var(--y2);padding:2px 8px;border-radius:5px;font-weight:800;
+  background:var(--y2);padding:1px 7px;border-radius:4px;font-weight:800;
 }
 .title-flash .title{
-  font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1.05;
+  font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1.05;
   color:var(--sl9);
   opacity:0;animation:flashInY 600ms cubic-bezier(.22,1,.36,1) 120ms forwards;
 }
@@ -77,27 +77,29 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .title-flash .subtitle{
-  font-size:15px;color:var(--muted);margin-top:8px;max-width:640px;line-height:1.55;
+  font-size:13px;color:var(--muted);margin-top:6px;max-width:100%;line-height:1.5;
   opacity:0;animation:flashInY 500ms cubic-bezier(.22,1,.36,1) 260ms forwards;
 }
 .title-flash .subtitle strong{color:var(--sl9);font-weight:700}
-/* Narration panel — larger, more visible detailed explanation per scene */
+/* Narration panel — visible detailed explanation per scene.
+   Hidden on brand/tagline/CTA scenes (1, 2, 17) via body[data-narr-hide] */
 .narration{
-  position:absolute;right:32px;bottom:100px;z-index:14;max-width:340px;
-  background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
-  border:1px solid var(--border);border-radius:16px;
-  padding:16px 18px;box-shadow:0 20px 40px rgba(15,23,42,.12);
+  position:absolute;right:24px;bottom:56px;z-index:14;width:300px;max-width:26%;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(10px);
+  border:1px solid var(--border);border-radius:14px;
+  padding:12px 14px;box-shadow:0 16px 32px rgba(15,23,42,.1);
   opacity:0;transform:translateX(20px);
   transition:opacity 500ms cubic-bezier(.22,1,.36,1),transform 500ms cubic-bezier(.22,1,.36,1);
   pointer-events:none;
 }
+.narration.hidden{display:none !important}
 .narration.show{opacity:1;transform:translateX(0)}
 .narration .lbl{
-  font-size:10px;font-weight:800;color:var(--y6);letter-spacing:.15em;
-  text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;
+  font-size:9px;font-weight:800;color:var(--y6);letter-spacing:.15em;
+  text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;
 }
-.narration .lbl::before{content:'';width:16px;height:2px;background:var(--y5);border-radius:2px}
-.narration .body{font-size:13px;color:var(--text-2);line-height:1.55;font-weight:500}
+.narration .lbl::before{content:'';width:14px;height:2px;background:var(--y5);border-radius:2px}
+.narration .body{font-size:12px;color:var(--text-2);line-height:1.5;font-weight:500}
 .narration .body strong{color:var(--sl9);font-weight:700}
 .narration .body em{color:var(--y6);font-style:normal;font-weight:700;background:var(--y2);padding:1px 6px;border-radius:4px;font-size:12px}
 @keyframes flashInY{
@@ -235,7 +237,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 3 · THE HOOK (scam chat)
 ============================================================ */
-.hook-wrap{max-width:600px;margin:0 auto;position:relative;padding-top:130px}
+.hook-wrap{max-width:520px;margin:0 auto;position:relative}
 .chat-app{background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.15);overflow:hidden;border:1px solid var(--border)}
 .chat-head{background:#F8FAFC;padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
 .chat-head .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#94A3B8,#64748B);display:grid;place-items:center;color:#fff;font-weight:700}
@@ -252,10 +254,10 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .bubble.b4{animation-delay:2.6s}
 .bubble.gcash{background:linear-gradient(135deg,#3B82F6,#1D4ED8);color:#fff;font-weight:700;border:2px solid #93C5FD;box-shadow:0 6px 20px rgba(59,130,246,.4)}
 .blocked-stamp{
-  position:absolute;top:200px;left:50%;transform:translate(-50%,-50%) rotate(-12deg);
-  color:var(--rd6);border:6px solid var(--rd6);padding:14px 26px;
-  font-size:38px;font-weight:900;letter-spacing:.15em;
-  border-radius:8px;text-transform:uppercase;background:rgba(254,226,226,.9);
+  position:absolute;top:60%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);
+  color:var(--rd6);border:6px solid var(--rd6);padding:12px 22px;
+  font-size:32px;font-weight:900;letter-spacing:.15em;
+  border-radius:8px;text-transform:uppercase;background:rgba(254,226,226,.92);
   opacity:0;animation:stampIn 400ms ease 3.8s forwards;box-shadow:0 20px 60px rgba(220,38,38,.4);z-index:10;
 }
 @keyframes stampIn{
@@ -268,7 +270,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 4 · THE PROBLEM (stats grid)
 ============================================================ */
-.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:140px}
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0;max-width:calc(100% - 340px)}
 .problem-card{
   background:#fff;border:2px solid #FCA5A5;border-radius:18px;padding:22px;
   opacity:0;transform:translateY(20px);animation:cardUp 500ms ease forwards
@@ -286,7 +288,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 5 · SOLUTION (3-step flow)
 ============================================================ */
-.intro-flow{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:130px}
+.intro-flow{display:flex;align-items:center;justify-content:flex-start;gap:14px;margin:0;max-width:calc(100% - 340px)}
 .flow-step{
   background:#fff;border:1px solid var(--border);border-radius:20px;padding:20px 18px;width:200px;text-align:center;
   box-shadow:0 10px 30px rgba(15,23,42,.06);
@@ -311,7 +313,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 6 · TECH STACK (Freighter → Soroban → Stellar)
 ============================================================ */
-.stack-wrap{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:130px;flex-wrap:nowrap}
+.stack-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin:0;flex-wrap:nowrap;max-width:calc(100% - 300px)}
 .stack-node{
   background:#fff;border-radius:18px;padding:20px 18px;width:190px;text-align:center;
   border:2px solid var(--border);box-shadow:0 10px 30px rgba(15,23,42,.06);
@@ -356,7 +358,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 7 · THE VAULT (escrow visualization)
 ============================================================ */
-.vault-wrap{display:flex;align-items:center;justify-content:center;gap:50px;margin-top:120px}
+.vault-wrap{display:flex;align-items:center;justify-content:flex-start;gap:40px;margin:0;max-width:calc(100% - 340px)}
 .wallet-ill{position:relative}
 .wallet{
   width:150px;height:110px;background:linear-gradient(135deg,#4338CA,#1E1B4B);
@@ -407,7 +409,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 8 · BROWSE (explore grid)
 ============================================================ */
-.browse-wrap{max-width:1200px;margin:120px auto 0}
+.browse-wrap{max-width:calc(100% - 340px);margin:0 0 0 0}
 .browse-filters{display:flex;gap:6px;margin-bottom:14px}
 .filter-chip{padding:6px 13px;border-radius:999px;font-size:12px;font-weight:600;background:#fff;border:1px solid var(--border);color:var(--muted)}
 .filter-chip.on{background:var(--em6);color:#fff;border-color:var(--em6);box-shadow:0 4px 12px rgba(16,185,129,.3)}
@@ -417,7 +419,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .pasabuy-card:nth-child(2){animation-delay:.45s}
 .pasabuy-card:nth-child(3){animation-delay:.7s}
 @keyframes cardIn{to{opacity:1;transform:translateY(0) scale(1)}}
-.pasabuy-card .cover{height:120px;display:grid;place-items:center;font-size:54px;position:relative}
+.pasabuy-card .cover{height:96px;display:grid;place-items:center;font-size:44px;position:relative}
 .pasabuy-card:nth-child(1) .cover{background:linear-gradient(135deg,#FFEDD5,#FCD34D)}
 .pasabuy-card:nth-child(2) .cover{background:linear-gradient(135deg,#FEE2E2,#FCA5A5)}
 .pasabuy-card:nth-child(3) .cover{background:linear-gradient(135deg,#DBEAFE,#93C5FD)}
@@ -436,7 +438,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 9 · DEPOSIT (join form + Freighter)
 ============================================================ */
-.dep-layout{display:grid;grid-template-columns:1fr 380px;gap:28px;max-width:1150px;margin:120px auto 0;align-items:center}
+.dep-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:calc(100% - 340px);margin:0}
 .dep-left h3{font-size:34px;font-weight:800;color:var(--sl9);letter-spacing:-.03em;line-height:1.05}
 .dep-left p{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.5}
 .dep-left ul{margin-top:14px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text-2)}
@@ -460,11 +462,11 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .jform .total .v{font-size:18px;font-weight:800;color:#92400E}
 .jform .btn{margin-top:6px;background:var(--y3);color:var(--sl9);padding:10px;border-radius:10px;font-weight:800;text-align:center;font-size:12px;box-shadow:0 6px 16px rgba(251,191,36,.35);opacity:0;animation:fdIn 400ms ease 2s forwards}
 .freighter-pop{
-  position:absolute;top:140px;right:36px;background:#1E1B4B;color:#fff;
+  position:absolute;top:140px;left:calc(50% + 20px);background:#1E1B4B;color:#fff;
   padding:12px 16px;border-radius:14px;display:flex;gap:10px;align-items:center;
   box-shadow:0 20px 40px rgba(0,0,0,.4);opacity:0;
   animation:frIn 500ms ease 3s forwards,frOut 400ms ease 8.5s forwards;z-index:30;
-  max-width:300px;
+  max-width:280px;
 }
 @keyframes frIn{to{opacity:1}}
 @keyframes frOut{to{opacity:0;transform:translateY(-8px)}}
@@ -472,7 +474,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .freighter-pop .txt strong{display:block;font-size:12px;margin-bottom:2px}
 .freighter-pop .txt code{font-size:10px;color:rgba(255,255,255,.6);font-family:'JetBrains Mono',monospace}
 .confirmed-badge{
-  position:absolute;top:140px;right:36px;background:linear-gradient(135deg,#059669,#10B981);
+  position:absolute;top:140px;left:calc(50% + 20px);background:linear-gradient(135deg,#059669,#10B981);
   color:#fff;padding:12px 16px;border-radius:14px;display:flex;gap:10px;align-items:center;
   box-shadow:0 20px 40px rgba(16,185,129,.4);opacity:0;
   animation:frIn 400ms ease 9.5s forwards;z-index:30;
@@ -484,7 +486,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 10 · TRACK (order timeline + confirm)
 ============================================================ */
-.track-wrap{max-width:700px;margin:120px auto 0}
+.track-wrap{max-width:600px;margin:0 0 0 40px}
 .tl-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:12px}
 .tl-card h5{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:18px;text-transform:uppercase;letter-spacing:.06em}
 .tl-track{display:flex;align-items:center}
@@ -507,8 +509,8 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .tl-receipt .tx .hash{font-family:'JetBrains Mono',monospace;color:var(--y6);font-weight:600;font-size:11px}
 .tl-receipt .tx .link{margin-left:auto;color:var(--muted);font-size:10px}
 .confirm-btn{
-  position:absolute;bottom:180px;left:50%;transform:translateX(-50%);
-  background:var(--y3);color:var(--sl9);padding:14px 28px;border-radius:14px;font-weight:800;font-size:15px;
+  position:absolute;bottom:110px;left:calc(50% - 170px);transform:translateX(-50%);
+  background:var(--y3);color:var(--sl9);padding:12px 24px;border-radius:14px;font-weight:800;font-size:14px;
   box-shadow:0 12px 30px rgba(251,191,36,.4);z-index:20;
   opacity:0;animation:fdIn 400ms ease 5s forwards
 }
@@ -517,7 +519,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 11 · REFUND
 ============================================================ */
-.refund-wrap{display:flex;align-items:center;justify-content:center;gap:50px;margin-top:130px}
+.refund-wrap{display:flex;align-items:center;justify-content:flex-start;gap:40px;margin:0;max-width:calc(100% - 340px)}
 .deadline-clock{
   width:180px;height:180px;border-radius:50%;
   background:linear-gradient(135deg,#FEF3C7,#FCD34D);
@@ -535,7 +537,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 12 · ANTI-SCAM
 ============================================================ */
-.attack-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:1100px;margin:130px auto 0}
+.attack-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:calc(100% - 340px);margin:0}
 .attack{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;gap:12px;opacity:0;transform:translateY(10px);animation:fdIn 400ms ease forwards}
 .attack:nth-child(1){animation-delay:.15s}
 .attack:nth-child(2){animation-delay:.3s}
@@ -1235,24 +1237,38 @@ const kfStyle = document.createElement('style');
 kfStyle.textContent = '@keyframes confettiFall{0%{opacity:0;transform:translateY(-30vh) rotate(0)}10%{opacity:1}100%{opacity:0;transform:translateY(60vh) rotate(720deg)}}';
 document.head.appendChild(kfStyle);
 
+// Scenes 1, 2, 17 (indices 0, 1, 16) are cover-style — hide narration + title-flash to let content breathe.
+const COVER_SCENES = new Set([0, 1, 16]);
+
 function updateTitleFlash(idx) {
   if (idx === lastSceneIdx) return;
   lastSceneIdx = idx;
   const sc = SCENES[idx];
-  // Refresh the title-flash element to replay entry animations.
+  const isCover = COVER_SCENES.has(idx);
+  // Refresh the title-flash element to replay entry animations (skip on cover scenes).
   const clone = titleFlash.cloneNode(true);
   titleFlash.parentNode.replaceChild(clone, titleFlash);
-  clone.querySelector('#tfNum').textContent = sc.num;
-  clone.querySelector('#tfTag').textContent = sc.tag;
-  clone.querySelector('#tfTitle').textContent = sc.title;
-  clone.querySelector('#tfSubtitle').innerHTML = sc.sub;
-  setTimeout(() => { clone.style.transition = 'opacity 600ms ease'; clone.style.opacity = '0.35'; }, 4500);
-  // Refresh narration panel with the scene's detailed text.
+  if (isCover) {
+    clone.style.display = 'none';
+  } else {
+    clone.style.display = '';
+    clone.querySelector('#tfNum').textContent = sc.num;
+    clone.querySelector('#tfTag').textContent = sc.tag;
+    clone.querySelector('#tfTitle').textContent = sc.title;
+    clone.querySelector('#tfSubtitle').innerHTML = sc.sub;
+    setTimeout(() => { clone.style.transition = 'opacity 600ms ease'; clone.style.opacity = '0.4'; }, 4500);
+  }
+  // Refresh narration panel (hide on cover scenes).
   narrationEl.classList.remove('show');
-  setTimeout(() => {
-    narrationBody.innerHTML = sc.narr || '';
-    narrationEl.classList.add('show');
-  }, 350);
+  if (isCover) {
+    narrationEl.classList.add('hidden');
+  } else {
+    narrationEl.classList.remove('hidden');
+    setTimeout(() => {
+      narrationBody.innerHTML = sc.narr || '';
+      narrationEl.classList.add('show');
+    }, 350);
+  }
 }
 
 function updateAct(idx) {
