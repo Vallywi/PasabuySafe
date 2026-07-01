@@ -1,22 +1,29 @@
-# 🛡️ PasabuySafe
-
 <p align="center">
   <img src="./pasabuy-safe-web/public/logo1.png" alt="PasabuySafe" width="500" style="max-width:100%; height:auto; object-fit:cover; border-radius:8px;" />
 </p>
 
 **Safe group buying for Filipino communities — powered by blockchain escrow.**
 
-[![CI](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml)
-[![Rust Tests](https://img.shields.io/github/actions/workflow/status/Vallywi/PasabuySafe/ci.yml?branch=main&label=Rust%20tests&logo=rust&logoColor=white)](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml)
-[![Web Build](https://img.shields.io/github/actions/workflow/status/Vallywi/PasabuySafe/ci.yml?branch=main&label=Web%20build&logo=next.js&logoColor=white)](https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml)
-[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel&logoColor=white)](https://pasabuysafe.vercel.app)
-[![Stellar](https://img.shields.io/badge/Stellar-Soroban-7D00FF?logo=stellar&logoColor=white)](https://stellar.org/soroban)
-[![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com/)
-[![Rust](https://img.shields.io/badge/Rust-Edition_2021-CE412B?logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Made in PH](https://img.shields.io/badge/Made_in-🇵🇭_Philippines-blue)](#)
+<p align="center">
+  <a href="https://pasabuysafe.vercel.app"><img src="https://img.shields.io/badge/LIVE%20DEMO-PASABUYSAFE-F59E0B?style=for-the-badge&logo=vercel&logoColor=white&labelColor=1F2937" alt="Live Demo"></a>
+  <a href="https://github.com/Vallywi/PasabuySafe/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Vallywi/PasabuySafe/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white&labelColor=1F2937" alt="CI"></a>
+  <img src="https://img.shields.io/badge/STELLAR-TESTNET-7D00FF?style=for-the-badge&logo=stellar&logoColor=white&labelColor=1F2937" alt="Stellar Testnet">
+  <img src="https://img.shields.io/badge/SOROBAN%20SDK-22.0.0-0EA5E9?style=for-the-badge&logo=rust&logoColor=white&labelColor=1F2937" alt="Soroban SDK">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/NEXT.JS-16.2-000000?style=for-the-badge&logo=next.js&logoColor=white&labelColor=1F2937" alt="Next.js">
+  <img src="https://img.shields.io/badge/TYPESCRIPT-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=1F2937" alt="TypeScript">
+  <img src="https://img.shields.io/badge/SUPABASE-POSTGRES-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white&labelColor=1F2937" alt="Supabase">
+  <img src="https://img.shields.io/badge/RUST-EDITION%202021-CE412B?style=for-the-badge&logo=rust&logoColor=white&labelColor=1F2937" alt="Rust">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/WALLET-FREIGHTER-FDB92B?style=for-the-badge&logo=stellar&logoColor=black&labelColor=1F2937" alt="Freighter Wallet">
+  <img src="https://img.shields.io/badge/PRIVACY-NON--CUSTODIAL-2563EB?style=for-the-badge&labelColor=1F2937" alt="Non-Custodial">
+  <img src="https://img.shields.io/badge/LICENSE-MIT-EAB308?style=for-the-badge&labelColor=1F2937" alt="MIT License">
+  <img src="https://img.shields.io/badge/MADE%20IN-🇵🇭%20PHILIPPINES-2563EB?style=for-the-badge&labelColor=1F2937" alt="Made in Philippines">
+</p>
 
 PasabuySafe is an anti-scam platform that protects buyers in pasabuy (group buy) transactions. Instead of sending money directly to an organizer and hoping for the best, your payment is locked in a smart contract that only releases funds when you confirm you received your order.
 
