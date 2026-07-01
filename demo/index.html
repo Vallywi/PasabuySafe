@@ -55,12 +55,12 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .scene .body{height:100%;padding:56px 60px 100px;display:flex;flex-direction:column;justify-content:center}
 
 /* --- Big flashing scene title/description block --- */
-.title-flash{position:absolute;left:60px;top:60px;z-index:14;max-width:80%;pointer-events:none}
+.title-flash{position:absolute;left:60px;top:56px;z-index:14;max-width:64%;pointer-events:none}
 .title-flash .eyebrow{
   display:inline-flex;align-items:center;gap:10px;
   padding:6px 14px;background:rgba(15,23,42,.08);
   border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--sl9);margin-bottom:12px;
+  text-transform:uppercase;color:var(--sl9);margin-bottom:10px;
   opacity:0;animation:flashInY 500ms cubic-bezier(.22,1,.36,1) forwards;
 }
 .title-flash .eyebrow .num{
@@ -68,7 +68,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   background:var(--y2);padding:2px 8px;border-radius:5px;font-weight:800;
 }
 .title-flash .title{
-  font-size:52px;font-weight:800;letter-spacing:-.03em;line-height:1.02;
+  font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1.05;
   color:var(--sl9);
   opacity:0;animation:flashInY 600ms cubic-bezier(.22,1,.36,1) 120ms forwards;
 }
@@ -77,9 +77,29 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .title-flash .subtitle{
-  font-size:17px;color:var(--muted);margin-top:10px;max-width:720px;line-height:1.45;
+  font-size:15px;color:var(--muted);margin-top:8px;max-width:640px;line-height:1.55;
   opacity:0;animation:flashInY 500ms cubic-bezier(.22,1,.36,1) 260ms forwards;
 }
+.title-flash .subtitle strong{color:var(--sl9);font-weight:700}
+/* Narration panel — larger, more visible detailed explanation per scene */
+.narration{
+  position:absolute;right:32px;bottom:100px;z-index:14;max-width:340px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:16px 18px;box-shadow:0 20px 40px rgba(15,23,42,.12);
+  opacity:0;transform:translateX(20px);
+  transition:opacity 500ms cubic-bezier(.22,1,.36,1),transform 500ms cubic-bezier(.22,1,.36,1);
+  pointer-events:none;
+}
+.narration.show{opacity:1;transform:translateX(0)}
+.narration .lbl{
+  font-size:10px;font-weight:800;color:var(--y6);letter-spacing:.15em;
+  text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.narration .lbl::before{content:'';width:16px;height:2px;background:var(--y5);border-radius:2px}
+.narration .body{font-size:13px;color:var(--text-2);line-height:1.55;font-weight:500}
+.narration .body strong{color:var(--sl9);font-weight:700}
+.narration .body em{color:var(--y6);font-style:normal;font-weight:700;background:var(--y2);padding:1px 6px;border-radius:4px;font-size:12px}
 @keyframes flashInY{
   from{opacity:0;transform:translateY(16px) scale(.98);filter:blur(6px)}
   to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
@@ -559,6 +579,12 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   <div class="subtitle" id="tfSubtitle">Anti-scam escrow for Filipino pasabuy</div>
 </div>
 
+<!-- Detailed narration panel (per scene, right side) -->
+<div class="narration" id="narration">
+  <div class="lbl">Narrator</div>
+  <div class="body" id="narrationBody">…</div>
+</div>
+
 <div class="scenes" id="scenes">
 
   <!-- SCENE 1 · BRAND INTRO -->
@@ -929,55 +955,119 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 // ============================================================================
 
 const SCENES = [
-  // ACT 1 · OPENING (0–12s)
-  { s:0,   e:6,   num:'01', tag:'Brand',      act:'01', actName:'OPENING',   title:'PasabuySafe',              sub:'Anti-scam escrow for Filipino pasabuy — powered by Stellar Soroban.' },
-  { s:6,   e:12,  num:'02', tag:'Tagline',    act:'01', actName:'OPENING',   title:'Buy together. Pay securely.', sub:'Blockchain protection for group buys, made for Filipino communities.' },
-  // ACT 2 · THE PROBLEM (12–30s)
-  { s:12,  e:22,  num:'03', tag:'The Hook',   act:'02', actName:'THE PROBLEM', title:'The Hook',                sub:'A pasabuy scam takes 30 seconds to happen.' },
-  { s:22,  e:30,  num:'04', tag:'Impact',     act:'02', actName:'THE PROBLEM', title:'Why traditional fails.',  sub:'GCash, bank transfers, DM trust — zero buyer protection.' },
-  // ACT 3 · THE SOLUTION (30–60s)
-  { s:30,  e:42,  num:'05', tag:'3-Step Flow', act:'03', actName:'THE SOLUTION', title:'The solution: hold funds in code.', sub:'Three steps. Zero trust required. Money only moves when the buyer confirms.' },
-  { s:42,  e:54,  num:'06', tag:'How It Connects', act:'03', actName:'THE SOLUTION', title:'Freighter → Soroban → Stellar.', sub:'End-to-end on-chain path. No custodial backend, no middleman.' },
-  { s:54,  e:60,  num:'07', tag:'The Vault',  act:'03', actName:'THE SOLUTION', title:'Immutable escrow.',       sub:'Deposits live inside the contract. No withdraw. No admin key.' },
-  // ACT 4 · THE PRODUCT (60–96s)
-  { s:60,  e:72,  num:'08', tag:'Browse',     act:'04', actName:'THE PRODUCT', title:'Browse safely.',          sub:'Every listing shows price, deadline, and organizer address on-chain.' },
-  { s:72,  e:84,  num:'09', tag:'Deposit',    act:'04', actName:'THE PRODUCT', title:'Join · Sign · Locked.',   sub:'Fill the form, sign with Freighter, deposit lands on Soroban.' },
-  { s:84,  e:96,  num:'10', tag:'Track',      act:'04', actName:'THE PRODUCT', title:'Track every step.',       sub:'Paid → Delivered → Confirmed. Verifiable on Stellar Expert.' },
-  // ACT 5 · THE BENEFITS (96–120s)
-  { s:96,  e:108, num:'11', tag:'Refund',     act:'05', actName:'THE BENEFITS', title:'Refunds are automatic.', sub:'Deadline passes without delivery? One click reclaims your funds.' },
-  { s:108, e:116, num:'12', tag:'Anti-Scam',  act:'05', actName:'THE BENEFITS', title:'What the contract prevents.', sub:'Four attacks. Four blocks. Enforced by code, not policy.' },
-  { s:116, e:120, num:'13', tag:'Try It',     act:'05', actName:'THE BENEFITS', title:'Buy together. Pay securely.', sub:'Live on Stellar Testnet. Free forever.' }
+  // Each entry has a `dom` field pointing at which DOM data-scene to activate.
+  // Multiple entries can share a DOM scene when the visual is the same but the
+  // narration/caption evolves.
+  // ACT 1 · OPENING (0–14s)
+  { s:0, e:7, dom:1, num:'01', tag:'Brand', act:'01', actName:'OPENING',
+    title:'PasabuySafe',
+    sub:'The anti-scam escrow platform built for Filipino pasabuy communities — <strong>powered by Stellar Soroban smart contracts.</strong>',
+    narr:'<strong>Hi, I&apos;m PasabuySafe.</strong> I make group buys safe. Every peso goes into a smart contract on Stellar — not into anyone&apos;s wallet — until the buyer says the item actually arrived.' },
+  { s:7, e:14, dom:2, num:'02', tag:'Tagline', act:'01', actName:'OPENING',
+    title:'Buy together. Pay securely.',
+    sub:'A single principle: <strong>the organizer never touches the money until the buyer confirms delivery.</strong> Everything else follows from that.',
+    narr:'The idea is simple. When you pay for a pasabuy, your money should not go to the organizer&apos;s GCash. It should sit somewhere <em>neither of you can move</em> until the item is delivered. That&apos;s what we built.' },
+  // ACT 2 · THE PROBLEM (14–34s)
+  { s:14, e:22, dom:3, num:'03', tag:'The Hook', act:'02', actName:'THE PROBLEM',
+    title:'A pasabuy scam is fast.',
+    sub:'This exact sequence happens hundreds of times a month in Viber GCs, Facebook groups, and Telegram channels across the Philippines.',
+    narr:'Watch what happens on the right. A trusted-looking organizer posts a batch. You send GCash. They read the message. Then you&apos;re <strong>blocked</strong>. Report to Facebook? Account banned. Money? Gone.' },
+  { s:22, e:28, dom:3, num:'04', tag:'Victim Voices', act:'02', actName:'THE PROBLEM',
+    title:'Why nobody stops it.',
+    sub:'Reputation systems are gamed for months, then burned in a single scam run. GCash offers no dispute. Police reports go nowhere.',
+    narr:'Scammers spend <em>months</em> building trust — receipts, testimonials, screenshots of "past batches." Then one big run, and they vanish. The current system can&apos;t tell a good organizer from a patient thief.' },
+  { s:28, e:34, dom:4, num:'05', tag:'Impact Stats', act:'02', actName:'THE PROBLEM',
+    title:'The damage, in numbers.',
+    sub:'Amounts range from ₱500 to over ₱50,000 per victim. It compounds because scammers hit dozens of buyers at once.',
+    narr:'For each victim, the numbers hurt. But multiplied by <em>thousands</em> of victims monthly — this is one of the biggest silent problems in Filipino e-commerce today. No one is protecting these people.' },
+  // ACT 3 · THE SOLUTION (34–66s)
+  { s:34, e:42, dom:5, num:'06', tag:'Solution', act:'03', actName:'THE SOLUTION',
+    title:'Hold the funds in code.',
+    sub:'Not in the organizer&apos;s wallet. Not in our wallet. In a Soroban smart contract on the Stellar blockchain — provably immutable and inspectable by anyone.',
+    narr:'Our answer is not another reputation system. It&apos;s a <strong>smart contract</strong>. Money enters, gets locked, and only leaves when three specific on-chain conditions are met — enforced by code that no one, not even us, can override.' },
+  { s:42, e:50, dom:5, num:'07', tag:'3-Step Flow', act:'03', actName:'THE SOLUTION',
+    title:'Three steps. Zero trust.',
+    sub:'You Pay → They Deliver → You Confirm. That&apos;s the entire flow. No escrow agent, no PayPal-style dispute team, no "3-5 business days."',
+    narr:'It works like this. Step one, <em>you pay</em> into the contract. Step two, the organizer ships and marks delivered on-chain. Step three, <em>you confirm</em> — which triggers the release. If any step is missed, the money returns to you automatically.' },
+  { s:50, e:60, dom:6, num:'08', tag:'Tech Stack', act:'03', actName:'THE SOLUTION',
+    title:'Freighter → Soroban → Stellar.',
+    sub:'Buyer signs in <strong>Freighter wallet</strong>. Transaction routes through <strong>Soroban RPC</strong> to our escrow contract deployed on <strong>Stellar Testnet</strong>. Zero custodial backend.',
+    narr:'Behind the button, here&apos;s the actual path. Your click opens Freighter. Freighter cryptographically signs the call. The signed transaction goes through Soroban RPC to Stellar. The contract enforces the rules. Everything is <em>on-chain</em> and <em>public</em>.' },
+  { s:60, e:66, dom:7, num:'09', tag:'The Vault', act:'03', actName:'THE SOLUTION',
+    title:'An immutable escrow vault.',
+    sub:'Written in Rust with the Soroban SDK. 5.1 KB of compiled WASM. No withdraw function. No admin key. No upgrade path. Ever.',
+    narr:'The contract is deliberately minimal. It has no <em>withdraw()</em> function, no admin, no way to change the deadline once set. We couldn&apos;t drain it even if we wanted to. That&apos;s the point.' },
+  // ACT 4 · THE PRODUCT (66–104s)
+  { s:66, e:74, dom:8, num:'10', tag:'Browse', act:'04', actName:'THE PRODUCT',
+    title:'Browse pasabuys safely.',
+    sub:'The Explore page shows every active listing with price in <strong>PHP + XLM</strong>, deadline countdown, slots remaining, and the organizer&apos;s public wallet address — all pulled from on-chain state.',
+    narr:'When you open the Explore page, this is what you see. Real pasabuys — Cebu chicharon, Ilocos empanada, Osaka moshi manju — each showing price in pesos and XLM, deadline, and the organizer&apos;s wallet. Every field is <em>verifiable</em>.' },
+  { s:74, e:82, dom:9, num:'11', tag:'Join Form', act:'04', actName:'THE PRODUCT',
+    title:'Fill in your delivery.',
+    sub:'The join form collects name, PH phone, meetup location, note, quantity, and delivery method. Contact fields are protected by Supabase RLS — <strong>only the organizer can see them.</strong>',
+    narr:'Filling in the form takes ten seconds. Full name, PH phone in +63 format, where to meet, and how many items. Your contact info is visible <em>only to the organizer</em> — not to us, not to other buyers.' },
+  { s:82, e:90, dom:9, num:'12', tag:'Freighter Sign', act:'04', actName:'THE PRODUCT',
+    title:'Sign the deposit on-chain.',
+    sub:'One Freighter popup: <code style="background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px">contract.deposit(pasabuy_id, buyer, amount)</code>. Once the Stellar network confirms, your row is inserted in the database.',
+    narr:'This is the moment your money goes on-chain. Freighter shows the exact call — deposit, with the pasabuy ID, your address, and the amount. You approve. A few seconds later, the network confirms. Your order is <em>locked</em>.' },
+  { s:90, e:98, dom:10, num:'13', tag:'Track Order', act:'04', actName:'THE PRODUCT',
+    title:'Track every step on-chain.',
+    sub:'The buyer dashboard shows a 3-stage timeline — Paid → Delivered → Confirmed — plus your order details and a transaction receipt with a live link to Stellar Expert.',
+    narr:'From here, you watch your order move. Paid means it&apos;s in escrow. Delivered means the organizer marked it shipped on-chain. When you receive it, you tap confirm — and your deposit releases to the organizer <em>instantly</em>.' },
+  { s:98, e:104, dom:10, num:'14', tag:'Confirm & Release', act:'04', actName:'THE PRODUCT',
+    title:'One click releases the escrow.',
+    sub:'Confirmation is a single wallet-signed transaction. There is no support ticket, no cooling-off period, no intermediary. Funds move from the contract to the organizer in one Stellar ledger.',
+    narr:'When your item arrives, this is what a confirm looks like. You sign once. The contract sends the funds to the organizer. Done. No middleman. No 3-5 business days. Just <em>math</em>.' },
+  // ACT 5 · THE BENEFITS (104–120s)
+  { s:104, e:110, dom:11, num:'15', tag:'Refund Safety Net', act:'05', actName:'THE BENEFITS',
+    title:'Refunds are automatic.',
+    sub:'If the deadline passes and the organizer never ships, one click calls <code style="background:rgba(15,23,42,.85);color:var(--y3);padding:2px 6px;border-radius:4px;font-size:12px">refund()</code> and the contract returns your XLM. No approval needed.',
+    narr:'Now — what if the organizer disappears? The deadline passes. You tap refund. The contract checks — deadline elapsed, no confirmation — and returns your funds. <em>Automatically.</em> No support ticket. No begging.' },
+  { s:110, e:115, dom:12, num:'16', tag:'Anti-Scam Rules', act:'05', actName:'THE BENEFITS',
+    title:'Four attacks made impossible.',
+    sub:'Collect-and-block, fake confirmations, direct withdraws, deadline changes — all four common scam patterns are structurally impossible in our contract.',
+    narr:'Here are the four ways scammers steal in the traditional flow. The contract blocks <em>all four</em> by design. No withdraw function, no admin key, no way to fake a signature, no way to change the deadline. Structural, not policy.' },
+  { s:115, e:120, dom:13, num:'17', tag:'Try It', act:'05', actName:'THE BENEFITS',
+    title:'Ready to pasabuy without fear?',
+    sub:'Live on Stellar Testnet at <strong>pasabuysafe.vercel.app</strong>. Free XLM from Friendbot. Free Freighter browser wallet. Zero risk.',
+    narr:'You can try this right now — <em>free</em>. Grab test XLM from Friendbot, install Freighter, and join or create a pasabuy at pasabuysafe.vercel.app. Every transaction is real and viewable on Stellar Expert.' }
 ];
 const TOTAL = 120;
 
 const CAPTIONS = [
-  { at:0,   text:'This is <em>PasabuySafe</em>.' },
-  { at:3,   text:'The anti-scam escrow for Filipino pasabuy.' },
-  { at:6,   text:'<em>Buy together.</em> <em>Pay securely.</em>' },
-  { at:9,   text:'Blockchain protection for group buys, made for Filipinos.' },
-  { at:12,  text:'Every year, thousands lose money to pasabuy scams.' },
-  { at:16,  text:'One GCash transfer. One "read". One <strong>block</strong>.' },
-  { at:22,  text:'GCash. Bank transfer. Trust. All fail buyers.' },
-  { at:26,  text:'No chargeback. No dispute. <strong>No refund.</strong>' },
-  { at:30,  text:'The fix: hold funds in code, not a wallet.' },
-  { at:34,  text:'You pay. They deliver. You confirm. That&apos;s it.' },
-  { at:42,  text:'Under the hood: your wallet → Freighter → Soroban RPC → contract.' },
-  { at:48,  text:'End-to-end on-chain. No custodial backend. No middleman.' },
-  { at:54,  text:'Every deposit lives <em>inside</em> the contract.' },
-  { at:57,  text:'No <code>withdraw()</code>. No admin. No keys.' },
-  { at:60,  text:'Browse active pasabuys on the <em>Explore</em> page.' },
-  { at:66,  text:'Prices in ₱ and XLM. Deadline visible. Organizer wallet public.' },
-  { at:72,  text:'Tap "Join Safely" and fill in delivery details.' },
-  { at:78,  text:'Sign the deposit with <em>Freighter</em>. Funds locked on Stellar.' },
-  { at:84,  text:'Track your order live from the buyer dashboard.' },
-  { at:88,  text:'Every transaction linked to <em>Stellar Expert</em>.' },
-  { at:92,  text:'Received your item? One click releases the escrow.' },
-  { at:96,  text:'What if the organizer disappears? Deadline passes…' },
-  { at:102, text:'…and your funds return <em>automatically</em>. No approval needed.' },
-  { at:108, text:'Four attacks the contract makes <strong>impossible</strong>.' },
-  { at:113, text:'No withdraw. No fake confirms. No deadline tricks. No custody.' },
-  { at:116, text:'Ready to <em>pasabuy without fear?</em>' },
-  { at:118, text:'Live on Stellar Testnet. <em>Free forever.</em>' }
+  { at:0,   text:'Hi. Meet <em>PasabuySafe</em> — the anti-scam escrow for Filipino pasabuy.' },
+  { at:4,   text:'We make sure the organizer never touches the money until you receive your item.' },
+  { at:7,   text:'Our tagline: <em>Buy together.</em> <em>Pay securely.</em>' },
+  { at:10,  text:'One principle drives everything — the organizer never holds the funds.' },
+  { at:14,  text:'Here&apos;s how a typical Filipino pasabuy scam plays out.' },
+  { at:17,  text:'You send GCash. They read the message. Then you&apos;re <strong>blocked</strong>.' },
+  { at:22,  text:'Scammers spend months building trust before one massive scam run.' },
+  { at:25,  text:'Reputation systems fail. GCash offers no dispute. <strong>Nobody stops them.</strong>' },
+  { at:28,  text:'Victims lose ₱500 to over ₱50,000 per scam, thousands per month.' },
+  { at:34,  text:'Our fix isn&apos;t another reputation platform. It&apos;s <em>math</em>.' },
+  { at:38,  text:'We put your money into a smart contract on Stellar — locked by code.' },
+  { at:42,  text:'The user flow is three steps. You Pay. They Deliver. You Confirm.' },
+  { at:46,  text:'If any step is missed, funds return to the buyer <em>automatically</em>.' },
+  { at:50,  text:'Under the hood: buyer wallet → <em>Freighter</em> → Soroban RPC → contract.' },
+  { at:55,  text:'Every action is a signed on-chain transaction. Nothing is custodial.' },
+  { at:60,  text:'The contract is 5.1 KB of Rust. No withdraw. No admin. No upgrade.' },
+  { at:63,  text:'We couldn&apos;t drain the escrow even if we wanted to. That&apos;s the point.' },
+  { at:66,  text:'Browse active pasabuys on the <em>Explore</em> page.' },
+  { at:70,  text:'Every listing shows price in ₱ and XLM, deadline, and organizer wallet.' },
+  { at:74,  text:'To join, fill in your delivery details — name, PH phone, meetup, quantity.' },
+  { at:78,  text:'Contact fields are visible <em>only to the organizer</em>, protected by RLS.' },
+  { at:82,  text:'Now the important part: sign the deposit with <em>Freighter</em>.' },
+  { at:86,  text:'One popup, one signature, and your XLM is locked in escrow.' },
+  { at:90,  text:'Track your order status from the buyer dashboard.' },
+  { at:94,  text:'Every step is verifiable on <em>Stellar Expert</em> — full transparency.' },
+  { at:98,  text:'When your item arrives, one click releases the escrow to the organizer.' },
+  { at:102, text:'No support ticket, no delay — the contract executes it in one ledger.' },
+  { at:104, text:'But what if nothing arrives? The deadline passes…' },
+  { at:107, text:'…and one tap on <em>refund()</em> returns your funds. <strong>Automatically.</strong>' },
+  { at:110, text:'Four common scam attacks are all made <strong>structurally impossible</strong>.' },
+  { at:113, text:'Not by policy. Not by trust. By code.' },
+  { at:115, text:'Ready to <em>pasabuy without fear?</em>' },
+  { at:118, text:'Live on Stellar Testnet at <em>pasabuysafe.vercel.app</em>. Free forever.' }
 ];
 
 const $ = (s) => document.querySelector(s);
@@ -994,6 +1084,8 @@ const titleFlash = $('#titleFlash');
 const actBar = $('#actBar');
 const actNum = $('#actNum');
 const actName = $('#actName');
+const narrationEl = $('#narration');
+const narrationBody = $('#narrationBody');
 
 SCENES.forEach(() => {
   const d = document.createElement('div');
@@ -1013,8 +1105,9 @@ function currentCaption() { let m=null; for (const c of CAPTIONS) { if (t>=c.at)
 function injectConfetti() {
   if (confettiInjected) return;
   confettiInjected = true;
+  // Track/Confirm scene is `data-scene="10"` in the DOM (it houses the confirm button + #confetti).
   const s10 = $$('[data-scene="10"]')[0];
-  const c = s10.querySelector('#confetti'); if (!c) return;
+  const c = s10 && s10.querySelector('#confetti'); if (!c) return;
   const colors = ['#FBBF24','#F59E0B','#10B981','#3B82F6','#EF4444','#8B5CF6','#FCD34D'];
   for (let i=0;i<60;i++) {
     const el = document.createElement('div');
@@ -1034,13 +1127,20 @@ function updateTitleFlash(idx) {
   if (idx === lastSceneIdx) return;
   lastSceneIdx = idx;
   const sc = SCENES[idx];
+  // Refresh the title-flash element to replay entry animations.
   const clone = titleFlash.cloneNode(true);
   titleFlash.parentNode.replaceChild(clone, titleFlash);
   clone.querySelector('#tfNum').textContent = sc.num;
   clone.querySelector('#tfTag').textContent = sc.tag;
   clone.querySelector('#tfTitle').textContent = sc.title;
-  clone.querySelector('#tfSubtitle').textContent = sc.sub;
-  setTimeout(() => { clone.style.transition = 'opacity 600ms ease'; clone.style.opacity = '0.15'; }, 5000);
+  clone.querySelector('#tfSubtitle').innerHTML = sc.sub;
+  setTimeout(() => { clone.style.transition = 'opacity 600ms ease'; clone.style.opacity = '0.35'; }, 4500);
+  // Refresh narration panel with the scene's detailed text.
+  narrationEl.classList.remove('show');
+  setTimeout(() => {
+    narrationBody.innerHTML = sc.narr || '';
+    narrationEl.classList.add('show');
+  }, 350);
 }
 
 function updateAct(idx) {
@@ -1083,14 +1183,20 @@ function updateDots(idx) {
 
 function render() {
   const idx = sceneIdx();
-  scenes.forEach((el, i) => el.classList.toggle('active', i === idx));
-  pip.textContent = `${String(idx+1).padStart(2,'0')}/13 · ${fmt(t)}`;
+  const sc = SCENES[idx];
+  // Activate the DOM scene mapped by the `dom` field (multiple SCENES can share).
+  scenes.forEach((el) => {
+    const d = parseInt(el.getAttribute('data-scene'), 10);
+    el.classList.toggle('active', d === sc.dom);
+  });
+  pip.textContent = `${String(idx+1).padStart(2,'0')}/17 · ${fmt(t)}`;
   progressFill.style.width = `${(t/TOTAL)*100}%`;
   updateTitleFlash(idx);
   updateAct(idx);
   updateCaption();
   updateDots(idx);
-  if (idx === 9) injectConfetti();
+  // Confetti fires when SCENES 13 "Confirm & Release" plays (0-indexed 13).
+  if (idx === 13) injectConfetti();
 }
 
 function tick(ts) {
