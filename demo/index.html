@@ -52,7 +52,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
   transition:opacity 500ms cubic-bezier(.22,1,.36,1),transform 500ms cubic-bezier(.22,1,.36,1);
   pointer-events:none;overflow:hidden}
 .scene.active{opacity:1;transform:translateY(0);pointer-events:auto}
-.scene .body{height:100%;padding:150px 60px 90px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.scene .body{height:100%;padding:150px 60px 90px;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden}
 
 /* --- Big flashing scene title/description block --- */
 .title-flash{position:absolute;left:56px;top:56px;z-index:14;max-width:60%;pointer-events:none}
@@ -270,7 +270,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 4 · THE PROBLEM (stats grid)
 ============================================================ */
-.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0;max-width:calc(100% - 340px)}
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 auto;max-width:calc(100% - 340px)}
 .problem-card{
   background:#fff;border:2px solid #FCA5A5;border-radius:18px;padding:22px;
   opacity:0;transform:translateY(20px);animation:cardUp 500ms ease forwards
@@ -288,7 +288,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 5 · SOLUTION (3-step flow)
 ============================================================ */
-.intro-flow{display:flex;align-items:center;justify-content:flex-start;gap:14px;margin:0;max-width:calc(100% - 340px)}
+.intro-flow{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 auto;max-width:calc(100% - 340px)}
 .flow-step{
   background:#fff;border:1px solid var(--border);border-radius:20px;padding:20px 18px;width:200px;text-align:center;
   box-shadow:0 10px 30px rgba(15,23,42,.06);
@@ -313,7 +313,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 6 · TECH STACK (Freighter → Soroban → Stellar)
 ============================================================ */
-.stack-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin:0;flex-wrap:nowrap;max-width:calc(100% - 300px)}
+.stack-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 auto;flex-wrap:nowrap;max-width:calc(100% - 300px)}
 .stack-node{
   background:#fff;border-radius:18px;padding:20px 18px;width:190px;text-align:center;
   border:2px solid var(--border);box-shadow:0 10px 30px rgba(15,23,42,.06);
@@ -358,7 +358,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 7 · THE VAULT (escrow visualization)
 ============================================================ */
-.vault-wrap{display:flex;align-items:center;justify-content:flex-start;gap:40px;margin:0;max-width:calc(100% - 340px)}
+.vault-wrap{display:flex;align-items:center;justify-content:center;gap:40px;margin:0 auto;max-width:calc(100% - 340px)}
 .wallet-ill{position:relative}
 .wallet{
   width:150px;height:110px;background:linear-gradient(135deg,#4338CA,#1E1B4B);
@@ -409,7 +409,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 8 · BROWSE (explore grid)
 ============================================================ */
-.browse-wrap{max-width:calc(100% - 340px);margin:0 0 0 0}
+.browse-wrap{max-width:calc(100% - 340px);margin:0 auto}
 .browse-filters{display:flex;gap:6px;margin-bottom:14px}
 .filter-chip{padding:6px 13px;border-radius:999px;font-size:12px;font-weight:600;background:#fff;border:1px solid var(--border);color:var(--muted)}
 .filter-chip.on{background:var(--em6);color:#fff;border-color:var(--em6);box-shadow:0 4px 12px rgba(16,185,129,.3)}
@@ -438,7 +438,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 9 · DEPOSIT (join form + Freighter)
 ============================================================ */
-.dep-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:calc(100% - 340px);margin:0}
+.dep-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:calc(100% - 340px);margin:0 auto}
 .dep-left h3{font-size:34px;font-weight:800;color:var(--sl9);letter-spacing:-.03em;line-height:1.05}
 .dep-left p{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.5}
 .dep-left ul{margin-top:14px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text-2)}
@@ -462,7 +462,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .jform .total .v{font-size:18px;font-weight:800;color:#92400E}
 .jform .btn{margin-top:6px;background:var(--y3);color:var(--sl9);padding:10px;border-radius:10px;font-weight:800;text-align:center;font-size:12px;box-shadow:0 6px 16px rgba(251,191,36,.35);opacity:0;animation:fdIn 400ms ease 2s forwards}
 .freighter-pop{
-  position:absolute;top:140px;left:calc(50% + 20px);background:#1E1B4B;color:#fff;
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-180px);background:#1E1B4B;color:#fff;
   padding:12px 16px;border-radius:14px;display:flex;gap:10px;align-items:center;
   box-shadow:0 20px 40px rgba(0,0,0,.4);opacity:0;
   animation:frIn 500ms ease 3s forwards,frOut 400ms ease 8.5s forwards;z-index:30;
@@ -474,7 +474,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .freighter-pop .txt strong{display:block;font-size:12px;margin-bottom:2px}
 .freighter-pop .txt code{font-size:10px;color:rgba(255,255,255,.6);font-family:'JetBrains Mono',monospace}
 .confirmed-badge{
-  position:absolute;top:140px;left:calc(50% + 20px);background:linear-gradient(135deg,#059669,#10B981);
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-180px);background:linear-gradient(135deg,#059669,#10B981);
   color:#fff;padding:12px 16px;border-radius:14px;display:flex;gap:10px;align-items:center;
   box-shadow:0 20px 40px rgba(16,185,129,.4);opacity:0;
   animation:frIn 400ms ease 9.5s forwards;z-index:30;
@@ -486,7 +486,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 10 · TRACK (order timeline + confirm)
 ============================================================ */
-.track-wrap{max-width:600px;margin:0 0 0 40px}
+.track-wrap{max-width:600px;margin:0 auto}
 .tl-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:12px}
 .tl-card h5{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:18px;text-transform:uppercase;letter-spacing:.06em}
 .tl-track{display:flex;align-items:center}
@@ -509,7 +509,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .tl-receipt .tx .hash{font-family:'JetBrains Mono',monospace;color:var(--y6);font-weight:600;font-size:11px}
 .tl-receipt .tx .link{margin-left:auto;color:var(--muted);font-size:10px}
 .confirm-btn{
-  position:absolute;bottom:110px;left:calc(50% - 170px);transform:translateX(-50%);
+  position:absolute;bottom:90px;left:50%;transform:translateX(-50%);
   background:var(--y3);color:var(--sl9);padding:12px 24px;border-radius:14px;font-weight:800;font-size:14px;
   box-shadow:0 12px 30px rgba(251,191,36,.4);z-index:20;
   opacity:0;animation:fdIn 400ms ease 5s forwards
@@ -519,7 +519,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 11 · REFUND
 ============================================================ */
-.refund-wrap{display:flex;align-items:center;justify-content:flex-start;gap:40px;margin:0;max-width:calc(100% - 340px)}
+.refund-wrap{display:flex;align-items:center;justify-content:center;gap:40px;margin:0 auto;max-width:calc(100% - 340px)}
 .deadline-clock{
   width:180px;height:180px;border-radius:50%;
   background:linear-gradient(135deg,#FEF3C7,#FCD34D);
@@ -537,7 +537,7 @@ code,kbd,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 /* ============================================================
    SCENE 12 · ANTI-SCAM
 ============================================================ */
-.attack-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:calc(100% - 340px);margin:0}
+.attack-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:calc(100% - 340px);margin:0 auto}
 .attack{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;gap:12px;opacity:0;transform:translateY(10px);animation:fdIn 400ms ease forwards}
 .attack:nth-child(1){animation-delay:.15s}
 .attack:nth-child(2){animation-delay:.3s}

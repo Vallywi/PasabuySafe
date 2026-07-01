@@ -2,7 +2,6 @@
   <img src="./pasabuy-safe-web/public/logo1.png" alt="PasabuySafe" width="500" style="max-width:100%; height:auto; object-fit:cover; border-radius:8px;" />
 </p>
 
-**Safe group buying for Filipino communities — powered by blockchain escrow.**
 
 <p align="center">
   <a href="https://pasabuysafe.vercel.app"><img src="https://img.shields.io/badge/LIVE%20DEMO-PASABUYSAFE-F59E0B?style=for-the-badge&logo=vercel&logoColor=white&labelColor=1F2937" alt="Live Demo"></a>
@@ -18,6 +17,8 @@
   <img src="https://img.shields.io/badge/RUST-EDITION%202021-CE412B?style=for-the-badge&logo=rust&logoColor=white&labelColor=1F2937" alt="Rust">
 </p>
 
+<h3 align="center">Safe group buying for Filipino communities — powered by blockchain escrow.</h3>
+
 <p align="center">
   <img src="https://img.shields.io/badge/WALLET-FREIGHTER-FDB92B?style=for-the-badge&logo=stellar&logoColor=black&labelColor=1F2937" alt="Freighter Wallet">
   <img src="https://img.shields.io/badge/PRIVACY-NON--CUSTODIAL-2563EB?style=for-the-badge&labelColor=1F2937" alt="Non-Custodial">
@@ -25,7 +26,7 @@
   <img src="https://img.shields.io/badge/MADE%20IN-🇵🇭%20PHILIPPINES-2563EB?style=for-the-badge&labelColor=1F2937" alt="Made in Philippines">
 </p>
 
-PasabuySafe is an anti-scam platform that protects buyers in pasabuy (group buy) transactions. Instead of sending money directly to an organizer and hoping for the best, your payment is locked in a smart contract that only releases funds when you confirm you received your order.
+<p align="center">PasabuySafe is an anti-scam platform that protects buyers in pasabuy (group buy) transactions. Instead of sending money directly to an organizer and hoping for the best, your payment is locked in a smart contract that only releases funds when you confirm you received your order.</p>
 
 ---
 
@@ -230,8 +231,8 @@ Each pasabuy — and each buyer's order within it — moves through a bounded st
 
 - **PasabuySafe Soroban contract (Stellar Testnet):**
   `CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB` · [view on Stellar Expert ↗](https://stellar.expert/explorer/testnet/contract/CBSPN43EXNZVIK3QHZ6LVGAQUU5KIWAH6JM2UGUK5IS6VCVJRV4Y7OKB)
-- **Native XLM Stellar Asset Contract (Testnet):**
-  `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
+  ![Stellar Expert Contract](./pasabuy-safe-web/public/soroban.png)
+  
 - **Live web app:** [pasabuysafe.vercel.app](https://pasabuysafe.vercel.app)
 
 Every deposit, mark-delivered, confirm, and refund transaction can be verified independently on Stellar Expert — the contract itself is the source of truth.

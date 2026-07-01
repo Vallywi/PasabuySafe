@@ -9,3 +9,4 @@ ALTER TABLE group_buys
 
 CREATE INDEX IF NOT EXISTS idx_group_buys_location ON group_buys(location);
 CREATE INDEX IF NOT EXISTS idx_group_buys_subcategory ON group_buys(subcategory);
+    
