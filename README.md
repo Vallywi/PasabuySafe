@@ -242,41 +242,59 @@ Every deposit, mark-delivered, confirm, and refund transaction can be verified i
 
 ## 📸 Screenshots
 
-### Landing page
+### 1. Landing page
 ![Landing page](./docs/screenshots/landing.png)
 > Hero section, how it works, trust signals
 
-### Explore
-![Explore page](./docs/screenshots/explore.png)
-> Browse active pasabuys, see slots, price, deadline
+---
 
-### Buyer flow
-![Buyer order](./docs/screenshots/buyer-order.png)
-> Deposit, track status, confirm delivery or claim refund
-
-### Organizer dashboard
-![Organizer dashboard](./docs/screenshots/organizer.png)
-> Manage participants, mark delivered, view transaction history
-
-### FAQ
-![FAQ](./docs/screenshots/faq.png)
-> Common questions about escrow and pasabuy
-
-### Auth
+### 2. Auth
 ![Auth](./docs/screenshots/auth.png)
 > Sign in / sign up with wallet or email
 
-### Create Pasabuy
+---
+
+### 3. Explore
+![Explore page](./docs/screenshots/explore.png)
+> Browse active pasabuys, see slots, price, deadline
+
+---
+
+### 4. Pasabuy Detail
+![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png)
+> Detailed view of a pasabuy with join options
+
+---
+
+### 5. Buyer flow
+![Buyer order](./docs/screenshots/buyer-order.png)
+> Deposit, track status, confirm delivery or claim refund
+
+---
+
+### 6. Create Pasabuy
 ![Create Pasabuy](./docs/screenshots/create-pasabuy.png)
 > Organizer form to create a new group buy
 
-### Profile
+---
+
+### 7. Organizer dashboard
+![Organizer dashboard](./docs/screenshots/organizer.png)
+> Manage participants, mark delivered, view transaction history
+
+---
+
+### 8. Profile
 ![Profile](./docs/screenshots/profile.png)
 > User profile with wallet info and order history
 
-### Pasabuy Detail
-![Pasabuy Detail](./docs/screenshots/pasabuy-detail.png)
-> Detailed view of a pasabuy with join options
+---
+
+### 9. FAQ
+![FAQ](./docs/screenshots/faq.png)
+> Common questions about escrow and pasabuy
+
+---
 
 > Drop PNGs into `docs/screenshots/` with the filenames above and they will render automatically. Recommended width: 1200 px. Missing screenshots render as broken-image icons on GitHub; delete the row until the file exists if that bothers you.
 
